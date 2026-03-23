@@ -10,6 +10,7 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import SanitizerIcon from "@mui/icons-material/Sanitizer";
 import MapIcon from "@mui/icons-material/Map";
+import BugReportIcon from "@mui/icons-material/BugReport";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -102,6 +103,13 @@ export const MODULES = {
         displayName: "Inspection Areas",
         path: "inspection-areas",
         icon: <MapIcon sx={iconStyles.child} />,
+      },
+      PESTS: {
+        name: "Pests",
+        permissionId: "MASTERLIST.PESTS",
+        displayName: "Pests",
+        path: "pests",
+        icon: <BugReportIcon sx={iconStyles.child} />,
       },
     },
   },

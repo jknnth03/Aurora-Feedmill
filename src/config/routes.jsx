@@ -9,6 +9,7 @@ import Permissions from "../pages/user-management/permissions/Permissions.jsx";
 import Checklist from "../pages/masterlist/checklists/Checklists.jsx";
 import Sections from "../pages/masterlist/sections/Sections.jsx";
 import InspectionAreas from "../pages/masterlist/inspection-areas/InspectionAreas.jsx";
+import Pests from "../pages/masterlist/pests/Pests.jsx";
 import Login from "../pages/login/Login.jsx";
 import COBS from "../pages/checklist-form/COBS/COBS.jsx";
 
@@ -82,6 +83,14 @@ export const ROUTES = [
         element: <InspectionAreas />,
         handle: {
           permission: MODULES.MASTERLIST.children.INSPECTION_AREAS.permissionId,
+        },
+      },
+      {
+        id: "MASTERLIST.PESTS",
+        path: `${MODULES.MASTERLIST.path}/${MODULES.MASTERLIST.children.PESTS.path}`,
+        element: <Pests />,
+        handle: {
+          permission: MODULES.MASTERLIST.children.PESTS.permissionId,
         },
       },
 
