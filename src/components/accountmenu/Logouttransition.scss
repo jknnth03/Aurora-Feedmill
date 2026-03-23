@@ -1,0 +1,44 @@
+@use "../../styles/colors" as *;
+
+@keyframes logout-logo-spin-shrink {
+  0% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(4.5) rotate(180deg);
+    opacity: 1;
+  }
+  55% {
+    transform: scale(4.5) rotate(540deg);
+    opacity: 1;
+  }
+  85% {
+    transform: scale(1) rotate(720deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $bg-cream;
+  pointer-events: all;
+
+  &__logo {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    animation: logout-logo-spin-shrink 1.8s cubic-bezier(0.4, 0, 0.2, 1)
+      forwards;
+    transform-origin: center center;
+  }
+}

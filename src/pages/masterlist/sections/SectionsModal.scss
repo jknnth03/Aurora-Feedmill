@@ -1,0 +1,215 @@
+@use "../../../styles/colors" as *;
+
+.sm {
+  &__paper {
+    border-radius: 14px !important;
+    font-family: "Poppins", sans-serif;
+    background: $bg-main !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+  }
+
+  &__header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__header-icon {
+    font-size: 1.1rem !important;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close {
+    color: $text-muted !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__content {
+    padding: 16px 20px 20px !important;
+    overflow: visible !important;
+  }
+
+  &__group {
+    margin-bottom: 16px;
+  }
+
+  &__group-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 0 0 10px;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.35);
+    }
+  }
+
+  &__field {
+    position: relative;
+  }
+
+  &__label {
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: $bg-main;
+    padding: 0 4px;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 1;
+    transition: color 0.2s;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &__required {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 2px;
+
+    svg {
+      font-size: 0.5rem !important;
+      color: $status-error !important;
+    }
+  }
+
+  &__input-wrap {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    background: $bg-main;
+    padding: 0 12px;
+    transition: border-color 0.2s;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    &:focus-within {
+      border-color: $primary-main;
+
+      .sm__label {
+        color: $primary-main;
+      }
+    }
+
+    &--error {
+      border-color: $status-error !important;
+
+      .sm__label {
+        color: $status-error !important;
+      }
+    }
+
+    input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 11px 0;
+      font-size: 0.82rem;
+      font-weight: 400;
+      color: $text-primary;
+      outline: none;
+      font-family: "Poppins", sans-serif;
+
+      [data-theme="dark"] & {
+        color: rgba(255, 255, 255, 0.85);
+      }
+    }
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+    margin-left: 4px;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: $status-error;
+    font-family: "Poppins", sans-serif;
+
+    svg {
+      font-size: 0.72rem !important;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+
+  &__cancel-btn {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: $text-muted;
+    background: transparent;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    padding: 7px 18px;
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      border-color: $primary-main;
+      color: $primary-main;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.5);
+
+      &:hover {
+        border-color: $secondary-main;
+        color: $secondary-main;
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+@use "sass:map";
+
+$breakpoints: (
+  "xxs": 500px,
+  "xs": 575.98px,
+  "sm": 768px,
+  "lm": 930.98px,
+  "md": 991.98px,
+  "lg": 1199.98px,
+  "xl": 1399.98px,
+  "xxl": 9999px,
+);
+
+@mixin xxs {
+  @media (max-width: map.get($breakpoints, "xs")) {
+    @content;
+  }
+}
+
+@mixin xs {
+  @media (max-width: map.get($breakpoints, "xs")) {
+    @content;
+  }
+}
+
+@mixin sm {
+  @media (max-width: map.get($breakpoints, "sm")) {
+    @content;
+  }
+}
+
+@mixin lm {
+  @media (max-width: map.get($breakpoints, "lm")) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (max-width: map.get($breakpoints, "md")) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (max-width: map.get($breakpoints, "lg")) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (max-width: map.get($breakpoints, "xl")) {
+    @content;
+  }
+}
+
+@mixin xxl {
+  @media (max-width: map.get($breakpoints, "xxl")) {
+    @content;
+  }
+}

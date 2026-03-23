@@ -1,0 +1,63 @@
+@use "../../styles/colors" as *;
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &__item-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: $text-muted;
+    background: transparent;
+    transition:
+      background 0.15s,
+      color 0.15s;
+    white-space: nowrap;
+
+    &--clickable {
+      cursor: pointer;
+      &:hover {
+        background: rgba($primary-main, 0.06);
+        color: $primary-main;
+      }
+    }
+
+    &--active {
+      background: rgba($primary-main, 0.08);
+      color: $primary-main;
+
+      .breadcrumbs__icon svg {
+        color: $primary-main;
+      }
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+
+    svg {
+      font-size: 15px !important;
+      color: $text-muted;
+    }
+  }
+
+  &__sep {
+    color: $text-muted;
+    font-size: 0.85rem;
+    opacity: 0.5;
+  }
+}

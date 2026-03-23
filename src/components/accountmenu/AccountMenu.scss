@@ -1,0 +1,190 @@
+@use "../../styles/colors" as *;
+
+.account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  padding-left: 6px;
+  padding-right: 12px;
+  border-radius: 8px;
+  text-align: left;
+  transition: background 0.15s;
+  font-family: "Poppins", sans-serif;
+  min-width: 0;
+
+  &:hover {
+    background: rgba($primary-main, 0.08);
+
+    .account-trigger__avatar {
+      animation: icon-jump 2s ease infinite;
+    }
+  }
+
+  &__avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: $primary-main;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+  }
+
+  &__name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $primary-main;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__role {
+    font-size: 0.68rem;
+    color: $nav-icon;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@keyframes icon-jump {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+  80% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.account-menu__paper {
+  min-width: 230px !important;
+  border-radius: 12px !important;
+  background-color: var(--bg-paper) !important;
+  box-shadow: 0 8px 24px var(--shadow) !important;
+  overflow: hidden !important;
+  font-family: "Poppins", sans-serif !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.account-menu__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+
+.account-menu__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: $primary-main;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-menu__user {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.account-menu__name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $primary-main;
+  font-family: "Poppins", sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-menu__role {
+  font-size: 0.7rem;
+  color: $nav-icon;
+  font-family: "Poppins", sans-serif;
+}
+
+.account-menu__item {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 0.845rem !important;
+  color: $nav-text !important;
+  padding: 10px 16px !important;
+  gap: 4px;
+  transition: background 0.15s !important;
+
+  .MuiListItemIcon-root {
+    min-width: 32px !important;
+    color: $nav-icon;
+  }
+
+  &:hover {
+    background: rgba($primary-main, 0.08) !important;
+    color: $primary-main !important;
+
+    .MuiListItemIcon-root {
+      color: $primary-main;
+    }
+  }
+
+  &--toggle {
+    &:hover {
+      background: rgba($primary-main, 0.08) !important;
+      color: $nav-text !important;
+
+      .MuiListItemIcon-root {
+        color: $primary-main;
+      }
+    }
+  }
+
+  &--logout {
+    &:hover {
+      background: rgba($status-error, 0.08) !important;
+      color: $status-error !important;
+
+      .MuiListItemIcon-root {
+        color: $status-error;
+      }
+    }
+  }
+}
+
+.account-menu__switch {
+  margin-left: auto;
+}

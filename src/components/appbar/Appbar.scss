@@ -1,0 +1,88 @@
+@use "../../styles/mixins" as *;
+@use "../../styles/colors" as *;
+
+.appbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-height: 56px;
+  height: 56px;
+  padding: 0 16px;
+  background-color: $bg-main;
+  flex-shrink: 0;
+
+  @include sm {
+    padding: 0 8px;
+    height: 52px;
+  }
+
+  &__toggle {
+    color: $primary-main !important;
+    transition: background 0.2s !important;
+    border-radius: 8px !important;
+
+    &:hover {
+      background: rgba($primary-main, 0.08) !important;
+    }
+  }
+
+  &__spacer {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  &__greeting {
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+
+    strong {
+      font-weight: 600;
+      color: $text-primary;
+    }
+
+    @include sm {
+      display: none;
+    }
+  }
+
+  &__divider {
+    display: none;
+  }
+
+  &__logout {
+    color: $text-muted !important;
+    transition:
+      color 0.2s,
+      background 0.2s !important;
+
+    &:hover {
+      color: $status-error !important;
+      background: rgba(239, 68, 68, 0.08) !important;
+    }
+  }
+}
+
+.appbar__notif {
+  color: $primary-main !important;
+  border-radius: 8px !important;
+
+  &:hover {
+    background: rgba($primary-main, 0.08) !important;
+  }
+
+  svg {
+    font-size: 22px;
+  }
+}

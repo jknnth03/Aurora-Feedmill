@@ -1,0 +1,119 @@
+@use "../../styles/colors" as *;
+
+.row-menu {
+  position: relative;
+  display: inline-flex;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: $text-muted;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      background 0.15s;
+
+    &:hover {
+      color: $primary-main;
+      background: rgba($primary-main, 0.06);
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.5);
+
+      &:hover {
+        color: $secondary-main;
+        background: rgba($secondary-main, 0.08);
+      }
+    }
+  }
+
+  &__dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 200;
+    background: $bg-main;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    min-width: 140px;
+    overflow: hidden;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: $text-primary;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition:
+      background 0.12s,
+      color 0.12s;
+    text-align: left;
+
+    &:hover {
+      background: rgba($primary-main, 0.06);
+    }
+
+    &--danger {
+      color: $status-error;
+
+      &:hover {
+        background: rgba($status-error, 0.06);
+        color: $status-error-dark;
+      }
+    }
+
+    &--restore {
+      color: $status-success;
+
+      &:hover {
+        background: rgba($status-success, 0.06);
+        color: $status-success-dark;
+      }
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      &--danger {
+        color: $status-error-light;
+
+        &:hover {
+          background: rgba($status-error, 0.1);
+        }
+      }
+
+      &--restore {
+        color: $status-success-light;
+
+        &:hover {
+          background: rgba($status-success, 0.1);
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,367 @@
+@use "../../styles/mixins" as *;
+@use "../../styles/colors" as *;
+
+.sidebar-wrapper {
+  flex-shrink: 0;
+  height: 100vh;
+  z-index: 100;
+  overflow: hidden;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.08);
+  transition: width 0.25s ease;
+
+  &--open {
+    width: 300px;
+  }
+
+  &--closed {
+    width: 58px;
+  }
+
+  &--desktop {
+    display: block;
+
+    @include sm {
+      display: none;
+    }
+  }
+
+  &--mobile {
+    display: none !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1300;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+
+    @include sm {
+      display: block !important;
+
+      &.sidebar-wrapper--mobile-open {
+        transform: translateX(0);
+      }
+    }
+  }
+}
+
+.sidebar-overlay {
+  display: none;
+
+  @include sm {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1299;
+  }
+}
+
+.sidebar {
+  height: 100vh;
+  background-color: $bg-main;
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.25s ease;
+
+  &--open {
+    width: 300px;
+  }
+
+  &--closed {
+    width: 58px;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 14px;
+    flex-shrink: 0;
+    min-height: 64px;
+  }
+
+  &__logo-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+    cursor: pointer;
+
+    &:hover {
+      animation: icon-jump 2s ease infinite;
+    }
+  }
+
+  &__brand-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $primary-main;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    flex: 1;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__brand-sub {
+    font-size: 1rem;
+    font-weight: 500;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $nav-icon;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 6px;
+    margin-left: auto;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  &__nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $primary-main;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+
+  &__footer {
+    flex-shrink: 0;
+    padding: 8px 6px;
+  }
+
+  &__avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: $primary-main;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  &__user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__user-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $nav-text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__user-role {
+    font-size: 0.68rem;
+    color: $nav-icon;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: $nav-text;
+  font-family: "Poppins", sans-serif;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+  background: transparent;
+
+  &:hover {
+    .nav-item__icon {
+      animation: icon-jump 2s ease infinite;
+    }
+  }
+
+  &:not(.nav-item--child) {
+    &:hover {
+      background: rgba($primary-main, 0.08);
+      color: $primary-main;
+
+      .nav-item__icon {
+        color: $primary-main;
+      }
+      .nav-item__arrow {
+        color: $primary-main;
+      }
+    }
+
+    &.nav-item--active {
+      background: rgba($primary-main, 0.1);
+      color: $primary-main;
+      font-weight: 500;
+
+      .nav-item__icon {
+        color: $primary-main;
+      }
+      .nav-item__arrow {
+        color: $primary-main;
+      }
+    }
+  }
+
+  &--child {
+    font-size: 0.845rem;
+    padding-top: 13px;
+    padding-bottom: 13px;
+    border-radius: 6px;
+    color: $nav-text;
+
+    &:hover {
+      background: rgba($primary-main, 0.08);
+      color: $primary-main;
+
+      .nav-item__icon {
+        color: $primary-main;
+      }
+    }
+
+    &.nav-item--active {
+      background: transparent;
+      color: $primary-main;
+      font-weight: 500;
+
+      .nav-item__icon {
+        color: $primary-main;
+      }
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    color: $nav-icon;
+    flex-shrink: 0;
+    transition: color 0.15s;
+
+    svg {
+      font-size: 20px;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__arrow {
+    display: flex;
+    align-items: center;
+    color: $nav-icon;
+    flex-shrink: 0;
+    margin-left: auto;
+    transition: color 0.15s;
+  }
+
+  &__check {
+    position: absolute;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    color: $secondary-main;
+
+    &-icon {
+      font-size: 13px !important;
+    }
+  }
+}
+
+@keyframes icon-jump {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+  80% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.MuiCollapse-root,
+.MuiCollapse-wrapper,
+.MuiCollapse-wrapperInner {
+  background: transparent !important;
+}
+
+.sidebar-tooltip {
+  background-color: $secondary-main !important;
+  color: $tertiary-contrast !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  padding: 5px 10px !important;
+
+  &__arrow {
+    color: $secondary-main !important;
+  }
+}

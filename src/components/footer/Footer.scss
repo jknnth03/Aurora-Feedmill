@@ -1,0 +1,69 @@
+@use "../../styles/colors" as *;
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px;
+  background: var(--bg-main);
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.04);
+  min-height: 44px;
+  font-family: "Poppins", sans-serif;
+
+  &__left {
+    flex: 1;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    color: $primary-main;
+    cursor: default;
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba($primary-main, 0.08);
+    }
+
+    &--error {
+      color: $status-error;
+
+      &:hover {
+        background: rgba($status-error, 0.08);
+      }
+    }
+
+    svg {
+      font-size: 18px;
+    }
+  }
+
+  &__datetime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba($primary-main, 0.06);
+  }
+
+  &__date {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: $text-muted;
+  }
+
+  &__time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $primary-main;
+  }
+}

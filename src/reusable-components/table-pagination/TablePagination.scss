@@ -1,0 +1,115 @@
+@use "../../styles/colors" as *;
+
+.tp {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  padding: 10px 16px;
+  border-top: 1px solid $border-color;
+  font-family: "Poppins", sans-serif;
+  flex-shrink: 0;
+
+  [data-theme="dark"] & {
+    border-top-color: rgba(255, 255, 255, 0.07);
+  }
+
+  &__rows {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: $text-muted;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.45);
+    }
+  }
+
+  &__select {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: $text-primary;
+    background: transparent;
+    border: 1.5px solid $border-color;
+    border-radius: 6px;
+    padding: 3px 6px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+      border-color: rgba(255, 255, 255, 0.15);
+      background: transparent;
+
+      option {
+        background: #1e1e1e;
+      }
+    }
+
+    &:focus {
+      border-color: $primary-main;
+    }
+  }
+
+  &__info {
+    font-size: 0.75rem;
+    color: $text-muted;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.45);
+    }
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid $border-color;
+    border-radius: 6px;
+    background: transparent;
+    color: $text-primary;
+    cursor: pointer;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &:hover:not(:disabled) {
+      background: rgba($primary-main, 0.08);
+      border-color: $primary-main;
+      color: $primary-main;
+
+      [data-theme="dark"] & {
+        background: rgba($secondary-main, 0.1);
+        border-color: $secondary-main;
+        color: $secondary-main;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+}
