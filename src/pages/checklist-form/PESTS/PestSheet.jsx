@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
-import SanitizerIcon from "@mui/icons-material/Sanitizer";
+import BugReportIcon from "@mui/icons-material/BugReport";
 import AddIcon from "@mui/icons-material/Add";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
@@ -12,79 +12,59 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetCobsQuery,
-  useArchiveCobsMutation,
-} from "../../../features/api/checklist-form/cobsApi";
+  useGetPestsSheetsQuery,
+  useArchivePestsSheetMutation,
+} from "../../../features/api/checklist-form/pestSheetApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import COBSModal from "./COBSModal";
-import "./COBS.scss";
+import PestSheetModal from "./PestSheetModal";
+import "./PestSheet.scss";
 
 const COLUMNS = [
-  { key: "checklist_id", label: "Checklist ID", sortable: true },
-  { key: "name", label: "Area / Section", sortable: true },
+  { key: "id", label: "ID", sortable: true },
   {
-    key: "item",
-    label: "Checklist Items",
+    key: "inspection_areas",
+    label: "Inspection Areas",
     sortable: false,
-    render: (items) =>
-      Array.isArray(items) ? items.map((i) => i.name).join(", ") : "—",
+    render: (value) => value?.map((a) => a.name).join(", ") || "—",
   },
   {
-    key: "type",
-    label: "Type",
+    key: "pests",
+    label: "Pests",
     sortable: false,
-    render: (_, row) =>
-      Array.isArray(row.item) && row.item.length > 0 ? row.item[0].type : "—",
+    render: (value) => value?.map((p) => p.name).join(", ") || "—",
   },
 ];
 
-const flattenCobsData = (rawData = []) => {
-  const rows = [];
-  rawData.forEach((entry) => {
-    const { checklist_id, forms } = entry;
-    if (Array.isArray(forms)) {
-      forms.forEach((form) => {
-        rows.push({
-          checklist_id,
-          name: form.name,
-          item: form.item ?? [],
-        });
-      });
-    }
-  });
-  return rows;
-};
-
-const COBS = () => {
+const PestSheet = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [queryParams, setQueryParams, , resetAfterArchive, resetAfterRestore] =
     useRememberQueryParams();
-  const showArchived = queryParams.status === "0";
+  const showArchived = queryParams.status === "inactive";
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  // ✅ pass only the checklist_id — modal handles the lazy fetch
+  // ✅ store only the ID, not the whole row
   const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
 
-  const { data, isFetching, error } = useGetCobsQuery({
+  const { data, isFetching, error } = useGetPestsSheetsQuery({
     status: showArchived ? 0 : 1,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
   });
-  const [archiveCobs, { isLoading: isArchiving }] = useArchiveCobsMutation();
+  const [archivePestsSheet, { isLoading: isArchiving }] =
+    useArchivePestsSheetMutation();
 
   const is404 = error?.status === 404;
-  const rawData = data?.data?.data ?? [];
-  const tableData = flattenCobsData(rawData);
+  const tableData = data?.data?.data ?? [];
   const total = data?.data?.total ?? 0;
 
   const handleSort = (key, order) => {
@@ -107,9 +87,9 @@ const COBS = () => {
   };
   const handleConfirmRestore = async () => {
     try {
-      await archiveCobs(toRestore.checklist_id).unwrap();
+      await archivePestsSheet(toRestore.id).unwrap();
       window.__snackbar__?.enqueueSnackbar(
-        "COBS questionnaire restored successfully.",
+        "Pest questionnaire restored successfully.",
         { variant: "success" },
       );
       setRestoreConfirmOpen(false);
@@ -125,8 +105,8 @@ const COBS = () => {
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    // ✅ same as PestSheet — pass only the ID, modal fetches full data
-    setSelectedId(row.checklist_id);
+    // ✅ pass only the ID — modal will fetch full data
+    setSelectedId(row.id);
     setModalOpen(true);
   };
   const handleClose = () => {
@@ -139,9 +119,9 @@ const COBS = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archiveCobs(toArchive.checklist_id).unwrap();
+      await archivePestsSheet(toArchive.id).unwrap();
       window.__snackbar__?.enqueueSnackbar(
-        "COBS questionnaire archived successfully.",
+        "Pest questionnaire archived successfully.",
         { variant: "success" },
       );
       setConfirmOpen(false);
@@ -155,13 +135,13 @@ const COBS = () => {
   return (
     <>
       <PageContainer
-        title="COBS Questionnaires"
-        titleIcon={<SanitizerIcon />}
+        title="Pest Questionnaires"
+        titleIcon={<BugReportIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         titleAction={
           <UniversalButton
-            label="Add COBS Questionnaire"
-            tooltip="Click this button to add a new COBS questionnaire"
+            label="Add Pest Questionnaire"
+            tooltip="Click this button to add a new pest questionnaire"
             icon={<AddIcon />}
             onClick={handleAdd}
           />
@@ -172,7 +152,7 @@ const COBS = () => {
               active={showArchived}
               onClick={() => {
                 setQueryParams(
-                  { status: showArchived ? "1" : "0" },
+                  { status: showArchived ? "active" : "inactive" },
                   { retain: true },
                 );
                 setPage(1);
@@ -181,7 +161,7 @@ const COBS = () => {
             <TableSearchField
               value={search}
               onChange={handleSearch}
-              placeholder="Search COBS questionnaires..."
+              placeholder="Search pest questionnaires..."
             />
           </>
         }
@@ -212,7 +192,7 @@ const COBS = () => {
         />
       </PageContainer>
 
-      <COBSModal
+      <PestSheetModal
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
@@ -226,8 +206,8 @@ const COBS = () => {
         }}
         onConfirm={handleConfirmArchive}
         isLoading={isArchiving}
-        title="Archive COBS Questionnaire"
-        message={`Are you sure you want to archive "${toArchive?.name}"? This action will set the questionnaire as inactive.`}
+        title="Archive Pest Questionnaire"
+        message={`Are you sure you want to archive Pest Questionnaire #${toArchive?.id}? This action will set it as inactive.`}
       />
 
       <ConfirmDialog
@@ -238,11 +218,11 @@ const COBS = () => {
         }}
         onConfirm={handleConfirmRestore}
         isLoading={isArchiving}
-        title="Restore COBS Questionnaire"
-        message={`Are you sure you want to restore "${toRestore?.name}"? This will set it back to active.`}
+        title="Restore Pest Questionnaire"
+        message={`Are you sure you want to restore Pest Questionnaire #${toRestore?.id}? This will set it back to active.`}
       />
     </>
   );
 };
 
-export default COBS;
+export default PestSheet;

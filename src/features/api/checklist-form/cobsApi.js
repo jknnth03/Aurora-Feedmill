@@ -11,10 +11,10 @@ const cobsApi = apiSlice.injectEndpoints({
     }),
 
     getCobsById: builder.query({
+      // ✅ GET requests cannot have a body — use params instead
       query: (checklist_id) => ({
         url: `/api/forms/by-checklist`,
-        method: "GET",
-        body: { checklist_id },
+        params: { checklist_id },
       }),
       providesTags: (result, error, checklist_id) => [
         { type: "Cobs", id: checklist_id },

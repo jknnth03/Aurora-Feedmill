@@ -105,9 +105,9 @@ export const MODULES = {
         icon: <MapIcon sx={iconStyles.child} />,
       },
       PESTS: {
-        name: "Pests",
+        name: "Pest Types",
         permissionId: "MASTERLIST.PESTS",
-        displayName: "Pests",
+        displayName: "Pest Types",
         path: "pests",
         icon: <BugReportIcon sx={iconStyles.child} />,
       },
@@ -115,18 +115,25 @@ export const MODULES = {
   },
 
   CHECKLISTFORM: {
-    name: "Checklist Form",
-    permissionId: "CHECKLISTFORM",
-    displayName: "Checklist Form",
+    name: "Questionnaires",
+    permissionId: "QUESTIONNAIRES",
+    displayName: "Questionnaires",
     path: "/checklist-form",
     icon: <AssignmentIcon sx={iconStyles.main} />,
     children: {
       COBS: {
         name: "COBS",
-        permissionId: "CHECKLISTFORM.COBS",
+        permissionId: "QUESTIONNAIRES.COBS",
         displayName: "COBS",
         path: "cobs",
         icon: <SanitizerIcon sx={iconStyles.child} />,
+      },
+      PEST_SHEETS: {
+        name: "Pest",
+        permissionId: "QUESTIONNAIRES.PEST_SHEETS",
+        displayName: "Pest",
+        path: "pest-sheets",
+        icon: <BugReportIcon sx={iconStyles.child} />,
       },
     },
   },

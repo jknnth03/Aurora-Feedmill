@@ -12,6 +12,7 @@ import InspectionAreas from "../pages/masterlist/inspection-areas/InspectionArea
 import Pests from "../pages/masterlist/pests/Pests.jsx";
 import Login from "../pages/login/Login.jsx";
 import COBS from "../pages/checklist-form/COBS/COBS.jsx";
+import PestSheet from "../pages/checklist-form/PESTS/PestSheet.jsx";
 
 export const ROUTES = [
   {
@@ -94,13 +95,21 @@ export const ROUTES = [
         },
       },
 
-      // ─── Checklist Form ────────────────────────────────────────────────────
+      // ─── Questionnaires ────────────────────────────────────────────────────
       {
-        id: "CHECKLISTFORM.COBS",
+        id: "QUESTIONNAIRES.COBS",
         path: `${MODULES.CHECKLISTFORM.path}/${MODULES.CHECKLISTFORM.children.COBS.path}`,
         element: <COBS />,
         handle: {
           permission: MODULES.CHECKLISTFORM.children.COBS.permissionId,
+        },
+      },
+      {
+        id: "QUESTIONNAIRES.PEST_SHEETS",
+        path: `${MODULES.CHECKLISTFORM.path}/${MODULES.CHECKLISTFORM.children.PEST_SHEETS.path}`,
+        element: <PestSheet />,
+        handle: {
+          permission: MODULES.CHECKLISTFORM.children.PEST_SHEETS.permissionId,
         },
       },
     ],
