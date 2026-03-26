@@ -13,6 +13,7 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
+  useGetInspectionAreaByIdQuery,
   useCreateInspectionAreaMutation,
   useUpdateInspectionAreaMutation,
 } from "../../../features/api/masterlist/inspectionAreaApi";
@@ -22,14 +23,31 @@ const schema = yup.object({
   name: yup.string().required("Inspection area name is required"),
 });
 
-const InspectionAreasModal = ({ open, onClose, selectedRow = null }) => {
+const SkeletonLoader = () => (
+  <div className="iam__skeleton-wrap">
+    {[50, 75, 60, 80].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="iam__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "28%" }} />
+    </div>
+  </div>
+);
+
+const InspectionAreasModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const [createInspectionArea, { isLoading: isCreating }] =
     useCreateInspectionAreaMutation();
   const [updateInspectionArea, { isLoading: isUpdating }] =
     useUpdateInspectionAreaMutation();
   const isLoading = isCreating || isUpdating;
+
+  const { data: areaData, isFetching: areaLoading } =
+    useGetInspectionAreaByIdQuery(selectedId, {
+      skip: !selectedId || !open,
+    });
 
   const {
     register,
@@ -41,17 +59,30 @@ const InspectionAreasModal = ({ open, onClose, selectedRow = null }) => {
     defaultValues: { name: "" },
   });
 
+  // Set mode + clear state when modal opens
   useEffect(() => {
     if (open) {
-      setMode(selectedRow ? "view" : "add");
-      reset({ name: selectedRow?.name ?? "" });
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
+        setSelectedRow(null);
+        reset({ name: "" });
+      }
     }
-  }, [open, selectedRow, reset]);
+  }, [open, selectedId, reset]);
+
+  // Populate form when API data arrives
+  useEffect(() => {
+    if (areaData) {
+      const data = areaData?.data ?? null;
+      setSelectedRow(data);
+      reset({ name: data?.name ?? "" });
+    }
+  }, [areaData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updateInspectionArea({ id: selectedRow.id, ...form }).unwrap();
+        await updateInspectionArea({ id: selectedId, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Inspection area updated successfully.",
           { variant: "success" },
@@ -109,7 +140,9 @@ const InspectionAreasModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="iam__content">
-        {isView ? (
+        {areaLoading ? (
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             <div className="iam__group">
               <p className="iam__group-label">Inspection Area Details</p>
@@ -158,7 +191,7 @@ const InspectionAreasModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="iam__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="iam__back-btn"

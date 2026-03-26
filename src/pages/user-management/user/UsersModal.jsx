@@ -63,6 +63,17 @@ const FIELD_GROUPS = [
   },
 ];
 
+const SkeletonLoader = () => (
+  <div className="um__skeleton-wrap">
+    {[40, 60, 40, 60, 80, 50, 70, 55, 65].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="um__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "25%" }} />
+    </div>
+  </div>
+);
+
 const RoleAutocomplete = ({ value, onChange, error, displayValue }) => {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -218,14 +229,15 @@ const FormField = ({
   );
 };
 
-const UsersModal = ({ open, onClose, selectedRow = null }) => {
+const UsersModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
   const [showPass, setShowPass] = useState(false);
 
-  const { data: userDetail } = useGetUserByIdQuery(selectedRow?.id, {
-    skip: !selectedRow?.id || !open,
-  });
-  const rowData = userDetail?.data ?? selectedRow;
+  const { data: userDetail, isFetching: userLoading } = useGetUserByIdQuery(
+    selectedId,
+    { skip: !selectedId || !open },
+  );
+  const rowData = userDetail?.data ?? null;
 
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
@@ -252,11 +264,12 @@ const UsersModal = ({ open, onClose, selectedRow = null }) => {
     },
   });
 
+  // Set mode + clear on open
   useEffect(() => {
     if (open) {
       setShowPass(false);
-      setMode(selectedRow ? "view" : "add");
-      if (!selectedRow) {
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
         reset({
           role_id: "",
           employee_id: "",
@@ -270,10 +283,11 @@ const UsersModal = ({ open, onClose, selectedRow = null }) => {
         });
       }
     }
-  }, [open, selectedRow, reset]);
+  }, [open, selectedId, reset]);
 
+  // Populate form when API data arrives
   useEffect(() => {
-    if (rowData && open && selectedRow) {
+    if (rowData && open && selectedId) {
       reset({
         role_id: rowData.role?.id ?? "",
         employee_id: rowData.employee_id ?? "",
@@ -286,7 +300,7 @@ const UsersModal = ({ open, onClose, selectedRow = null }) => {
         password: "",
       });
     }
-  }, [rowData, open, selectedRow, reset]);
+  }, [rowData, open, selectedId, reset]);
 
   const onSubmit = async (form) => {
     try {
@@ -348,7 +362,9 @@ const UsersModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="um__content">
-        {isView ? (
+        {userLoading ? (
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             {FIELD_GROUPS.map((group) => {
               const visibleFields = getVisibleFields(group.fields);
@@ -448,7 +464,7 @@ const UsersModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="um__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="um__back-btn"

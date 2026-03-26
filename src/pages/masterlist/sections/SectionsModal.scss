@@ -6,6 +6,7 @@
     font-family: "Poppins", sans-serif;
     background: $bg-main !important;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    overflow: hidden !important;
 
     [data-theme="dark"] & {
       background: $bg-main !important;
@@ -53,7 +54,30 @@
 
   &__content {
     padding: 16px 20px 20px !important;
-    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-height: 70vh;
+
+    &:not(:hover) {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    &:hover {
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    }
   }
 
   &__group {
@@ -141,6 +165,32 @@
       }
     }
 
+    &--disabled {
+      background: rgba($primary-main, 0.03) !important;
+      border-color: $border-color !important;
+      cursor: default;
+      pointer-events: none;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+      }
+
+      input {
+        color: $text-muted !important;
+        cursor: default;
+
+        [data-theme="dark"] & {
+          color: rgba(255, 255, 255, 0.4) !important;
+        }
+      }
+
+      .sm__label {
+        color: $text-muted !important;
+        opacity: 0.7;
+      }
+    }
+
     input {
       flex: 1;
       border: none;
@@ -174,6 +224,30 @@
     }
   }
 
+  &__skeleton-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0;
+
+    .ut__skeleton {
+      height: 14px;
+      border-radius: 6px;
+      display: block;
+    }
+  }
+
+  &__skeleton-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+
+    .ut__skeleton {
+      height: 32px;
+      border-radius: 8px;
+    }
+  }
+
   &__footer {
     display: flex;
     align-items: center;
@@ -181,6 +255,11 @@
     gap: 10px;
     margin-top: 20px;
     padding-top: 16px;
+    border-top: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
   }
 
   &__cancel-btn {
@@ -209,6 +288,38 @@
       &:hover {
         border-color: $secondary-main;
         color: $secondary-main;
+      }
+    }
+  }
+
+  &__back-btn {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $secondary-contrast;
+    background: transparent;
+    border: 1.5px dashed $border-color;
+    border-radius: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    opacity: 0.75;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s;
+
+    &:hover {
+      opacity: 1;
+      border-color: $secondary-contrast;
+    }
+
+    [data-theme="dark"] & {
+      color: $text-muted;
+      border-color: $border-color;
+
+      &:hover {
+        color: $text-secondary;
+        opacity: 1;
+        border-color: $text-muted;
       }
     }
   }

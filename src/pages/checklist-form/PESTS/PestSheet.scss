@@ -1,56 +1,36 @@
 @use "../../../styles/colors" as *;
 
 .pest-sheet {
-  &__more-btn {
+  &__stack {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: $text-muted;
-    cursor: pointer;
-    transition:
-      color 0.15s,
-      background 0.15s;
-
-    &:hover {
-      color: $primary-main;
-      background: rgba($primary-main, 0.06);
-    }
-
-    [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.5);
-
-      &:hover {
-        color: $secondary-main;
-        background: rgba($secondary-main, 0.08);
-      }
-    }
-  }
-
-  &__chip-cell {
-    display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 4px;
+    padding: 4px 0;
   }
 
-  &__chip {
+  &__stack-item {
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 500;
+    font-size: 0.78rem;
     font-family: "Poppins", sans-serif;
-    background: rgba($primary-main, 0.08);
-    color: $primary-main;
+    color: $text-primary;
+    padding: 2px 0;
+
+    // bullet prefix
+    &::before {
+      content: "";
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: $primary-main;
+      margin-right: 7px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
 
     [data-theme="dark"] & {
-      background: rgba($secondary-main, 0.12);
-      color: $secondary-main;
+      color: rgba(255, 255, 255, 0.8);
     }
   }
 }

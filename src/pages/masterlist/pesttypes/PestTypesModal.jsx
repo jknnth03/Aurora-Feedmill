@@ -13,21 +13,39 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
+  useGetPestByIdQuery,
   useCreatePestMutation,
   useUpdatePestMutation,
 } from "../../../features/api/masterlist/pestsApi";
-import "./PestsModal.scss";
+import "./PestTypesModal.scss";
 
 const schema = yup.object({
   name: yup.string().required("Pest name is required"),
 });
 
-const PestsModal = ({ open, onClose, selectedRow = null }) => {
+const SkeletonLoader = () => (
+  <div className="pm__skeleton-wrap">
+    {[50, 75, 60, 80].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="pm__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "28%" }} />
+    </div>
+  </div>
+);
+
+const PestsModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const [createPest, { isLoading: isCreating }] = useCreatePestMutation();
   const [updatePest, { isLoading: isUpdating }] = useUpdatePestMutation();
   const isLoading = isCreating || isUpdating;
+
+  const { data: pestData, isFetching: pestLoading } = useGetPestByIdQuery(
+    selectedId,
+    { skip: !selectedId || !open },
+  );
 
   const {
     register,
@@ -41,15 +59,26 @@ const PestsModal = ({ open, onClose, selectedRow = null }) => {
 
   useEffect(() => {
     if (open) {
-      setMode(selectedRow ? "view" : "add");
-      reset({ name: selectedRow?.name ?? "" });
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
+        setSelectedRow(null);
+        reset({ name: "" });
+      }
     }
-  }, [open, selectedRow, reset]);
+  }, [open, selectedId, reset]);
+
+  useEffect(() => {
+    if (pestData) {
+      const data = pestData?.data ?? null;
+      setSelectedRow(data);
+      reset({ name: data?.name ?? "" });
+    }
+  }, [pestData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updatePest({ id: selectedRow.id, ...form }).unwrap();
+        await updatePest({ id: selectedId, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar("Pest updated successfully.", {
           variant: "success",
         });
@@ -105,7 +134,9 @@ const PestsModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="pm__content">
-        {isView ? (
+        {pestLoading ? (
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             <div className="pm__group">
               <p className="pm__group-label">Pest Details</p>
@@ -154,7 +185,7 @@ const PestsModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="pm__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="pm__back-btn"

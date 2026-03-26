@@ -64,6 +64,18 @@ const MultiSelectField = ({
     onChange(next);
   };
 
+  const allSelected =
+    options.length > 0 && options.every((o) => value.includes(o.id));
+
+  const handleSelectAll = (e) => {
+    e.stopPropagation();
+    if (allSelected) {
+      onChange([]);
+    } else {
+      onChange(options.map((o) => o.id));
+    }
+  };
+
   return (
     <div className="psm__field" onClick={onFirstClick}>
       <div
@@ -76,6 +88,19 @@ const MultiSelectField = ({
             </span>
           )}
         </label>
+        {!disabled && !isLoading && options.length > 0 && (
+          <div className="psm__multiselect-toolbar">
+            <button
+              type="button"
+              className="psm__select-all-btn"
+              onClick={handleSelectAll}>
+              {allSelected ? "Deselect All" : "Select All"}
+            </button>
+            <span className="psm__selected-count">
+              {value.length}/{options.length} selected
+            </span>
+          </div>
+        )}
         <div className="psm__multiselect-body">
           {isLoading ? (
             <p className="psm__multiselect-empty">Loading...</p>
@@ -139,7 +164,9 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
   const [pestsTouched, setPestsTouched] = useState(false);
 
   const { data: sheetData, isFetching: sheetLoading } =
-    useGetPestsSheetByIdQuery(selectedId, { skip: !selectedId });
+    useGetPestsSheetByIdQuery(selectedId, {
+      skip: !selectedId || !open,
+    });
 
   const selectedRow = sheetData?.data ?? null;
 
@@ -177,8 +204,11 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
       setMode(selectedId ? "view" : "add");
       setAreasTouched(false);
       setPestsTouched(false);
+      if (!selectedId) {
+        reset({ inspection_area_ids: [], pest_ids: [] });
+      }
     }
-  }, [open, selectedId]);
+  }, [open, selectedId, reset]);
 
   useEffect(() => {
     if (selectedRow) {
@@ -197,15 +227,20 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
   };
 
   const onSubmit = async (form) => {
+    // ✅ backend expects singular key names with array values
+    const payload = {
+      inspection_area_id: form.inspection_area_ids,
+      pest_id: form.pest_ids,
+    };
     try {
       if (mode === "edit") {
-        await updatePestsSheet({ id: selectedId, ...form }).unwrap();
+        await updatePestsSheet({ id: selectedId, ...payload }).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Pest questionnaire updated successfully.",
           { variant: "success" },
         );
       } else {
-        await createPestsSheet(form).unwrap();
+        await createPestsSheet(payload).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Pest questionnaire created successfully.",
           { variant: "success" },

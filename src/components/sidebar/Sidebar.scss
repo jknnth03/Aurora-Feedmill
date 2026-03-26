@@ -141,7 +141,8 @@
     padding: 8px 6px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
+    scrollbar-gutter: stable;
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -209,6 +210,17 @@
   }
 }
 
+.nav-item-wrap {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+
+  // last child no extra margin
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -227,6 +239,9 @@
   white-space: nowrap;
   position: relative;
   background: transparent;
+  // ✅ prevent background from bleeding into adjacent items
+  isolation: isolate;
+  z-index: 0;
 
   &:hover {
     .nav-item__icon {
@@ -251,6 +266,7 @@
       background: rgba($primary-main, 0.1);
       color: $primary-main;
       font-weight: 500;
+      z-index: 0;
 
       .nav-item__icon {
         color: $primary-main;
@@ -328,6 +344,18 @@
   }
 }
 
+// ✅ ensure Collapse wrapper doesn't collapse margin/padding of siblings
+.MuiCollapse-root {
+  position: relative;
+  z-index: 0;
+}
+
+.MuiCollapse-root,
+.MuiCollapse-wrapper,
+.MuiCollapse-wrapperInner {
+  background: transparent !important;
+}
+
 @keyframes icon-jump {
   0% {
     transform: translateY(0);
@@ -344,12 +372,6 @@
   100% {
     transform: translateY(0);
   }
-}
-
-.MuiCollapse-root,
-.MuiCollapse-wrapper,
-.MuiCollapse-wrapperInner {
-  background: transparent !important;
 }
 
 .sidebar-tooltip {

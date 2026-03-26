@@ -3,6 +3,7 @@ import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
 import SanitizerIcon from "@mui/icons-material/Sanitizer";
 import AddIcon from "@mui/icons-material/Add";
+import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -18,6 +19,7 @@ import {
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import COBSModal from "./COBSModal";
+import COBSPreviewDialog from "./COBSPreviewDialog";
 import "./COBS.scss";
 
 const COLUMNS = [
@@ -25,17 +27,19 @@ const COLUMNS = [
   { key: "name", label: "Area / Section", sortable: true },
   {
     key: "item",
-    label: "Checklist Items",
+    label: "Checklist",
     sortable: false,
-    render: (items) =>
-      Array.isArray(items) ? items.map((i) => i.name).join(", ") : "—",
-  },
-  {
-    key: "type",
-    label: "Type",
-    sortable: false,
-    render: (_, row) =>
-      Array.isArray(row.item) && row.item.length > 0 ? row.item[0].type : "—",
+    render: (items, row, onViewItems) => (
+      <button
+        className="cobs__eye-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          onViewItems?.(row);
+        }}
+        title="View checklist items">
+        <RemoveRedEyeIcon sx={{ fontSize: "1rem" }} />
+      </button>
+    ),
   },
 ];
 
@@ -63,19 +67,24 @@ const COBS = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [queryParams, setQueryParams, , resetAfterArchive, resetAfterRestore] =
     useRememberQueryParams();
-  const showArchived = queryParams.status === "0";
+  const showArchived = queryParams.status === "inactive";
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  // ✅ pass only the checklist_id — modal handles the lazy fetch
   const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
 
+  // Preview dialog state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewRow, setPreviewRow] = useState(null);
+
+  const currentStatus = showArchived ? "inactive" : "active";
+
   const { data, isFetching, error } = useGetCobsQuery({
-    status: showArchived ? 0 : 1,
+    status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
@@ -125,7 +134,6 @@ const COBS = () => {
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    // ✅ same as PestSheet — pass only the ID, modal fetches full data
     setSelectedId(row.checklist_id);
     setModalOpen(true);
   };
@@ -152,6 +160,20 @@ const COBS = () => {
     }
   };
 
+  // Columns with eye btn handler injected
+  const columnsWithHandler = COLUMNS.map((col) =>
+    col.key === "item"
+      ? {
+          ...col,
+          render: (items, row) =>
+            COLUMNS.find((c) => c.key === "item").render(items, row, (r) => {
+              setPreviewRow(r);
+              setPreviewOpen(true);
+            }),
+        }
+      : col,
+  );
+
   return (
     <>
       <PageContainer
@@ -172,7 +194,7 @@ const COBS = () => {
               active={showArchived}
               onClick={() => {
                 setQueryParams(
-                  { status: showArchived ? "1" : "0" },
+                  { status: showArchived ? "active" : "inactive" },
                   { retain: true },
                 );
                 setPage(1);
@@ -195,7 +217,7 @@ const COBS = () => {
           />
         }>
         <UniversalTable
-          columns={COLUMNS}
+          columns={columnsWithHandler}
           data={tableData}
           isLoading={isFetching}
           sortBy={sortBy}
@@ -216,6 +238,15 @@ const COBS = () => {
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
+      />
+
+      <COBSPreviewDialog
+        open={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false);
+          setPreviewRow(null);
+        }}
+        checklist_id={previewRow?.checklist_id}
       />
 
       <ConfirmDialog

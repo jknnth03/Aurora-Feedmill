@@ -17,8 +17,8 @@ import {
 } from "../../../features/api/masterlist/pestsApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import PestsModal from "./PestsModal";
-import "./Pests.scss";
+import PestsModal from "./PestTypesModal";
+import "./PestTypes.scss";
 
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
@@ -36,7 +36,7 @@ const Pests = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
@@ -89,16 +89,16 @@ const Pests = () => {
   };
 
   const handleAdd = () => {
-    setSelectedRow(null);
+    setSelectedId(null);
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    setSelectedRow(row);
+    setSelectedId(row.id);
     setModalOpen(true);
   };
   const handleClose = () => {
     setModalOpen(false);
-    setSelectedRow(null);
+    setSelectedId(null);
   };
   const handleArchiveClick = (row) => {
     setToArchive(row);
@@ -181,7 +181,7 @@ const Pests = () => {
       <PestsModal
         open={modalOpen}
         onClose={handleClose}
-        selectedRow={selectedRow}
+        selectedId={selectedId}
       />
 
       <ConfirmDialog

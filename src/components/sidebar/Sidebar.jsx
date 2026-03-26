@@ -111,7 +111,8 @@ const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
   );
 
   return (
-    <>
+    // ✅ wrapper div ensures gap applies between item + its collapse as a unit
+    <div className="nav-item-wrap">
       {!sidebarOpen && level === 0 ? (
         <Tooltip title={item.displayName} placement="right">
           {itemEl}
@@ -138,7 +139,7 @@ const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
           </div>
         </Collapse>
       )}
-    </>
+    </div>
   );
 };
 

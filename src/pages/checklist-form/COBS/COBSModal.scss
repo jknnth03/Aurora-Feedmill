@@ -6,6 +6,7 @@
     font-family: "Poppins", sans-serif;
     background: $bg-main !important;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    overflow: hidden !important;
 
     [data-theme="dark"] & {
       background: $bg-main !important;
@@ -53,18 +54,29 @@
 
   &__content {
     padding: 16px 20px 20px !important;
+    overflow-x: hidden !important;
     overflow-y: auto !important;
     max-height: 70vh;
 
-    &::-webkit-scrollbar {
-      width: 4px;
+    &:not(:hover) {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
-    &::-webkit-scrollbar-thumb {
-      background: $primary-main;
-      border-radius: 4px;
-    }
-    &::-webkit-scrollbar-track {
-      background: transparent;
+
+    &:hover {
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
     }
   }
 
@@ -457,7 +469,6 @@
     }
   }
 
-  // ─── Skeleton ───────────────────────────────────────────────────────────────
   &__skeleton-wrap {
     display: flex;
     flex-direction: column;
@@ -482,7 +493,6 @@
     }
   }
 
-  // ─── Checklist Autocomplete — mirrors um__ac from UsersModal ────────────────
   &__ac {
     position: relative;
     border: 1.5px solid $border-color;
@@ -675,7 +685,6 @@
     margin: 0;
   }
 
-  // ─── Footer ─────────────────────────────────────────────────────────────────
   &__footer {
     display: flex;
     align-items: center;

@@ -36,7 +36,7 @@ const Sections = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedId, setSelectedId] = useState(null); // ← changed from selectedRow
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
@@ -90,16 +90,16 @@ const Sections = () => {
   };
 
   const handleAdd = () => {
-    setSelectedRow(null);
+    setSelectedId(null); // ← changed
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    setSelectedRow(row);
+    setSelectedId(row.id); // ← changed
     setModalOpen(true);
   };
   const handleClose = () => {
     setModalOpen(false);
-    setSelectedRow(null);
+    setSelectedId(null); // ← changed
   };
   const handleArchiveClick = (row) => {
     setToArchive(row);
@@ -182,7 +182,7 @@ const Sections = () => {
       <SectionsModal
         open={modalOpen}
         onClose={handleClose}
-        selectedRow={selectedRow}
+        selectedId={selectedId} // ← changed from selectedRow
       />
 
       <ConfirmDialog

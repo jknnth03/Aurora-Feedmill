@@ -16,6 +16,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
+  useGetChecklistByIdQuery,
   useCreateChecklistMutation,
   useUpdateChecklistMutation,
 } from "../../../features/api/masterlist/checklistApi";
@@ -29,6 +30,17 @@ const schema = yup.object({
     .required("Section is required")
     .typeError("Section is required"),
 });
+
+const SkeletonLoader = () => (
+  <div className="cm__skeleton-wrap">
+    {[50, 75, 60, 80].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="cm__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "28%" }} />
+    </div>
+  </div>
+);
 
 const SectionAutocomplete = ({ value, onChange, error, displayValue }) => {
   const [search, setSearch] = useState("");
@@ -82,6 +94,7 @@ const SectionAutocomplete = ({ value, onChange, error, displayValue }) => {
               onChange={(e) => setSearch(e.target.value)}
               className="cm__ac-input"
               onClick={(e) => e.stopPropagation()}
+              autoComplete="off"
             />
           </div>
         ) : (
@@ -121,14 +134,20 @@ const SectionAutocomplete = ({ value, onChange, error, displayValue }) => {
   );
 };
 
-const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
+const ChecklistModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const [createChecklist, { isLoading: isCreating }] =
     useCreateChecklistMutation();
   const [updateChecklist, { isLoading: isUpdating }] =
     useUpdateChecklistMutation();
   const isLoading = isCreating || isUpdating;
+
+  const { data: checklistData, isFetching: checklistLoading } =
+    useGetChecklistByIdQuery(selectedId, {
+      skip: !selectedId || !open,
+    });
 
   const {
     register,
@@ -141,33 +160,42 @@ const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
     defaultValues: { name: "", section_id: "" },
   });
 
+  // Set mode when modal opens
   useEffect(() => {
     if (open) {
-      setMode(selectedRow ? "view" : "add");
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
+        setSelectedRow(null);
+        reset({ name: "", section_id: "" });
+      }
+    }
+  }, [open, selectedId, reset]);
+
+  // Populate form when data is fetched
+  useEffect(() => {
+    if (checklistData) {
+      const data = checklistData?.data ?? null;
+      setSelectedRow(data);
       reset({
-        name: selectedRow ? (selectedRow.name ?? "") : "",
-        section_id: selectedRow ? (selectedRow.section?.id ?? "") : "",
+        name: data?.name ?? "",
+        section_id: data?.section?.id ?? "",
       });
     }
-  }, [open, selectedRow, reset]);
+  }, [checklistData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updateChecklist({ id: selectedRow.id, ...form }).unwrap();
+        await updateChecklist({ id: selectedId, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Checklist updated successfully.",
-          {
-            variant: "success",
-          },
+          { variant: "success" },
         );
       } else {
         await createChecklist(form).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Checklist created successfully.",
-          {
-            variant: "success",
-          },
+          { variant: "success" },
         );
       }
       onClose();
@@ -216,7 +244,9 @@ const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="cm__content">
-        {isView ? (
+        {checklistLoading ? (
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             <div className="cm__group">
               <p className="cm__group-label">Checklist Details</p>
@@ -228,6 +258,7 @@ const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
                     value={selectedRow?.name ?? ""}
                     disabled
                     readOnly
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -239,6 +270,7 @@ const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
                     value={selectedRow?.section?.name ?? "—"}
                     disabled
                     readOnly
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -285,7 +317,7 @@ const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
                     value={field.value}
                     onChange={field.onChange}
                     error={!!errors.section_id}
-                    displayValue={selectedRow?.section?.name}
+                    displayValue={selectedRow?.section?.name ?? ""}
                   />
                 )}
               />
@@ -298,7 +330,7 @@ const ChecklistModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="cm__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="cm__back-btn"

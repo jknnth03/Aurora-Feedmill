@@ -20,19 +20,41 @@ import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import PestSheetModal from "./PestSheetModal";
 import "./PestSheet.scss";
 
+const renderStackedList = (items) => {
+  if (!items || items.length === 0) return "—";
+  const visible = items.slice(0, 5);
+  const remaining = items.slice(5);
+  return (
+    <div className="pest-sheet__stack">
+      {visible.map((item, idx) => (
+        <span key={idx} className="pest-sheet__stack-item">
+          {item.name}
+        </span>
+      ))}
+      {remaining.length > 0 && (
+        <span
+          className="pest-sheet__stack-more"
+          title={remaining.map((i) => i.name).join(", ")}>
+          +{remaining.length} more
+        </span>
+      )}
+    </div>
+  );
+};
+
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
   {
     key: "inspection_areas",
     label: "Inspection Areas",
     sortable: false,
-    render: (value) => value?.map((a) => a.name).join(", ") || "—",
+    render: (value) => renderStackedList(value),
   },
   {
     key: "pests",
     label: "Pests",
     sortable: false,
-    render: (value) => value?.map((p) => p.name).join(", ") || "—",
+    render: (value) => renderStackedList(value),
   },
 ];
 
@@ -47,15 +69,16 @@ const PestSheet = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  // ✅ store only the ID, not the whole row
   const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
 
+  const currentStatus = showArchived ? "inactive" : "active";
+
   const { data, isFetching, error } = useGetPestsSheetsQuery({
-    status: showArchived ? 0 : 1,
+    status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
@@ -105,7 +128,6 @@ const PestSheet = () => {
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    // ✅ pass only the ID — modal will fetch full data
     setSelectedId(row.id);
     setModalOpen(true);
   };

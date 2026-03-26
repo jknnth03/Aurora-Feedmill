@@ -6,6 +6,7 @@
     font-family: "Poppins", sans-serif;
     background: $bg-main !important;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    overflow: hidden !important;
 
     [data-theme="dark"] & {
       background: $bg-main !important;
@@ -53,7 +54,30 @@
 
   &__content {
     padding: 16px 20px 20px !important;
-    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-height: 70vh;
+
+    &:not(:hover) {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    &:hover {
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    }
   }
 
   &__group {
@@ -117,14 +141,12 @@
     }
   }
 
-  // ─── Skeleton layout ────────────────────────────────────────────────────────
   &__skeleton-wrap {
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 4px 0;
 
-    // reuse the same ut__skeleton bars
     .ut__skeleton {
       height: 14px;
       border-radius: 6px;
@@ -143,7 +165,6 @@
     }
   }
 
-  // ─── Multi-select container ─────────────────────────────────────────────────
   &__multiselect {
     position: relative;
     border: 1.5px solid $border-color;
@@ -189,6 +210,49 @@
     }
   }
 
+  &__multiselect-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px 4px;
+    border-bottom: 1px dashed $border-color;
+    margin-bottom: 4px;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  &__select-all-btn {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: $primary-main;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 0.7;
+    }
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__selected-count {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.65rem;
+    color: $text-muted;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.35);
+    }
+  }
+
   &__multiselect-body {
     display: flex;
     flex-direction: column;
@@ -218,7 +282,6 @@
     margin: 0;
   }
 
-  // ─── Checkable option rows ──────────────────────────────────────────────────
   &__option {
     display: flex;
     align-items: center;
@@ -302,7 +365,6 @@
     }
   }
 
-  // ─── View-mode chips ────────────────────────────────────────────────────────
   &__chip-wrap {
     display: flex;
     flex-wrap: wrap;
@@ -328,7 +390,6 @@
     }
   }
 
-  // ─── Error message ──────────────────────────────────────────────────────────
   &__error {
     display: flex;
     align-items: center;
@@ -345,7 +406,6 @@
     }
   }
 
-  // ─── Footer ─────────────────────────────────────────────────────────────────
   &__footer {
     display: flex;
     align-items: center;
@@ -353,6 +413,11 @@
     gap: 10px;
     margin-top: 20px;
     padding-top: 16px;
+    border-top: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
   }
 
   &__back-btn {

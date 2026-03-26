@@ -48,7 +48,6 @@ const schema = yup.object({
 
 const TYPE_OPTIONS = ["radio button", "checkbox", "text input"];
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 const SkeletonLoader = () => (
   <div className="cobsm__skeleton-wrap">
     {[50, 75, 60, 80, 55, 70, 65].map((w, i) => (
@@ -60,7 +59,6 @@ const SkeletonLoader = () => (
   </div>
 );
 
-// ─── Checklist Autocomplete — same UI as RoleAutocomplete in UsersModal ────────
 const ChecklistAutocomplete = ({ value, onChange, error, displayValue }) => {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -115,6 +113,7 @@ const ChecklistAutocomplete = ({ value, onChange, error, displayValue }) => {
               onChange={(e) => setSearch(e.target.value)}
               className="cobsm__ac-input"
               onClick={(e) => e.stopPropagation()}
+              autoComplete="off"
             />
           </div>
         ) : (
@@ -156,7 +155,6 @@ const ChecklistAutocomplete = ({ value, onChange, error, displayValue }) => {
   );
 };
 
-// ─── Form Section ─────────────────────────────────────────────────────────────
 const FormSection = ({
   formIdx,
   control,
@@ -263,7 +261,6 @@ const FormSection = ({
   );
 };
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
 const COBSModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
   const [cobsLoading, setCobsLoading] = useState(false);
@@ -309,7 +306,7 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
         });
       } else {
         setCobsLoading(true);
-        fetchCobsById(selectedId)
+        fetchCobsById(selectedId, true)
           .unwrap()
           .then((res) => {
             const data = res?.data ?? null;
@@ -406,9 +403,10 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
                 <label className="cobsm__label">Checklist</label>
                 <input
                   type="text"
-                  value={`Checklist #${selectedRow?.checklist_id ?? "—"}`}
+                  value={selectedRow?.checklist ?? "—"}
                   disabled
                   readOnly
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -434,6 +432,7 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
                       value={form.name ?? "—"}
                       disabled
                       readOnly
+                      autoComplete="off"
                     />
                   </div>
                   <p className="cobsm__sub-label">Items</p>
@@ -449,6 +448,7 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
                             value={item.name}
                             disabled
                             readOnly
+                            autoComplete="off"
                           />
                         </div>
                         <div className="cobsm__input-wrap cobsm__input-wrap--disabled cobsm__input-wrap--type">
@@ -458,6 +458,7 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
                             value={item.type}
                             disabled
                             readOnly
+                            autoComplete="off"
                           />
                         </div>
                       </div>
@@ -486,11 +487,7 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
                     value={field.value}
                     onChange={field.onChange}
                     error={!!errors.checklist_id}
-                    displayValue={
-                      selectedRow?.checklist_id
-                        ? `Checklist #${selectedRow.checklist_id}`
-                        : ""
-                    }
+                    displayValue={selectedRow?.checklist ?? ""}
                   />
                 )}
               />

@@ -13,6 +13,7 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
+  useGetSectionByIdQuery, // ← new
   useCreateSectionMutation,
   useUpdateSectionMutation,
 } from "../../../features/api/masterlist/sectionsApi";
@@ -22,12 +23,32 @@ const schema = yup.object({
   name: yup.string().required("Section name is required"),
 });
 
-const SectionsModal = ({ open, onClose, selectedRow = null }) => {
+// ← new: matches SkeletonLoader in ChecklistModal
+const SkeletonLoader = () => (
+  <div className="sm__skeleton-wrap">
+    {[50, 75, 60, 80].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="sm__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "28%" }} />
+    </div>
+  </div>
+);
+
+const SectionsModal = ({ open, onClose, selectedId = null }) => {
+  // ← prop changed
   const [mode, setMode] = useState("add");
+  const [selectedRow, setSelectedRow] = useState(null); // ← new local state
 
   const [createSection, { isLoading: isCreating }] = useCreateSectionMutation();
   const [updateSection, { isLoading: isUpdating }] = useUpdateSectionMutation();
   const isLoading = isCreating || isUpdating;
+
+  // ← new: declarative fetch, skips when no id or modal closed
+  const { data: sectionData, isFetching: sectionLoading } =
+    useGetSectionByIdQuery(selectedId, {
+      skip: !selectedId || !open,
+    });
 
   const {
     register,
@@ -39,17 +60,30 @@ const SectionsModal = ({ open, onClose, selectedRow = null }) => {
     defaultValues: { name: "" },
   });
 
+  // Set mode + clear state when modal opens
   useEffect(() => {
     if (open) {
-      setMode(selectedRow ? "view" : "add");
-      reset({ name: selectedRow ? (selectedRow.name ?? "") : "" });
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
+        setSelectedRow(null);
+        reset({ name: "" });
+      }
     }
-  }, [open, selectedRow, reset]);
+  }, [open, selectedId, reset]);
+
+  // Populate form when API data arrives
+  useEffect(() => {
+    if (sectionData) {
+      const data = sectionData?.data ?? null;
+      setSelectedRow(data);
+      reset({ name: data?.name ?? "" });
+    }
+  }, [sectionData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updateSection({ id: selectedRow.id, ...form }).unwrap();
+        await updateSection({ id: selectedId, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar("Section updated successfully.", {
           variant: "success",
         });
@@ -105,7 +139,9 @@ const SectionsModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="sm__content">
-        {isView ? (
+        {sectionLoading ? ( // ← new: skeleton while fetching
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             <div className="sm__group">
               <p className="sm__group-label">Section Details</p>
@@ -154,7 +190,7 @@ const SectionsModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="sm__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="sm__back-btn"
