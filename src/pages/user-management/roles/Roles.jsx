@@ -34,11 +34,6 @@ const COLUMNS = [
   },
 ];
 
-const STATUS_MAP = {
-  active: 1,
-  inactive: 0,
-};
-
 const Roles = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -50,7 +45,7 @@ const Roles = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
@@ -103,18 +98,17 @@ const Roles = () => {
   };
 
   const handleAdd = () => {
-    setSelectedRow(null);
+    setSelectedId(null);
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    setSelectedRow(row);
+    setSelectedId(row.id);
     setModalOpen(true);
   };
   const handleClose = () => {
     setModalOpen(false);
-    setSelectedRow(null);
+    setSelectedId(null);
   };
-
   const handleArchiveClick = (row) => {
     setToArchive(row);
     setConfirmOpen(true);
@@ -196,7 +190,7 @@ const Roles = () => {
       <RolesModal
         open={modalOpen}
         onClose={handleClose}
-        selectedRow={selectedRow}
+        selectedId={selectedId}
       />
 
       <ConfirmDialog

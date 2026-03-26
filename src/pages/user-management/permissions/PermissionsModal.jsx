@@ -13,6 +13,7 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
+  useGetPermissionByIdQuery,
   useCreatePermissionMutation,
   useUpdatePermissionMutation,
 } from "../../../features/api/usermanagement/permissionsApi";
@@ -22,14 +23,31 @@ const schema = yup.object({
   name: yup.string().required("Permission name is required"),
 });
 
-const PermissionsModal = ({ open, onClose, selectedRow = null }) => {
+const SkeletonLoader = () => (
+  <div className="pm__skeleton-wrap">
+    {[50, 75, 60, 80].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="pm__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "28%" }} />
+    </div>
+  </div>
+);
+
+const PermissionsModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const [createPermission, { isLoading: isCreating }] =
     useCreatePermissionMutation();
   const [updatePermission, { isLoading: isUpdating }] =
     useUpdatePermissionMutation();
   const isLoading = isCreating || isUpdating;
+
+  const { data: permissionData, isFetching: permissionLoading } =
+    useGetPermissionByIdQuery(selectedId, {
+      skip: !selectedId || !open,
+    });
 
   const {
     register,
@@ -41,17 +59,30 @@ const PermissionsModal = ({ open, onClose, selectedRow = null }) => {
     defaultValues: { name: "" },
   });
 
+  // Set mode + clear on open
   useEffect(() => {
     if (open) {
-      setMode(selectedRow ? "view" : "add");
-      reset({ name: selectedRow ? (selectedRow.name ?? "") : "" });
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
+        setSelectedRow(null);
+        reset({ name: "" });
+      }
     }
-  }, [open, selectedRow, reset]);
+  }, [open, selectedId, reset]);
+
+  // Populate form when API data arrives
+  useEffect(() => {
+    if (permissionData) {
+      const data = permissionData?.data ?? null;
+      setSelectedRow(data);
+      reset({ name: data?.name ?? "" });
+    }
+  }, [permissionData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updatePermission({ id: selectedRow.id, ...form }).unwrap();
+        await updatePermission({ id: selectedId, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Permission updated successfully.",
           { variant: "success" },
@@ -109,7 +140,9 @@ const PermissionsModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="pm__content">
-        {isView ? (
+        {permissionLoading ? (
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             <div className="pm__group">
               <p className="pm__group-label">Permission Details</p>
@@ -158,7 +191,7 @@ const PermissionsModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="pm__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="pm__back-btn"

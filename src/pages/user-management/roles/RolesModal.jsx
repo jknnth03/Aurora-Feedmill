@@ -17,6 +17,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
+  useGetRoleByIdQuery,
   useCreateRoleMutation,
   useUpdateRoleMutation,
 } from "../../../features/api/usermanagement/rolesApi";
@@ -30,6 +31,17 @@ const schema = yup.object({
     .of(yup.number())
     .min(1, "At least one permission is required"),
 });
+
+const SkeletonLoader = () => (
+  <div className="rm__skeleton-wrap">
+    {[50, 75, 60, 80].map((w, i) => (
+      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    ))}
+    <div className="rm__skeleton-footer">
+      <span className="ut__skeleton" style={{ width: "28%" }} />
+    </div>
+  </div>
+);
 
 const PermissionsAutocomplete = ({
   value = [],
@@ -169,12 +181,18 @@ const PermissionsAutocomplete = ({
   );
 };
 
-const RolesModal = ({ open, onClose, selectedRow = null }) => {
+const RolesModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const [createRole, { isLoading: isCreating }] = useCreateRoleMutation();
   const [updateRole, { isLoading: isUpdating }] = useUpdateRoleMutation();
   const isLoading = isCreating || isUpdating;
+
+  const { data: roleData, isFetching: roleLoading } = useGetRoleByIdQuery(
+    selectedId,
+    { skip: !selectedId || !open },
+  );
 
   const {
     register,
@@ -187,24 +205,33 @@ const RolesModal = ({ open, onClose, selectedRow = null }) => {
     defaultValues: { name: "", permission_id: [] },
   });
 
+  // Set mode + clear on open
   useEffect(() => {
     if (open) {
-      setMode(selectedRow ? "view" : "add");
-      if (selectedRow) {
-        reset({
-          name: selectedRow.name ?? "",
-          permission_id: selectedRow.permissions?.map((p) => p.id) ?? [],
-        });
-      } else {
+      setMode(selectedId ? "view" : "add");
+      if (!selectedId) {
+        setSelectedRow(null);
         reset({ name: "", permission_id: [] });
       }
     }
-  }, [open, selectedRow, reset]);
+  }, [open, selectedId, reset]);
+
+  // Populate form when API data arrives
+  useEffect(() => {
+    if (roleData) {
+      const data = roleData?.data ?? null;
+      setSelectedRow(data);
+      reset({
+        name: data?.name ?? "",
+        permission_id: data?.permissions?.map((p) => p.id) ?? [],
+      });
+    }
+  }, [roleData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updateRole({ id: selectedRow.id, ...form }).unwrap();
+        await updateRole({ id: selectedId, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar("Role updated successfully.", {
           variant: "success",
         });
@@ -260,7 +287,9 @@ const RolesModal = ({ open, onClose, selectedRow = null }) => {
       </div>
 
       <DialogContent className="rm__content">
-        {isView ? (
+        {roleLoading ? (
+          <SkeletonLoader />
+        ) : isView ? (
           <>
             <div className="rm__group">
               <p className="rm__group-label">Role Details</p>
@@ -354,7 +383,7 @@ const RolesModal = ({ open, onClose, selectedRow = null }) => {
             </div>
 
             <div className="rm__footer">
-              {selectedRow && (
+              {selectedId && (
                 <button
                   type="button"
                   className="rm__back-btn"
