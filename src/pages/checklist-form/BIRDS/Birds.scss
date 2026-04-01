@@ -1,0 +1,81 @@
+// @use "../../../styles/colors" as *;
+
+// .birds {
+//   &__more-btn {
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     width: 30px;
+//     height: 30px;
+//     border: none;
+//     border-radius: 6px;
+//     background: transparent;
+//     color: $text-muted;
+//     cursor: pointer;
+//     transition:
+//       color 0.15s,
+//       background 0.15s;
+
+//     &:hover {
+//       color: $primary-main;
+//       background: rgba($primary-main, 0.06);
+//     }
+
+//     [data-theme="dark"] & {
+//       color: rgba(255, 255, 255, 0.5);
+
+//       &:hover {
+//         color: $secondary-main;
+//         background: rgba($secondary-main, 0.08);
+//       }
+//     }
+//   }
+
+//   &__stack {
+//     display: flex;
+//     flex-direction: column;
+//     gap: 4px;
+//     padding: 4px 0;
+//   }
+
+//   &__stack-item {
+//     display: inline-flex;
+//     align-items: center;
+//     font-size: 0.78rem;
+//     font-family: "Poppins", sans-serif;
+//     color: $text-primary;
+//     padding: 2px 0;
+
+//     &::before {
+//       content: "";
+//       display: inline-block;
+//       width: 5px;
+//       height: 5px;
+//       border-radius: 50%;
+//       background: $primary-main;
+//       margin-right: 7px;
+//       flex-shrink: 0;
+//       opacity: 0.6;
+//     }
+
+//     [data-theme="dark"] & {
+//       color: rgba(255, 255, 255, 0.8);
+//     }
+//   }
+
+//   &__stack-more {
+//     display: inline-flex;
+//     align-items: center;
+//     font-size: 0.7rem;
+//     font-family: "Poppins", sans-serif;
+//     font-weight: 600;
+//     color: $primary-main;
+//     opacity: 0.7;
+//     padding: 2px 0;
+//     cursor: default;
+
+//     [data-theme="dark"] & {
+//       color: $secondary-main;
+//     }
+//   }
+// }

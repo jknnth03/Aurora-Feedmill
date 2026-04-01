@@ -25,7 +25,11 @@ const UniversalButton = ({
         height: "32px",
         minHeight: "unset",
         backgroundColor: isDark ? "#e0e0e0" : "#fff",
-        color: color || (isDark ? "#c85c00" : "#f37925"),
+        color:
+          color ||
+          (isDark
+            ? "var(--palette-primary-dark, #c85c00)"
+            : "var(--palette-primary, #f37925)"),
         fontFamily: "Poppins, sans-serif",
         fontWeight: 600,
         fontSize: "0.8rem",

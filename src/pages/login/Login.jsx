@@ -10,7 +10,6 @@ import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import AuroraIcon2 from "../../assets/aurora2.png";
 import AuroraIcon from "../../assets/aurora.svg";
 import LoginIllustration from "../../assets/login-illustration.jpg";
 import "./Login.scss";
@@ -72,7 +71,6 @@ const Login = () => {
     <div className="login">
       <div className="login__left">
         <div className="login__left-brand">
-          <img src={AuroraIcon2} alt="Aurora2" />
           <h1>
             Aurora <span className="sub">Feedmill</span>
           </h1>

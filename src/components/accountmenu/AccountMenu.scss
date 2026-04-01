@@ -96,50 +96,6 @@
   border: 1px solid var(--border-color) !important;
 }
 
-.account-menu__header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px 10px;
-}
-
-.account-menu__avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: $primary-main;
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.account-menu__user {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.account-menu__name {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: $primary-main;
-  font-family: "Poppins", sans-serif;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account-menu__role {
-  font-size: 0.7rem;
-  color: $nav-icon;
-  font-family: "Poppins", sans-serif;
-}
-
 .account-menu__item {
   font-family: "Poppins", sans-serif !important;
   font-size: 0.845rem !important;

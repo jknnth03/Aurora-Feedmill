@@ -22,7 +22,7 @@
       height: 4px;
     }
     &::-webkit-scrollbar-thumb {
-      background: $primary-main;
+      background: var(--palette-primary, #f37925);
       border-radius: 4px;
     }
     &::-webkit-scrollbar-track {
@@ -37,7 +37,7 @@
   }
 
   &__thead {
-    border-bottom: 2px solid $border-color;
+    border-bottom: 1.5px solid var(--border-color);
 
     [data-theme="dark"] & {
       border-bottom-color: rgba(255, 255, 255, 0.1);
@@ -45,38 +45,29 @@
   }
 
   &__th {
-    padding: 10px 16px;
+    padding: 14px 16px;
     font-size: 0.78rem;
     font-weight: 600;
-    color: $text-muted;
+    // ← now driven by the Text Color Picker --text-table-header var
+    color: var(--text-table-header, var(--palette-primary, #f37925));
     text-align: left;
     white-space: nowrap;
     user-select: none;
     letter-spacing: 0.3px;
-
-    [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.5);
-    }
 
     &--sortable {
       cursor: pointer;
       transition: color 0.15s;
 
       &:hover {
-        color: $primary-main;
-
-        [data-theme="dark"] & {
-          color: $secondary-main;
-        }
+        // slightly darken on hover while still respecting customisation
+        filter: brightness(0.85);
       }
     }
 
     &--sorted {
-      color: $primary-main;
-
-      [data-theme="dark"] & {
-        color: $secondary-main;
-      }
+      // keep the custom color, just ensure it stays vivid
+      opacity: 1;
     }
 
     &--actions {
@@ -102,33 +93,45 @@
 
     &--active {
       opacity: 1;
-      color: $primary-main;
-
-      [data-theme="dark"] & {
-        color: $secondary-main;
-      }
+      // inherits parent color — no need to hard-code
+      color: inherit;
     }
   }
 
   &__tbody {
     .ut__tr {
-      border-bottom: 1px solid $border-color;
       transition: background 0.15s;
 
-      [data-theme="dark"] & {
-        border-bottom-color: rgba(255, 255, 255, 0.07);
-      }
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &:not(.ut__tr--skeleton):hover {
-        background: rgba($primary-main, 0.04);
+      &:not(.ut__tr--skeleton):nth-child(odd) {
+        background: var(--palette-row-bg, #fff5ec);
 
         [data-theme="dark"] & {
           background: rgba(255, 255, 255, 0.04);
         }
+      }
+
+      &:not(.ut__tr--skeleton):nth-child(even) {
+        background: transparent;
+
+        [data-theme="dark"] & {
+          background: transparent;
+        }
+      }
+
+      &:not(.ut__tr--skeleton):hover {
+        background: color-mix(
+          in srgb,
+          var(--palette-primary, #f37925) 12%,
+          transparent
+        );
+
+        [data-theme="dark"] & {
+          background: rgba(255, 255, 255, 0.07);
+        }
+      }
+
+      &--clickable {
+        cursor: pointer;
       }
     }
   }
@@ -137,13 +140,10 @@
     padding: 13px 16px;
     font-size: 0.82rem;
     font-weight: 400;
-    color: $text-primary;
+    // ← now driven by the Text Color Picker --text-table-body var
+    color: var(--text-table-body, var(--text-primary));
     text-align: left;
     vertical-align: middle;
-
-    [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.85);
-    }
 
     &--actions {
       white-space: nowrap;
@@ -154,6 +154,22 @@
     display: flex;
     align-items: center;
     gap: 6px;
+
+    // Action icon buttons / icon elements inside the actions cell
+    // target MUI SvgIcon, plain svg, and icon buttons
+    .MuiIconButton-root,
+    .MuiSvgIcon-root,
+    svg {
+      color: var(--text-table-action, #757575) !important;
+      transition: color 0.15s;
+    }
+
+    .MuiIconButton-root:hover {
+      .MuiSvgIcon-root,
+      svg {
+        color: var(--palette-primary, #f37925) !important;
+      }
+    }
   }
 
   &__skeleton {
@@ -162,9 +178,9 @@
     border-radius: 6px;
     background: linear-gradient(
       90deg,
-      rgba($primary-main, 0.08) 25%,
-      rgba($primary-main, 0.16) 50%,
-      rgba($primary-main, 0.08) 75%
+      color-mix(in srgb, var(--palette-primary, #f37925) 8%, transparent) 25%,
+      color-mix(in srgb, var(--palette-primary, #f37925) 16%, transparent) 50%,
+      color-mix(in srgb, var(--palette-primary, #f37925) 8%, transparent) 75%
     );
     background-size: 400px 100%;
     animation: skeleton-shimmer 1.4s ease-in-out infinite;

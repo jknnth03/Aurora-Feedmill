@@ -123,6 +123,7 @@ const RoleAutocomplete = ({ value, onChange, error, displayValue }) => {
               type="text"
               placeholder="Search role..."
               value={search}
+              l
               onChange={(e) => setSearch(e.target.value)}
               className="um__ac-input"
               onClick={(e) => e.stopPropagation()}

@@ -1,6 +1,6 @@
-$primary-main: #f37925;
-$primary-light: #ff9649;
-$primary-dark: #c85c00;
+$primary-main: var(--palette-primary, #f37925);
+$primary-light: var(--palette-primary-light, #ff9649);
+$primary-dark: var(--palette-primary-dark, #c85c00);
 $primary-contrast: #ffffff;
 
 $secondary-main: #ffc936;
@@ -45,10 +45,15 @@ $neutral-900: #212121;
 
 :root,
 [data-theme="light"] {
+  --palette-primary: #f37925;
+  --palette-primary-light: #fff5ec;
+  --palette-primary-dark: #c85c00;
+  --palette-row-bg: #fff5ec;
+
   --bg-main: #fffaf0;
   --bg-paper: #ffffff;
   --bg-subtle: #f5efe0;
-  --bg-left: #f37925;
+  --bg-left: var(--palette-primary, #f37925);
 
   --text-primary: #262210;
   --text-secondary: #433b20;
@@ -58,9 +63,37 @@ $neutral-900: #212121;
 
   --border-color: #e9e2d1;
   --shadow: rgba(0, 0, 0, 0.08);
+
+  /* ── Text Color Picker defaults (light) ── */
+  --text-sidebar: #616161;
+  --text-sidebar-active: #ffffff;
+  --text-sidebar-sub: #757575;
+  --text-sidebar-icon: #757575; /* ← was missing */
+  --text-appbar: #262210;
+  --text-appbar-icon: #616161;
+  --text-table-header: #f37925; /* ← match palette-primary so table header looks right by default */
+  --text-table-body: #433b20;
+  --text-table-action: #757575;
+  --text-card-title: #262210;
+  --text-card-label: #888888;
+  --text-btn-primary: #ffffff;
+  --text-btn-secondary: #433b20;
+  --text-input: #262210;
+  --text-placeholder: #9ca3af;
+  --text-input-label: #433b20;
+  --text-dialog-title: #262210;
+  --text-dialog-body: #433b20;
+  --text-badge: #ffffff;
+  --text-link: #2563eb;
+  --text-muted-custom: #888888;
 }
 
 [data-theme="dark"] {
+  --palette-primary: #f37925;
+  --palette-primary-light: #fff5ec;
+  --palette-primary-dark: #c85c00;
+  --palette-row-bg: #fff5ec;
+
   --bg-main: #1c1c28;
   --bg-paper: #26263a;
   --bg-subtle: #2e2e42;
@@ -74,6 +107,29 @@ $neutral-900: #212121;
 
   --border-color: rgba(255, 255, 255, 0.08);
   --shadow: rgba(0, 0, 0, 0.35);
+
+  /* ── Text Color Picker defaults (dark) ── */
+  --text-sidebar: #d4d0cb;
+  --text-sidebar-active: #ffffff;
+  --text-sidebar-sub: #a8a49d;
+  --text-sidebar-icon: #a8a49d; /* ← was missing */
+  --text-appbar: #d4d0cb;
+  --text-appbar-icon: #a8a49d;
+  --text-table-header: #f37925; /* ← keep primary orange in dark too */
+  --text-table-body: #d4d0cb; /* ← was #a8a49d — too dim for body text in dark */
+  --text-table-action: #a8a49d;
+  --text-card-title: #d4d0cb;
+  --text-card-label: #a0a0b8;
+  --text-btn-primary: #ffffff;
+  --text-btn-secondary: #d4d0cb;
+  --text-input: #d4d0cb;
+  --text-placeholder: #a0a0b8;
+  --text-input-label: #a8a49d;
+  --text-dialog-title: #d4d0cb;
+  --text-dialog-body: #a8a49d;
+  --text-badge: #ffffff;
+  --text-link: #60a5fa;
+  --text-muted-custom: #a0a0b8;
 }
 
 $bg-main: var(--bg-main);

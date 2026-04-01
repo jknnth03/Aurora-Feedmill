@@ -14,7 +14,7 @@
     transition: border-color 0.2s;
 
     &:focus-within {
-      border-color: $primary-main;
+      border-color: var(--palette-primary, #f37925);
     }
 
     [data-theme="dark"] & {
@@ -24,7 +24,7 @@
 
   &__field-icon {
     font-size: 1rem !important;
-    color: $primary-main;
+    color: var(--palette-primary, #f37925);
     flex-shrink: 0;
   }
 
@@ -49,7 +49,7 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    color: $primary-main;
+    color: var(--palette-primary, #f37925);
     flex-shrink: 0;
 
     svg {
@@ -74,15 +74,23 @@
       background 0.2s;
 
     &:hover {
-      border-color: $primary-main;
-      color: $primary-main;
-      background: rgba($primary-main, 0.04);
+      border-color: var(--palette-primary, #f37925);
+      color: var(--palette-primary, #f37925);
+      background: color-mix(
+        in srgb,
+        var(--palette-primary, #f37925) 4%,
+        transparent
+      );
     }
 
     &--active {
-      border-color: $primary-main;
-      color: $primary-main;
-      background: rgba($primary-main, 0.08);
+      border-color: var(--palette-primary, #f37925);
+      color: var(--palette-primary, #f37925);
+      background: color-mix(
+        in srgb,
+        var(--palette-primary, #f37925) 8%,
+        transparent
+      );
     }
 
     [data-theme="dark"] & {
@@ -110,10 +118,10 @@
     gap: 7px;
     height: 32px;
     padding: 0 16px;
-    border: 1.5px solid $primary-main;
+    border: 1.5px solid var(--palette-primary, #f37925);
     border-radius: 8px;
     background: $bg-paper;
-    color: $primary-main;
+    color: var(--palette-primary, #f37925);
     font-family: "Poppins", sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
@@ -131,8 +139,8 @@
     }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.85);
-      border-color: $primary-main;
+      background: color-mix(in srgb, var(--palette-primary, #f37925) 6%, white);
+      border-color: var(--palette-primary, #f37925);
     }
 
     &--active {
@@ -153,7 +161,7 @@
     [data-theme="dark"] & {
       background: #e0e0e0;
       border-color: #e0e0e0;
-      color: #c85c00;
+      color: var(--palette-primary-dark, #c85c00);
 
       &:hover {
         background: #bdbdbd;

@@ -11,6 +11,8 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import SanitizerIcon from "@mui/icons-material/Sanitizer";
 import MapIcon from "@mui/icons-material/Map";
 import BugReportIcon from "@mui/icons-material/BugReport";
+import WarningIcon from "@mui/icons-material/Warning";
+import FlutterDashIcon from "@mui/icons-material/FlutterDash";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -111,6 +113,13 @@ export const MODULES = {
         path: "pests",
         icon: <BugReportIcon sx={iconStyles.child} />,
       },
+      INFESTATION_LEVELS: {
+        name: "Infestation Levels",
+        permissionId: "MASTERLIST.INFESTATION_LEVELS",
+        displayName: "Infestation Levels",
+        path: "infestation-levels",
+        icon: <WarningIcon sx={iconStyles.child} />,
+      },
     },
   },
 
@@ -134,6 +143,13 @@ export const MODULES = {
         displayName: "Pest",
         path: "pest-sheets",
         icon: <BugReportIcon sx={iconStyles.child} />,
+      },
+      BIRDS: {
+        name: "Birds",
+        permissionId: "QUESTIONNAIRES.BIRDS",
+        displayName: "Birds",
+        path: "birds",
+        icon: <FlutterDashIcon sx={iconStyles.child} />,
       },
     },
   },

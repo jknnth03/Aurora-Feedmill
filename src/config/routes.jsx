@@ -10,9 +10,11 @@ import Checklist from "../pages/masterlist/checklists/Checklists.jsx";
 import Sections from "../pages/masterlist/sections/Sections.jsx";
 import InspectionAreas from "../pages/masterlist/inspection-areas/InspectionAreas.jsx";
 import Pests from "../pages/masterlist/pesttypes/PestTypes.jsx";
+import InfestationLevels from "../pages/masterlist/infestation-levels/InfestationLevel.jsx";
 import Login from "../pages/login/Login.jsx";
 import COBS from "../pages/checklist-form/COBS/COBS.jsx";
 import PestSheet from "../pages/checklist-form/PESTS/PestSheet.jsx";
+import Birds from "../pages/checklist-form/BIRDS/Birds.jsx";
 
 export const ROUTES = [
   {
@@ -94,6 +96,15 @@ export const ROUTES = [
           permission: MODULES.MASTERLIST.children.PESTS.permissionId,
         },
       },
+      {
+        id: "MASTERLIST.INFESTATION_LEVELS",
+        path: `${MODULES.MASTERLIST.path}/${MODULES.MASTERLIST.children.INFESTATION_LEVELS.path}`,
+        element: <InfestationLevels />,
+        handle: {
+          permission:
+            MODULES.MASTERLIST.children.INFESTATION_LEVELS.permissionId,
+        },
+      },
 
       // ─── Questionnaires ────────────────────────────────────────────────────
       {
@@ -110,6 +121,14 @@ export const ROUTES = [
         element: <PestSheet />,
         handle: {
           permission: MODULES.CHECKLISTFORM.children.PEST_SHEETS.permissionId,
+        },
+      },
+      {
+        id: "QUESTIONNAIRES.BIRDS",
+        path: `${MODULES.CHECKLISTFORM.path}/${MODULES.CHECKLISTFORM.children.BIRDS.path}`,
+        element: <Birds />,
+        handle: {
+          permission: MODULES.CHECKLISTFORM.children.BIRDS.permissionId,
         },
       },
     ],

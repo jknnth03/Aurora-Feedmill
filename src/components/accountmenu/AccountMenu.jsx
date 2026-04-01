@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import Menu from "@mui/material/Menu";
@@ -9,16 +9,32 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
+import PaletteIcon from "@mui/icons-material/Palette";
+import TextFormatIcon from "@mui/icons-material/TextFormat";
 import "./AccountMenu.scss";
 import { useTheme } from "../../styles/Themecontext";
 import { setLoggingOut } from "../../app/authSlice";
+import PalettePickerDialog, {
+  applyPalette,
+  initPalette,
+} from "./PalettePickerDialog";
+import TextColorPickerDialog from "./TextColorPickerDialog";
 
 const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isDark, toggleTheme } = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [textColorOpen, setTextColorOpen] = useState(false);
+  const [selectedPalette, setSelectedPalette] = useState("default-orange");
   const open = Boolean(anchorEl);
+
+  useEffect(() => {
+    const saved = initPalette();
+    setSelectedPalette(saved);
+    // initTextColors is now handled by ThemeContext on mount and theme toggle
+  }, []);
 
   const handleOpen = (e) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -31,6 +47,21 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
   const handleSettings = () => {
     handleClose();
     navigate("/settings");
+  };
+
+  const handlePalettePicker = () => {
+    handleClose();
+    setPaletteOpen(true);
+  };
+
+  const handleTextColorPicker = () => {
+    handleClose();
+    setTextColorOpen(true);
+  };
+
+  const handlePaletteSelect = (id) => {
+    applyPalette(id);
+    setSelectedPalette(id);
   };
 
   return (
@@ -58,16 +89,6 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
         slotProps={{
           paper: { className: "account-menu__paper", elevation: 4 },
         }}>
-        <div className="account-menu__header">
-          <div className="account-menu__avatar">{initials}</div>
-          <div className="account-menu__user">
-            <span className="account-menu__name">
-              {user?.fullName || "User"}
-            </span>
-            <span className="account-menu__role">{user?.roleName || "—"}</span>
-          </div>
-        </div>
-
         <MenuItem
           className="account-menu__item account-menu__item--toggle"
           disableRipple>
@@ -94,6 +115,22 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
           />
         </MenuItem>
 
+        <MenuItem className="account-menu__item" onClick={handlePalettePicker}>
+          <ListItemIcon>
+            <PaletteIcon fontSize="small" />
+          </ListItemIcon>
+          Palette Picker
+        </MenuItem>
+
+        <MenuItem
+          className="account-menu__item"
+          onClick={handleTextColorPicker}>
+          <ListItemIcon>
+            <TextFormatIcon fontSize="small" />
+          </ListItemIcon>
+          Text Colors
+        </MenuItem>
+
         <MenuItem className="account-menu__item" onClick={handleSettings}>
           <ListItemIcon>
             <SettingsIcon fontSize="small" />
@@ -110,6 +147,18 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
           Logout
         </MenuItem>
       </Menu>
+
+      <PalettePickerDialog
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        selectedPalette={selectedPalette}
+        onSelect={handlePaletteSelect}
+      />
+
+      <TextColorPickerDialog
+        open={textColorOpen}
+        onClose={() => setTextColorOpen(false)}
+      />
     </>
   );
 };

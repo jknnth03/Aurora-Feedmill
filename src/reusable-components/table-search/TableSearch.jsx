@@ -18,10 +18,14 @@ export const TableSearchField = ({
   return (
     <div
       className="ts__field"
-      style={{ backgroundColor: isDark ? "#e0e0e0" : "#fff" }}>
+      style={{ backgroundColor: isDark ? "#e0e0e0" : undefined }}>
       <SearchIcon
         className="ts__field-icon"
-        style={{ color: isDark ? "#c85c00" : "#f37925" }}
+        style={{
+          color: isDark
+            ? "var(--palette-primary-dark, #c85c00)"
+            : "var(--palette-primary, #f37925)",
+        }}
       />
       <input
         ref={inputRef}
@@ -36,7 +40,11 @@ export const TableSearchField = ({
         <button
           className="ts__clear"
           onClick={() => onChange("")}
-          style={{ color: isDark ? "#c85c00" : "#f37925" }}>
+          style={{
+            color: isDark
+              ? "var(--palette-primary-dark, #c85c00)"
+              : "var(--palette-primary, #f37925)",
+          }}>
           <CloseIcon fontSize="small" />
         </button>
       )}
