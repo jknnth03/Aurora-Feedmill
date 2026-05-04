@@ -186,8 +186,8 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
     { skip: !pestsTouched },
   );
 
-  const inspectionAreas = areasData?.data?.data ?? [];
-  const pests = pestsData?.data?.data ?? [];
+  const inspectionAreas = areasData?.data ?? [];
+  const pests = pestsData?.data ?? [];
 
   const {
     control,

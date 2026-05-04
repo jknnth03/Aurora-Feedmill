@@ -12,14 +12,14 @@ const TEXT_COLOR_VARS = [
     id: "sidebar-text",
     label: "Sidebar Text",
     cssVar: "--text-sidebar",
-    defaultLight: "#616161",
+    defaultLight: "#4A3728",
     defaultDark: "#d4d0cb",
   },
   {
     id: "sidebar-icon",
     label: "Sidebar Icons",
     cssVar: "--text-sidebar-icon",
-    defaultLight: "#757575",
+    defaultLight: "#4A3728",
     defaultDark: "#a8a49d",
   },
   {
@@ -33,7 +33,7 @@ const TEXT_COLOR_VARS = [
     id: "sidebar-sub",
     label: "Sidebar Sub Text",
     cssVar: "--text-sidebar-sub",
-    defaultLight: "#757575",
+    defaultLight: "#4A3728",
     defaultDark: "#a8a49d",
   },
   {
@@ -47,8 +47,22 @@ const TEXT_COLOR_VARS = [
     id: "appbar-icon",
     label: "App Bar Icons",
     cssVar: "--text-appbar-icon",
-    defaultLight: "#616161",
+    defaultLight: "#f37925",
+    defaultDark: "#f37925",
+  },
+  {
+    id: "breadcrumb-text",
+    label: "Breadcrumb Text",
+    cssVar: "--text-breadcrumb",
+    defaultLight: "#4A3728",
     defaultDark: "#a8a49d",
+  },
+  {
+    id: "breadcrumb-active",
+    label: "Breadcrumb Active",
+    cssVar: "--text-breadcrumb-active",
+    defaultLight: "#f37925",
+    defaultDark: "#f37925",
   },
   {
     id: "table-header",
@@ -68,7 +82,21 @@ const TEXT_COLOR_VARS = [
     id: "table-action",
     label: "Table Action Icons",
     cssVar: "--text-table-action",
-    defaultLight: "#757575",
+    defaultLight: "#4A3728",
+    defaultDark: "#a8a49d",
+  },
+  {
+    id: "pagination-text",
+    label: "Pagination Text",
+    cssVar: "--text-pagination",
+    defaultLight: "#433b20",
+    defaultDark: "#d4d0cb",
+  },
+  {
+    id: "pagination-muted",
+    label: "Pagination Muted Text",
+    cssVar: "--text-pagination-muted",
+    defaultLight: "#4A3728",
     defaultDark: "#a8a49d",
   },
   {
@@ -82,7 +110,7 @@ const TEXT_COLOR_VARS = [
     id: "card-label",
     label: "Card Label / Sub Text",
     cssVar: "--text-card-label",
-    defaultLight: "#888888",
+    defaultLight: "#4A3728",
     defaultDark: "#a0a0b8",
   },
   {
@@ -110,7 +138,7 @@ const TEXT_COLOR_VARS = [
     id: "input-placeholder",
     label: "Input Placeholder",
     cssVar: "--text-placeholder",
-    defaultLight: "#9ca3af",
+    defaultLight: "#4A3728",
     defaultDark: "#a0a0b8",
   },
   {
@@ -152,7 +180,70 @@ const TEXT_COLOR_VARS = [
     id: "muted-text",
     label: "Muted / Helper Text",
     cssVar: "--text-muted-custom",
-    defaultLight: "#888888",
+    defaultLight: "#4A3728",
+    defaultDark: "#a0a0b8",
+  },
+  {
+    id: "login-tagline",
+    label: "Login Tagline",
+    cssVar: "--text-login-tagline",
+    defaultLight: "#ffffff",
+    defaultDark: "#ffffff",
+  },
+  {
+    id: "login-brand-primary",
+    label: "Login Brand Primary",
+    cssVar: "--text-login-brand-primary",
+    defaultLight: "#f37925",
+    defaultDark: "#f37925",
+  },
+  {
+    id: "login-brand-sub",
+    label: "Login Brand Sub (Feedmill)",
+    cssVar: "--text-login-brand-sub",
+    defaultLight: "#f37925",
+    defaultDark: "#f37925",
+  },
+  {
+    id: "login-title",
+    label: "Login Title (User Login)",
+    cssVar: "--text-login-title",
+    defaultLight: "#262210",
+    defaultDark: "#d4d0cb",
+  },
+  {
+    id: "login-label",
+    label: "Login Field Labels",
+    cssVar: "--text-login-label",
+    defaultLight: "#4A3728",
+    defaultDark: "#a8a49d",
+  },
+  {
+    id: "login-input",
+    label: "Login Input Text",
+    cssVar: "--text-login-input",
+    defaultLight: "#262210",
+    defaultDark: "#d4d0cb",
+  },
+  {
+    id: "login-error",
+    label: "Login Error Text",
+    cssVar: "--text-login-error",
+    defaultLight: "#d32f2f",
+    defaultDark: "#ef9a9a",
+  },
+  {
+    id: "login-btn",
+    label: "Login Button Text",
+    cssVar: "--text-login-btn",
+    defaultLight: "#ffffff",
+    defaultDark: "#ffffff",
+  },
+  {
+    id: "login-footer",
+    label: "Login Footer Text",
+    cssVar: "--text-login-footer",
+    defaultLight: "#4A3728",
     defaultDark: "#a0a0b8",
   },
 ];
@@ -163,12 +254,28 @@ const GROUPS = [
     ids: ["sidebar-text", "sidebar-icon", "sidebar-active", "sidebar-sub"],
   },
   { label: "App Bar", ids: ["appbar-text", "appbar-icon"] },
+  { label: "Breadcrumbs", ids: ["breadcrumb-text", "breadcrumb-active"] },
   { label: "Table", ids: ["table-header", "table-body", "table-action"] },
+  { label: "Pagination", ids: ["pagination-text", "pagination-muted"] },
   { label: "Cards", ids: ["card-title", "card-label"] },
   { label: "Buttons", ids: ["btn-primary-text", "btn-secondary-text"] },
   { label: "Inputs", ids: ["input-text", "input-placeholder", "input-label"] },
   { label: "Dialogs", ids: ["dialog-title", "dialog-body"] },
   { label: "Others", ids: ["badge-text", "link-text", "muted-text"] },
+  {
+    label: "Login Page",
+    ids: [
+      "login-tagline",
+      "login-brand-primary",
+      "login-brand-sub",
+      "login-title",
+      "login-label",
+      "login-input",
+      "login-error",
+      "login-btn",
+      "login-footer",
+    ],
+  },
 ];
 
 function getIsDark() {
@@ -183,22 +290,14 @@ function applyTextColor(cssVar, hex) {
   document.documentElement.style.setProperty(cssVar, hex);
 }
 
-/**
- * Call this after theme switches so stored custom colors are re-applied,
- * and vars without a stored override fall back to the correct theme default.
- */
 function initTextColors() {
   TEXT_COLOR_VARS.forEach((item) => {
     const stored = localStorage.getItem(`tc_${item.cssVar}`);
-    // If the user has never customised this var, use the theme default.
-    // If they have customised it, honour their choice across both themes.
     applyTextColor(item.cssVar, stored || getDefault(item));
   });
 }
 
 export { initTextColors };
-
-// ─── Color math helpers ───────────────────────────────────────────────────────
 
 function hsvToRgb(h, s, v) {
   const i = Math.floor(h / 60);
@@ -253,8 +352,6 @@ function hexToRgb(hex) {
 function rgbToHex(r, g, b) {
   return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
-
-// ─── Inline Color Picker popup ────────────────────────────────────────────────
 
 const ColorPicker = ({ color, position, onChange, onClose }) => {
   const canvasRef = useRef(null);
@@ -411,10 +508,7 @@ const ColorPicker = ({ color, position, onChange, onClose }) => {
   );
 };
 
-// ─── Main Dialog ──────────────────────────────────────────────────────────────
-
 const TextColorPickerDialog = ({ open, onClose }) => {
-  // Re-derive defaults every time the dialog opens so it reads the current theme
   const buildColorMap = () => {
     const map = {};
     TEXT_COLOR_VARS.forEach((item) => {
@@ -427,7 +521,6 @@ const TextColorPickerDialog = ({ open, onClose }) => {
   const [colors, setColors] = useState(buildColorMap);
   const [pickerState, setPickerState] = useState(null);
 
-  // Re-read defaults when the dialog opens (handles theme switch before open)
   useEffect(() => {
     if (open) {
       setColors(buildColorMap());

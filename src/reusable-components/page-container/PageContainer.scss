@@ -17,7 +17,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 20px;
+    padding: 10px 20px;
     background: $primary-main;
     flex-shrink: 0;
     flex-wrap: wrap;
@@ -26,8 +26,12 @@
       background: $primary-dark;
     }
 
+    &--centered {
+      justify-content: center;
+    }
+
     @include sm {
-      padding: 10px 14px;
+      padding: 8px 14px;
       gap: 8px;
     }
   }
@@ -46,7 +50,7 @@
 
   &__title {
     font-family: "Poppins", sans-serif;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: $primary-contrast;
     margin: 0;
@@ -68,7 +72,7 @@
     flex-shrink: 0;
 
     svg {
-      font-size: 20px;
+      font-size: 16px;
 
       @include sm {
         font-size: 17px;
@@ -88,9 +92,17 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: nowrap;
-    margin-left: auto;
-    flex-shrink: 0;
+    flex: 1; // replaces flex-shrink: 0 — fills available space
+    flex-wrap: wrap; // replaces nowrap — allows items to drop to next line
+    min-width: 0; // prevents overflow
+
+    .page-container__header--centered & {
+      margin-left: 0;
+    }
+
+    .page-container__header:not(.page-container__header--centered) & {
+      margin-left: auto;
+    }
 
     @include sm {
       gap: 6px;

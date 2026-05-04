@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
-import ViewListIcon from "@mui/icons-material/ViewList";
+import SanitizerIcon from "@mui/icons-material/Sanitizer";
 import AddIcon from "@mui/icons-material/Add";
+import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -11,21 +13,54 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetSectionsQuery,
-  useArchiveSectionMutation,
-} from "../../../features/api/masterlist/sectionsApi";
+  useGetCobsQuery,
+  useArchiveCobsMutation,
+} from "../../../features/api/checklist-form/cobsApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import SectionsModal from "./SectionsModal";
-import { useState } from "react";
-import "./Sections.scss";
+import COBSModal from "./COBSQuestionnairesModal";
+import COBSPreviewDialog from "./COBSQuestionnairesPreviewDialog";
+import "./COBSQuestionnaires.scss";
 
 const COLUMNS = [
-  { key: "id", label: "ID", sortable: true },
-  { key: "name", label: "Name", sortable: true },
+  { key: "checklist_id", label: "Checklist ID", sortable: true },
+  { key: "name", label: "Area / Section", sortable: true },
+  {
+    key: "item",
+    label: "Checklist",
+    sortable: false,
+    render: (items, row, onViewItems) => (
+      <button
+        className="cobs__eye-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          onViewItems?.(row);
+        }}
+        title="View checklist items">
+        <RemoveRedEyeIcon sx={{ fontSize: "1rem" }} />
+      </button>
+    ),
+  },
 ];
 
-const Sections = () => {
+const flattenCobsData = (rawData = []) => {
+  const rows = [];
+  rawData.forEach((entry) => {
+    const { checklist_id, forms } = entry;
+    if (Array.isArray(forms)) {
+      forms.forEach((form) => {
+        rows.push({
+          checklist_id,
+          name: form.name,
+          item: form.item ?? [],
+        });
+      });
+    }
+  });
+  return rows;
+};
+
+const COBSQuestionnaires = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -36,26 +71,30 @@ const Sections = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(null); // ← changed from selectedRow
+  const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
 
+  // Preview dialog state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewRow, setPreviewRow] = useState(null);
+
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetSectionsQuery({
+  const { data, isFetching, error } = useGetCobsQuery({
     status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
   });
-  const [archiveSection, { isLoading: isArchiving }] =
-    useArchiveSectionMutation();
+  const [archiveCobs, { isLoading: isArchiving }] = useArchiveCobsMutation();
 
   const is404 = error?.status === 404;
-  const tableData = data?.data ?? [];
-  const total = data?.total ?? 0;
+  const rawData = data?.data?.data ?? [];
+  const tableData = flattenCobsData(rawData);
+  const total = data?.data?.total ?? 0;
 
   const handleSort = (key, order) => {
     setSortBy(key);
@@ -77,10 +116,11 @@ const Sections = () => {
   };
   const handleConfirmRestore = async () => {
     try {
-      await archiveSection(toRestore.id).unwrap();
-      window.__snackbar__?.enqueueSnackbar("Section restored successfully.", {
-        variant: "success",
-      });
+      await archiveCobs(toRestore.checklist_id).unwrap();
+      window.__snackbar__?.enqueueSnackbar(
+        "COBS questionnaire restored successfully.",
+        { variant: "success" },
+      );
       setRestoreConfirmOpen(false);
       setToRestore(null);
       resetAfterRestore();
@@ -90,16 +130,16 @@ const Sections = () => {
   };
 
   const handleAdd = () => {
-    setSelectedId(null); // ← changed
+    setSelectedId(null);
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    setSelectedId(row.id); // ← changed
+    setSelectedId(row.checklist_id);
     setModalOpen(true);
   };
   const handleClose = () => {
     setModalOpen(false);
-    setSelectedId(null); // ← changed
+    setSelectedId(null);
   };
   const handleArchiveClick = (row) => {
     setToArchive(row);
@@ -107,10 +147,11 @@ const Sections = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archiveSection(toArchive.id).unwrap();
-      window.__snackbar__?.enqueueSnackbar("Section archived successfully.", {
-        variant: "success",
-      });
+      await archiveCobs(toArchive.checklist_id).unwrap();
+      window.__snackbar__?.enqueueSnackbar(
+        "COBS questionnaire archived successfully.",
+        { variant: "success" },
+      );
       setConfirmOpen(false);
       setToArchive(null);
       resetAfterArchive();
@@ -119,16 +160,30 @@ const Sections = () => {
     }
   };
 
+  // Columns with eye btn handler injected
+  const columnsWithHandler = COLUMNS.map((col) =>
+    col.key === "item"
+      ? {
+          ...col,
+          render: (items, row) =>
+            COLUMNS.find((c) => c.key === "item").render(items, row, (r) => {
+              setPreviewRow(r);
+              setPreviewOpen(true);
+            }),
+        }
+      : col,
+  );
+
   return (
     <>
       <PageContainer
-        title="Sections"
-        titleIcon={<ViewListIcon />}
+        title="COBS Questionnaires"
+        titleIcon={<SanitizerIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         titleAction={
           <UniversalButton
-            label="Add Section"
-            tooltip="Click this button to add a new section"
+            label="Add COBS Questionnaire"
+            tooltip="Click this button to add a new COBS questionnaire"
             icon={<AddIcon />}
             onClick={handleAdd}
           />
@@ -148,7 +203,7 @@ const Sections = () => {
             <TableSearchField
               value={search}
               onChange={handleSearch}
-              placeholder="Search sections..."
+              placeholder="Search COBS questionnaires..."
             />
           </>
         }
@@ -162,7 +217,7 @@ const Sections = () => {
           />
         }>
         <UniversalTable
-          columns={COLUMNS}
+          columns={columnsWithHandler}
           data={tableData}
           isLoading={isFetching}
           sortBy={sortBy}
@@ -179,10 +234,19 @@ const Sections = () => {
         />
       </PageContainer>
 
-      <SectionsModal
+      <COBSModal
         open={modalOpen}
         onClose={handleClose}
-        selectedId={selectedId} // ← changed from selectedRow
+        selectedId={selectedId}
+      />
+
+      <COBSPreviewDialog
+        open={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false);
+          setPreviewRow(null);
+        }}
+        checklist_id={previewRow?.checklist_id}
       />
 
       <ConfirmDialog
@@ -193,8 +257,8 @@ const Sections = () => {
         }}
         onConfirm={handleConfirmArchive}
         isLoading={isArchiving}
-        title="Archive Section"
-        message={`Are you sure you want to archive "${toArchive?.name}"? This action will set the section as inactive.`}
+        title="Archive COBS Questionnaire"
+        message={`Are you sure you want to archive "${toArchive?.name}"? This action will set the questionnaire as inactive.`}
       />
 
       <ConfirmDialog
@@ -205,11 +269,11 @@ const Sections = () => {
         }}
         onConfirm={handleConfirmRestore}
         isLoading={isArchiving}
-        title="Restore Section"
+        title="Restore COBS Questionnaire"
         message={`Are you sure you want to restore "${toRestore?.name}"? This will set it back to active.`}
       />
     </>
   );
 };
 
-export default Sections;
+export default COBSQuestionnaires;

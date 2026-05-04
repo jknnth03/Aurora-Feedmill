@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
-import FlutterDashIcon from "@mui/icons-material/FlutterDash";
+import StarIcon from "@mui/icons-material/Star";
 import AddIcon from "@mui/icons-material/Add";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
@@ -12,53 +12,21 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetBirdsQuery,
-  useArchiveBirdMutation,
-} from "../../../features/api/checklist-form/birdsApi";
+  useGetScoresQuery,
+  useArchiveScoreMutation,
+} from "../../../features/api/masterlist/scoresApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import BirdsModal from "./BirdsModal";
-import "./Birds.scss";
-
-const renderStackedList = (items) => {
-  if (!items || items.length === 0) return "—";
-  const visible = items.slice(0, 5);
-  const remaining = items.slice(5);
-  return (
-    <div className="birds__stack">
-      {visible.map((item, idx) => (
-        <span key={idx} className="birds__stack-item">
-          {item.name}
-        </span>
-      ))}
-      {remaining.length > 0 && (
-        <span
-          className="birds__stack-more"
-          title={remaining.map((i) => i.name).join(", ")}>
-          +{remaining.length} more
-        </span>
-      )}
-    </div>
-  );
-};
+import ScoresModal from "./ScoresModal";
+import "./Scores.scss";
 
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
-  {
-    key: "inspection_areas",
-    label: "Inspection Areas",
-    sortable: false,
-    render: (value) => renderStackedList(value),
-  },
-  {
-    key: "infestation_levels",
-    label: "Infestation Levels",
-    sortable: false,
-    render: (value) => renderStackedList(value),
-  },
+  { key: "score", label: "Score", sortable: true },
+  { key: "rating", label: "Rating", sortable: true },
 ];
 
-const Birds = () => {
+const Scores = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -77,17 +45,17 @@ const Birds = () => {
 
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetBirdsQuery({
+  const { data, isFetching, error } = useGetScoresQuery({
     status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
   });
-  const [archiveBird, { isLoading: isArchiving }] = useArchiveBirdMutation();
+  const [archiveScore, { isLoading: isArchiving }] = useArchiveScoreMutation();
 
   const is404 = error?.status === 404;
-  const tableData = data?.data?.data ?? [];
-  const total = data?.data?.total ?? 0;
+  const tableData = data?.data ?? [];
+  const total = data?.total ?? 0;
 
   const handleSort = (key, order) => {
     setSortBy(key);
@@ -109,11 +77,10 @@ const Birds = () => {
   };
   const handleConfirmRestore = async () => {
     try {
-      await archiveBird(toRestore.id).unwrap();
-      window.__snackbar__?.enqueueSnackbar(
-        "Bird Questionnaire restored successfully.",
-        { variant: "success" },
-      );
+      await archiveScore(toRestore.id).unwrap();
+      window.__snackbar__?.enqueueSnackbar("Score restored successfully.", {
+        variant: "success",
+      });
       setRestoreConfirmOpen(false);
       setToRestore(null);
       resetAfterRestore();
@@ -140,11 +107,10 @@ const Birds = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archiveBird(toArchive.id).unwrap();
-      window.__snackbar__?.enqueueSnackbar(
-        "Bird Questionnaire archived successfully.",
-        { variant: "success" },
-      );
+      await archiveScore(toArchive.id).unwrap();
+      window.__snackbar__?.enqueueSnackbar("Score archived successfully.", {
+        variant: "success",
+      });
       setConfirmOpen(false);
       setToArchive(null);
       resetAfterArchive();
@@ -156,13 +122,13 @@ const Birds = () => {
   return (
     <>
       <PageContainer
-        title="Bird Questionnaires"
-        titleIcon={<FlutterDashIcon />}
+        title="Scores"
+        titleIcon={<StarIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         titleAction={
           <UniversalButton
-            label="Add Bird Questionnaire"
-            tooltip="Click this button to add a new bird questionnaire"
+            label="Add Score"
+            tooltip="Click this button to add a new score"
             icon={<AddIcon />}
             onClick={handleAdd}
           />
@@ -182,7 +148,7 @@ const Birds = () => {
             <TableSearchField
               value={search}
               onChange={handleSearch}
-              placeholder="Search bird questionnaires..."
+              placeholder="Search scores..."
             />
           </>
         }
@@ -213,7 +179,7 @@ const Birds = () => {
         />
       </PageContainer>
 
-      <BirdsModal
+      <ScoresModal
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
@@ -227,8 +193,8 @@ const Birds = () => {
         }}
         onConfirm={handleConfirmArchive}
         isLoading={isArchiving}
-        title="Archive Bird Questionnaire"
-        message={`Are you sure you want to archive Bird Questionnaire #${toArchive?.id}? This action will set it as inactive.`}
+        title="Archive Score"
+        message={`Are you sure you want to archive this score? This action will set it as inactive.`}
       />
 
       <ConfirmDialog
@@ -239,11 +205,11 @@ const Birds = () => {
         }}
         onConfirm={handleConfirmRestore}
         isLoading={isArchiving}
-        title="Restore Bird Questionnaire"
-        message={`Are you sure you want to restore Bird Questionnaire #${toRestore?.id}? This will set it back to active.`}
+        title="Restore Score"
+        message={`Are you sure you want to restore this score? This will set it back to active.`}
       />
     </>
   );
 };
 
-export default Birds;
+export default Scores;

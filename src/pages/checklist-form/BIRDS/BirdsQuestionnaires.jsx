@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
-import SanitizerIcon from "@mui/icons-material/Sanitizer";
+import FlutterDashIcon from "@mui/icons-material/FlutterDash";
 import AddIcon from "@mui/icons-material/Add";
-import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -13,54 +12,53 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetCobsQuery,
-  useArchiveCobsMutation,
-} from "../../../features/api/checklist-form/cobsApi";
+  useGetBirdsQuery,
+  useArchiveBirdMutation,
+} from "../../../features/api/checklist-form/birdsApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import COBSModal from "./COBSModal";
-import COBSPreviewDialog from "./COBSPreviewDialog";
-import "./COBS.scss";
+import BirdsModal from "./BirdsQuestionnairesModal";
+import "./BirdsQuestionnaires.scss";
+
+const renderStackedList = (items) => {
+  if (!items || items.length === 0) return "—";
+  const visible = items.slice(0, 5);
+  const remaining = items.slice(5);
+  return (
+    <div className="birds__stack">
+      {visible.map((item, idx) => (
+        <span key={idx} className="birds__stack-item">
+          {item.name}
+        </span>
+      ))}
+      {remaining.length > 0 && (
+        <span
+          className="birds__stack-more"
+          title={remaining.map((i) => i.name).join(", ")}>
+          +{remaining.length} more
+        </span>
+      )}
+    </div>
+  );
+};
 
 const COLUMNS = [
-  { key: "checklist_id", label: "Checklist ID", sortable: true },
-  { key: "name", label: "Area / Section", sortable: true },
+  { key: "id", label: "ID", sortable: true },
   {
-    key: "item",
-    label: "Checklist",
+    key: "inspection_areas",
+    label: "Inspection Areas",
     sortable: false,
-    render: (items, row, onViewItems) => (
-      <button
-        className="cobs__eye-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          onViewItems?.(row);
-        }}
-        title="View checklist items">
-        <RemoveRedEyeIcon sx={{ fontSize: "1rem" }} />
-      </button>
-    ),
+    render: (value) => renderStackedList(value),
+  },
+  {
+    key: "infestation_levels",
+    label: "Infestation Levels",
+    sortable: false,
+    render: (value) => renderStackedList(value),
   },
 ];
 
-const flattenCobsData = (rawData = []) => {
-  const rows = [];
-  rawData.forEach((entry) => {
-    const { checklist_id, forms } = entry;
-    if (Array.isArray(forms)) {
-      forms.forEach((form) => {
-        rows.push({
-          checklist_id,
-          name: form.name,
-          item: form.item ?? [],
-        });
-      });
-    }
-  });
-  return rows;
-};
-
-const COBS = () => {
+const BirdsQuestionnaires = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -77,24 +75,19 @@ const COBS = () => {
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
 
-  // Preview dialog state
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewRow, setPreviewRow] = useState(null);
-
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetCobsQuery({
+  const { data, isFetching, error } = useGetBirdsQuery({
     status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
   });
-  const [archiveCobs, { isLoading: isArchiving }] = useArchiveCobsMutation();
+  const [archiveBird, { isLoading: isArchiving }] = useArchiveBirdMutation();
 
   const is404 = error?.status === 404;
-  const rawData = data?.data?.data ?? [];
-  const tableData = flattenCobsData(rawData);
-  const total = data?.data?.total ?? 0;
+  const tableData = data?.data ?? [];
+  const total = data?.total ?? 0;
 
   const handleSort = (key, order) => {
     setSortBy(key);
@@ -116,9 +109,9 @@ const COBS = () => {
   };
   const handleConfirmRestore = async () => {
     try {
-      await archiveCobs(toRestore.checklist_id).unwrap();
+      await archiveBird(toRestore.id).unwrap();
       window.__snackbar__?.enqueueSnackbar(
-        "COBS questionnaire restored successfully.",
+        "Bird Questionnaire restored successfully.",
         { variant: "success" },
       );
       setRestoreConfirmOpen(false);
@@ -134,7 +127,7 @@ const COBS = () => {
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    setSelectedId(row.checklist_id);
+    setSelectedId(row.id);
     setModalOpen(true);
   };
   const handleClose = () => {
@@ -147,9 +140,9 @@ const COBS = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archiveCobs(toArchive.checklist_id).unwrap();
+      await archiveBird(toArchive.id).unwrap();
       window.__snackbar__?.enqueueSnackbar(
-        "COBS questionnaire archived successfully.",
+        "Bird Questionnaire archived successfully.",
         { variant: "success" },
       );
       setConfirmOpen(false);
@@ -160,30 +153,16 @@ const COBS = () => {
     }
   };
 
-  // Columns with eye btn handler injected
-  const columnsWithHandler = COLUMNS.map((col) =>
-    col.key === "item"
-      ? {
-          ...col,
-          render: (items, row) =>
-            COLUMNS.find((c) => c.key === "item").render(items, row, (r) => {
-              setPreviewRow(r);
-              setPreviewOpen(true);
-            }),
-        }
-      : col,
-  );
-
   return (
     <>
       <PageContainer
-        title="COBS Questionnaires"
-        titleIcon={<SanitizerIcon />}
+        title="Bird Questionnaires"
+        titleIcon={<FlutterDashIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         titleAction={
           <UniversalButton
-            label="Add COBS Questionnaire"
-            tooltip="Click this button to add a new COBS questionnaire"
+            label="Add Bird Questionnaire"
+            tooltip="Click this button to add a new bird questionnaire"
             icon={<AddIcon />}
             onClick={handleAdd}
           />
@@ -203,7 +182,7 @@ const COBS = () => {
             <TableSearchField
               value={search}
               onChange={handleSearch}
-              placeholder="Search COBS questionnaires..."
+              placeholder="Search bird questionnaires..."
             />
           </>
         }
@@ -217,7 +196,7 @@ const COBS = () => {
           />
         }>
         <UniversalTable
-          columns={columnsWithHandler}
+          columns={COLUMNS}
           data={tableData}
           isLoading={isFetching}
           sortBy={sortBy}
@@ -234,19 +213,10 @@ const COBS = () => {
         />
       </PageContainer>
 
-      <COBSModal
+      <BirdsModal
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
-      />
-
-      <COBSPreviewDialog
-        open={previewOpen}
-        onClose={() => {
-          setPreviewOpen(false);
-          setPreviewRow(null);
-        }}
-        checklist_id={previewRow?.checklist_id}
       />
 
       <ConfirmDialog
@@ -257,8 +227,8 @@ const COBS = () => {
         }}
         onConfirm={handleConfirmArchive}
         isLoading={isArchiving}
-        title="Archive COBS Questionnaire"
-        message={`Are you sure you want to archive "${toArchive?.name}"? This action will set the questionnaire as inactive.`}
+        title="Archive Bird Questionnaire"
+        message={`Are you sure you want to archive Bird Questionnaire #${toArchive?.id}? This action will set it as inactive.`}
       />
 
       <ConfirmDialog
@@ -269,11 +239,11 @@ const COBS = () => {
         }}
         onConfirm={handleConfirmRestore}
         isLoading={isArchiving}
-        title="Restore COBS Questionnaire"
-        message={`Are you sure you want to restore "${toRestore?.name}"? This will set it back to active.`}
+        title="Restore Bird Questionnaire"
+        message={`Are you sure you want to restore Bird Questionnaire #${toRestore?.id}? This will set it back to active.`}
       />
     </>
   );
 };
 
-export default COBS;
+export default BirdsQuestionnaires;

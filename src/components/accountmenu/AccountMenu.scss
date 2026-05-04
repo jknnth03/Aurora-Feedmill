@@ -60,7 +60,7 @@
   }
 
   &__role {
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     color: $nav-icon;
     white-space: nowrap;
     overflow: hidden;
@@ -99,19 +99,19 @@
 .account-menu__item {
   font-family: "Poppins", sans-serif !important;
   font-size: 0.845rem !important;
-  color: $nav-text !important;
+  color: var(--text-sidebar) !important;
   padding: 10px 16px !important;
   gap: 4px;
   transition: background 0.15s !important;
 
   .MuiListItemIcon-root {
     min-width: 32px !important;
-    color: $nav-icon;
+    color: var(--text-sidebar-icon);
   }
 
   &:hover {
     background: rgba($primary-main, 0.08) !important;
-    color: $primary-main !important;
+    color: var(--text-appbar) !important;
 
     .MuiListItemIcon-root {
       color: $primary-main;
@@ -121,7 +121,7 @@
   &--toggle {
     &:hover {
       background: rgba($primary-main, 0.08) !important;
-      color: $nav-text !important;
+      color: var(--text-sidebar) !important;
 
       .MuiListItemIcon-root {
         color: $primary-main;
@@ -130,6 +130,12 @@
   }
 
   &--logout {
+    color: var(--text-sidebar) !important;
+
+    .MuiListItemIcon-root {
+      color: var(--text-sidebar-icon);
+    }
+
     &:hover {
       background: rgba($status-error, 0.08) !important;
       color: $status-error !important;

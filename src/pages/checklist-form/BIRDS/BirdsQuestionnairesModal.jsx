@@ -20,7 +20,7 @@ import {
 } from "../../../features/api/checklist-form/birdsApi";
 import { useGetInspectionAreasQuery } from "../../../features/api/masterlist/inspectionAreaApi";
 import { useGetInfestationLevelsQuery } from "../../../features/api/masterlist/infestationLevelApi";
-import "./BirdsModal.scss";
+import "./BirdsQuestionnairesModal.scss";
 
 const schema = yup.object({
   inspection_area_ids: yup
@@ -158,7 +158,7 @@ const ViewChips = ({ label, items = [] }) => (
   </div>
 );
 
-const BirdsModal = ({ open, onClose, selectedId = null }) => {
+const BirdsQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
   const [areasTouched, setAreasTouched] = useState(false);
   const [infestationTouched, setInfestationTouched] = useState(false);
@@ -388,4 +388,4 @@ const BirdsModal = ({ open, onClose, selectedId = null }) => {
   );
 };
 
-export default BirdsModal;
+export default BirdsQuestionnairesModal;

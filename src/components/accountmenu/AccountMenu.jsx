@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Switch from "@mui/material/Switch";
-import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import PaletteIcon from "@mui/icons-material/Palette";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
+import StyleIcon from "@mui/icons-material/Style";
 import "./AccountMenu.scss";
 import { useTheme } from "../../styles/Themecontext";
 import { setLoggingOut } from "../../app/authSlice";
@@ -19,21 +18,21 @@ import PalettePickerDialog, {
   initPalette,
 } from "./PalettePickerDialog";
 import TextColorPickerDialog from "./TextColorPickerDialog";
+import ChipColorPickerDialog from "./ChipColorPickerDialog";
 
 const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isDark, toggleTheme } = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [textColorOpen, setTextColorOpen] = useState(false);
+  const [chipColorOpen, setChipColorOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState("default-orange");
   const open = Boolean(anchorEl);
 
   useEffect(() => {
     const saved = initPalette();
     setSelectedPalette(saved);
-    // initTextColors is now handled by ThemeContext on mount and theme toggle
   }, []);
 
   const handleOpen = (e) => setAnchorEl(e.currentTarget);
@@ -44,11 +43,6 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
     dispatch(setLoggingOut(true));
   };
 
-  const handleSettings = () => {
-    handleClose();
-    navigate("/settings");
-  };
-
   const handlePalettePicker = () => {
     handleClose();
     setPaletteOpen(true);
@@ -57,6 +51,11 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
   const handleTextColorPicker = () => {
     handleClose();
     setTextColorOpen(true);
+  };
+
+  const handleChipColorPicker = () => {
+    handleClose();
+    setChipColorOpen(true);
   };
 
   const handlePaletteSelect = (id) => {
@@ -131,11 +130,13 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
           Text Colors
         </MenuItem>
 
-        <MenuItem className="account-menu__item" onClick={handleSettings}>
+        <MenuItem
+          className="account-menu__item"
+          onClick={handleChipColorPicker}>
           <ListItemIcon>
-            <SettingsIcon fontSize="small" />
+            <StyleIcon fontSize="small" />
           </ListItemIcon>
-          Settings
+          Chip Colors
         </MenuItem>
 
         <MenuItem
@@ -158,6 +159,11 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
       <TextColorPickerDialog
         open={textColorOpen}
         onClose={() => setTextColorOpen(false)}
+      />
+
+      <ChipColorPickerDialog
+        open={chipColorOpen}
+        onClose={() => setChipColorOpen(false)}
       />
     </>
   );

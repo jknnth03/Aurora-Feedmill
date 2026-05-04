@@ -1,0 +1,19 @@
+@use "../../styles/mixins" as *;
+
+.ubtn__label--short {
+  display: none;
+}
+
+.ubtn__label--full {
+  display: inline;
+}
+
+@include sm {
+  .ubtn__label--full {
+    display: none;
+  }
+
+  .ubtn__label--short {
+    display: inline;
+  }
+}

@@ -1,0 +1,33 @@
+@use "../../../styles/colors" as *;
+
+.units {
+  &__more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: $text-muted;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      background 0.15s;
+
+    &:hover {
+      color: $primary-main;
+      background: rgba($primary-main, 0.06);
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.5);
+
+      &:hover {
+        color: $secondary-main;
+        background: rgba($secondary-main, 0.08);
+      }
+    }
+  }
+}

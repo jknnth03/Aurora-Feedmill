@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import { useLazyGetCobsByIdQuery } from "../../../features/api/checklist-form/cobsApi";
-import "./COBSModal.scss";
+import "./COBSQuestionnairesModal.scss";
 
 const SkeletonLoader = () => (
   <div className="cobsm__skeleton-wrap">

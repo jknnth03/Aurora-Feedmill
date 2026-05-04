@@ -15,7 +15,9 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
+import UniversalButton, {
+  SaveButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetUserByIdQuery,
   useCreateUserMutation,
@@ -83,7 +85,7 @@ const RoleAutocomplete = ({ value, onChange, error, displayValue }) => {
     { status: 1, search, page: 1, per_page: 50 },
     { skip: !open },
   );
-  const options = data?.data?.data ?? [];
+  const options = data?.data ?? [];
   const selected = options.find((r) => r.id === value) ?? null;
 
   useEffect(() => {
@@ -123,7 +125,6 @@ const RoleAutocomplete = ({ value, onChange, error, displayValue }) => {
               type="text"
               placeholder="Search role..."
               value={search}
-              l
               onChange={(e) => setSearch(e.target.value)}
               className="um__ac-input"
               onClick={(e) => e.stopPropagation()}
@@ -265,7 +266,6 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
     },
   });
 
-  // Set mode + clear on open
   useEffect(() => {
     if (open) {
       setShowPass(false);
@@ -286,7 +286,6 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
     }
   }, [open, selectedId, reset]);
 
-  // Populate form when API data arrives
   useEffect(() => {
     if (rowData && open && selectedId) {
       reset({
@@ -404,6 +403,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
                 label="Edit"
                 icon={<EditIcon />}
                 onClick={() => setMode("edit")}
+                modalVariant
               />
             </div>
           </>
@@ -473,7 +473,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
                   ← Back
                 </button>
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."

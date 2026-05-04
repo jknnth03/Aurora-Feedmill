@@ -55,8 +55,8 @@ const InfestationLevel = () => {
     useArchiveInfestationLevelMutation();
 
   const is404 = error?.status === 404;
-  const tableData = data?.data?.data ?? [];
-  const total = data?.data?.total ?? 0;
+  const tableData = data?.data ?? [];
+  const total = data?.total ?? 0;
 
   const handleSort = (key, order) => {
     setSortBy(key);

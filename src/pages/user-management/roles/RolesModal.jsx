@@ -15,7 +15,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
+import UniversalButton, {
+  SaveButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetRoleByIdQuery,
   useCreateRoleMutation,
@@ -60,7 +62,7 @@ const PermissionsAutocomplete = ({
     per_page: 50,
   });
 
-  const options = data?.data?.data ?? [];
+  const options = data?.data ?? [];
 
   const handleSelect = (permission) => {
     const already = value.includes(permission.id);
@@ -205,7 +207,6 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
     defaultValues: { name: "", permission_id: [] },
   });
 
-  // Set mode + clear on open
   useEffect(() => {
     if (open) {
       setMode(selectedId ? "view" : "add");
@@ -216,7 +217,6 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
     }
   }, [open, selectedId, reset]);
 
-  // Populate form when API data arrives
   useEffect(() => {
     if (roleData) {
       const data = roleData?.data ?? null;
@@ -333,6 +333,7 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
                 label="Edit"
                 icon={<EditIcon />}
                 onClick={() => setMode("edit")}
+                modalVariant
               />
             </div>
           </>
@@ -391,7 +392,7 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
                   ← Back
                 </button>
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."

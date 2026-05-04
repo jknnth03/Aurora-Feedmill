@@ -23,7 +23,7 @@ import {
   useUpdateCobsMutation,
 } from "../../../features/api/checklist-form/cobsApi";
 import { useGetChecklistsQuery } from "../../../features/api/masterlist/checklistApi";
-import "./COBSModal.scss";
+import "./COBSQuestionnairesModal.scss";
 
 const itemSchema = yup.object({
   name: yup.string().required("Item name is required"),
@@ -68,7 +68,7 @@ const ChecklistAutocomplete = ({ value, onChange, error, displayValue }) => {
     { status: 1, search, page: 1, per_page: 50 },
     { skip: !open },
   );
-  const options = data?.data?.data ?? [];
+  const options = data?.data ?? [];
   const selected = options.find((c) => c.id === value) ?? null;
 
   useEffect(() => {
@@ -261,7 +261,7 @@ const FormSection = ({
   );
 };
 
-const COBSModal = ({ open, onClose, selectedId = null }) => {
+const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
   const [cobsLoading, setCobsLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -563,4 +563,4 @@ const COBSModal = ({ open, onClose, selectedId = null }) => {
   );
 };
 
-export default COBSModal;
+export default COBSQuestionnairesModal;

@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
-import ViewListIcon from "@mui/icons-material/ViewList";
+import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import AddIcon from "@mui/icons-material/Add";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
@@ -11,21 +12,20 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetSectionsQuery,
-  useArchiveSectionMutation,
-} from "../../../features/api/masterlist/sectionsApi";
+  useGetUnitsQuery,
+  useArchiveUnitMutation,
+} from "../../../features/api/masterlist/unitsApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import SectionsModal from "./SectionsModal";
-import { useState } from "react";
-import "./Sections.scss";
+import UnitsModal from "./UnitsModal";
+import "./Units.scss";
 
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
   { key: "name", label: "Name", sortable: true },
 ];
 
-const Sections = () => {
+const Units = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -36,7 +36,7 @@ const Sections = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(null); // ← changed from selectedRow
+  const [selectedId, setSelectedId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
@@ -44,14 +44,13 @@ const Sections = () => {
 
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetSectionsQuery({
+  const { data, isFetching, error } = useGetUnitsQuery({
     status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
   });
-  const [archiveSection, { isLoading: isArchiving }] =
-    useArchiveSectionMutation();
+  const [archiveUnit, { isLoading: isArchiving }] = useArchiveUnitMutation();
 
   const is404 = error?.status === 404;
   const tableData = data?.data ?? [];
@@ -77,8 +76,8 @@ const Sections = () => {
   };
   const handleConfirmRestore = async () => {
     try {
-      await archiveSection(toRestore.id).unwrap();
-      window.__snackbar__?.enqueueSnackbar("Section restored successfully.", {
+      await archiveUnit(toRestore.id).unwrap();
+      window.__snackbar__?.enqueueSnackbar("Unit restored successfully.", {
         variant: "success",
       });
       setRestoreConfirmOpen(false);
@@ -90,16 +89,16 @@ const Sections = () => {
   };
 
   const handleAdd = () => {
-    setSelectedId(null); // ← changed
+    setSelectedId(null);
     setModalOpen(true);
   };
   const handleRowClick = (row) => {
-    setSelectedId(row.id); // ← changed
+    setSelectedId(row.id);
     setModalOpen(true);
   };
   const handleClose = () => {
     setModalOpen(false);
-    setSelectedId(null); // ← changed
+    setSelectedId(null);
   };
   const handleArchiveClick = (row) => {
     setToArchive(row);
@@ -107,8 +106,8 @@ const Sections = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archiveSection(toArchive.id).unwrap();
-      window.__snackbar__?.enqueueSnackbar("Section archived successfully.", {
+      await archiveUnit(toArchive.id).unwrap();
+      window.__snackbar__?.enqueueSnackbar("Unit archived successfully.", {
         variant: "success",
       });
       setConfirmOpen(false);
@@ -122,13 +121,13 @@ const Sections = () => {
   return (
     <>
       <PageContainer
-        title="Sections"
-        titleIcon={<ViewListIcon />}
+        title="Units"
+        titleIcon={<SquareFootIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         titleAction={
           <UniversalButton
-            label="Add Section"
-            tooltip="Click this button to add a new section"
+            label="Add Unit"
+            tooltip="Click this button to add a new unit"
             icon={<AddIcon />}
             onClick={handleAdd}
           />
@@ -148,7 +147,7 @@ const Sections = () => {
             <TableSearchField
               value={search}
               onChange={handleSearch}
-              placeholder="Search sections..."
+              placeholder="Search units..."
             />
           </>
         }
@@ -179,10 +178,10 @@ const Sections = () => {
         />
       </PageContainer>
 
-      <SectionsModal
+      <UnitsModal
         open={modalOpen}
         onClose={handleClose}
-        selectedId={selectedId} // ← changed from selectedRow
+        selectedId={selectedId}
       />
 
       <ConfirmDialog
@@ -193,8 +192,8 @@ const Sections = () => {
         }}
         onConfirm={handleConfirmArchive}
         isLoading={isArchiving}
-        title="Archive Section"
-        message={`Are you sure you want to archive "${toArchive?.name}"? This action will set the section as inactive.`}
+        title="Archive Unit"
+        message={`Are you sure you want to archive "${toArchive?.name}"? This action will set the unit as inactive.`}
       />
 
       <ConfirmDialog
@@ -205,11 +204,11 @@ const Sections = () => {
         }}
         onConfirm={handleConfirmRestore}
         isLoading={isArchiving}
-        title="Restore Section"
+        title="Restore Unit"
         message={`Are you sure you want to restore "${toRestore?.name}"? This will set it back to active.`}
       />
     </>
   );
 };
 
-export default Sections;
+export default Units;

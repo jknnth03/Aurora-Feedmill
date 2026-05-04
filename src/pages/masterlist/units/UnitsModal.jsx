@@ -6,50 +6,46 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import SecurityIcon from "@mui/icons-material/Security";
+import TuneIcon from "@mui/icons-material/Tune";
 import EditIcon from "@mui/icons-material/Edit";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import UniversalButton, {
-  SaveButton,
-} from "../../../reusable-components/universalbuttons/UniversalButtons";
+import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
-  useGetPermissionByIdQuery,
-  useCreatePermissionMutation,
-  useUpdatePermissionMutation,
-} from "../../../features/api/usermanagement/permissionsApi";
-import "./PermissionsModal.scss";
+  useGetUnitByIdQuery,
+  useCreateUnitMutation,
+  useUpdateUnitMutation,
+} from "../../../features/api/masterlist/unitsApi";
+import "./UnitsModal.scss";
 
 const schema = yup.object({
-  name: yup.string().required("Permission name is required"),
+  name: yup.string().required("Name is required"),
 });
 
 const SkeletonLoader = () => (
-  <div className="pm__skeleton-wrap">
+  <div className="um__skeleton-wrap">
     {[50, 75, 60, 80].map((w, i) => (
       <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
     ))}
-    <div className="pm__skeleton-footer">
+    <div className="um__skeleton-footer">
       <span className="ut__skeleton" style={{ width: "28%" }} />
     </div>
   </div>
 );
 
-const PermissionsModal = ({ open, onClose, selectedId = null }) => {
+const UnitsModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const [createPermission, { isLoading: isCreating }] =
-    useCreatePermissionMutation();
-  const [updatePermission, { isLoading: isUpdating }] =
-    useUpdatePermissionMutation();
+  const [createUnit, { isLoading: isCreating }] = useCreateUnitMutation();
+  const [updateUnit, { isLoading: isUpdating }] = useUpdateUnitMutation();
   const isLoading = isCreating || isUpdating;
 
-  const { data: permissionData, isFetching: permissionLoading } =
-    useGetPermissionByIdQuery(selectedId, {
-      skip: !selectedId || !open,
-    });
+  const { data: unitData, isFetching: unitLoading } = useGetUnitByIdQuery(
+    selectedId,
+    { skip: !selectedId || !open },
+  );
 
   const {
     register,
@@ -72,27 +68,25 @@ const PermissionsModal = ({ open, onClose, selectedId = null }) => {
   }, [open, selectedId, reset]);
 
   useEffect(() => {
-    if (permissionData) {
-      const data = permissionData?.data ?? null;
+    if (unitData) {
+      const data = unitData?.data ?? null;
       setSelectedRow(data);
       reset({ name: data?.name ?? "" });
     }
-  }, [permissionData, reset]);
+  }, [unitData, reset]);
 
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updatePermission({ id: selectedId, ...form }).unwrap();
-        window.__snackbar__?.enqueueSnackbar(
-          "Permission updated successfully.",
-          { variant: "success" },
-        );
+        await updateUnit({ id: selectedId, ...form }).unwrap();
+        window.__snackbar__?.enqueueSnackbar("Unit updated successfully.", {
+          variant: "success",
+        });
       } else {
-        await createPermission(form).unwrap();
-        window.__snackbar__?.enqueueSnackbar(
-          "Permission created successfully.",
-          { variant: "success" },
-        );
+        await createUnit(form).unwrap();
+        window.__snackbar__?.enqueueSnackbar("Unit created successfully.", {
+          variant: "success",
+        });
       }
       onClose();
     } catch (err) {
@@ -105,15 +99,15 @@ const PermissionsModal = ({ open, onClose, selectedId = null }) => {
   };
 
   const headerIcon = {
-    add: <SecurityIcon className="pm__header-icon" />,
-    view: <RemoveRedEyeIcon className="pm__header-icon" />,
-    edit: <EditIcon className="pm__header-icon" />,
+    add: <TuneIcon className="um__header-icon" />,
+    view: <RemoveRedEyeIcon className="um__header-icon" />,
+    edit: <EditIcon className="um__header-icon" />,
   };
 
   const headerTitle = {
-    add: "Add Permission",
-    view: "View Permission",
-    edit: "Edit Permission",
+    add: "Add Unit",
+    view: "View Unit",
+    edit: "Edit Unit",
   };
 
   const isView = mode === "view";
@@ -128,27 +122,27 @@ const PermissionsModal = ({ open, onClose, selectedId = null }) => {
       disableEscapeKeyDown
       maxWidth="xs"
       fullWidth
-      PaperProps={{ className: "pm__paper" }}>
-      <div className="pm__header">
-        <div className="pm__header-title">
+      PaperProps={{ className: "um__paper" }}>
+      <div className="um__header">
+        <div className="um__header-title">
           {headerIcon[mode]}
           <span>{headerTitle[mode]}</span>
         </div>
-        <IconButton className="pm__close" onClick={onClose} size="small">
+        <IconButton className="um__close" onClick={onClose} size="small">
           <CloseIcon fontSize="small" />
         </IconButton>
       </div>
 
-      <DialogContent className="pm__content">
-        {permissionLoading ? (
+      <DialogContent className="um__content">
+        {unitLoading ? (
           <SkeletonLoader />
         ) : isView ? (
           <>
-            <div className="pm__group">
-              <p className="pm__group-label">Permission Details</p>
-              <div className="pm__field">
-                <div className="pm__input-wrap pm__input-wrap--disabled">
-                  <label className="pm__label">Permission Name</label>
+            <div className="um__group">
+              <p className="um__group-label">Unit Details</p>
+              <div className="um__field">
+                <div className="um__input-wrap um__input-wrap--disabled">
+                  <label className="um__label">Name</label>
                   <input
                     type="text"
                     value={selectedRow?.name ?? ""}
@@ -158,32 +152,31 @@ const PermissionsModal = ({ open, onClose, selectedId = null }) => {
                 </div>
               </div>
             </div>
-            <div className="pm__footer">
+            <div className="um__footer">
               <UniversalButton
                 label="Edit"
                 icon={<EditIcon />}
                 onClick={() => setMode("edit")}
-                modalVariant
               />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="pm__group">
-              <p className="pm__group-label">Permission Details</p>
-              <div className="pm__field">
+            <div className="um__group">
+              <p className="um__group-label">Unit Details</p>
+              <div className="um__field">
                 <div
-                  className={`pm__input-wrap${errors.name ? " pm__input-wrap--error" : ""}`}>
-                  <label className="pm__label">
-                    Permission Name
-                    <span className="pm__required">
+                  className={`um__input-wrap${errors.name ? " um__input-wrap--error" : ""}`}>
+                  <label className="um__label">
+                    Name
+                    <span className="um__required">
                       <PushPinIcon />
                     </span>
                   </label>
                   <input type="text" {...register("name")} autoComplete="off" />
                 </div>
                 {errors.name && (
-                  <p className="pm__error">
+                  <p className="um__error">
                     <ReportProblemIcon />
                     {errors.name?.message}
                   </p>
@@ -191,22 +184,22 @@ const PermissionsModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
 
-            <div className="pm__footer">
+            <div className="um__footer">
               {selectedId && (
                 <button
                   type="button"
-                  className="pm__back-btn"
+                  className="um__back-btn"
                   onClick={() => setMode("view")}>
                   ← Back
                 </button>
               )}
-              <SaveButton
+              <UniversalButton
                 label={
                   isLoading
                     ? "Saving..."
                     : mode === "edit"
                       ? "Save Changes"
-                      : "Add Permission"
+                      : "Add Unit"
                 }
                 onClick={handleSubmit(onSubmit)}
                 disabled={isLoading}
@@ -219,4 +212,4 @@ const PermissionsModal = ({ open, onClose, selectedId = null }) => {
   );
 };
 
-export default PermissionsModal;
+export default UnitsModal;

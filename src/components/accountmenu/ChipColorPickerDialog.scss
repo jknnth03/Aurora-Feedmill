@@ -1,0 +1,461 @@
+@use "../../styles/colors" as *;
+@use "../../styles/mixins.scss" as *;
+
+// ─── Dialog Paper ─────────────────────────────────────────────────────────────
+.ccd-paper {
+  border-radius: 16px !important;
+  background-color: var(--bg-paper) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18) !important;
+  font-family: "Poppins", sans-serif !important;
+  overflow: hidden !important;
+  max-width: 660px !important;
+  width: 92vw !important;
+
+  @include sm {
+    max-width: 100% !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.ccd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 12px;
+  border-bottom: 1px solid var(--border-color);
+
+  @include sm {
+    padding: 14px 16px 10px;
+  }
+}
+
+.ccd-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ccd-icon {
+  color: $primary-main !important;
+  font-size: 1.3rem !important;
+}
+
+.ccd-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $primary-main;
+  font-family: "Courier New", monospace;
+  letter-spacing: 1px;
+
+  @include xs {
+    font-size: 0.95rem;
+  }
+}
+
+.ccd-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ccd-reset-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: $primary-main;
+    color: $primary-main;
+    background: rgba($primary-main, 0.05);
+  }
+}
+
+.ccd-close {
+  color: var(--nav-icon) !important;
+
+  &:hover {
+    background: rgba($primary-main, 0.08) !important;
+    color: $primary-main !important;
+  }
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+.ccd-content {
+  padding: 16px 24px 24px !important;
+  overflow-y: auto !important;
+  max-height: 70vh !important;
+
+  @include sm {
+    padding: 12px 14px 20px !important;
+    max-height: 75vh !important;
+  }
+}
+
+// ─── Column Headers ───────────────────────────────────────────────────────────
+.ccd-col-header {
+  display: grid;
+  grid-template-columns: 140px 100px 100px 1fr 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 0 10px 8px;
+  margin-bottom: 8px;
+
+  @include sm {
+    grid-template-columns: 110px 90px 90px 1fr 28px;
+  }
+
+  @include xs {
+    display: none;
+  }
+}
+
+.ccd-col-label-name,
+.ccd-col-label-preview,
+.ccd-col-label-bg,
+.ccd-col-label-text,
+.ccd-col-label-reset {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-family: "Poppins", sans-serif;
+}
+
+// ─── Groups ───────────────────────────────────────────────────────────────────
+.ccd-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ccd-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ccd-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: $primary-main;
+  font-family: "Poppins", sans-serif;
+  padding: 0 0 4px 2px;
+  border-bottom: 1.5px solid rgba($primary-main, 0.18);
+  margin-bottom: 4px;
+}
+
+.ccd-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// ─── Row ──────────────────────────────────────────────────────────────────────
+.ccd-row {
+  display: grid;
+  grid-template-columns: 140px 100px 100px 1fr 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+
+  @include sm {
+    grid-template-columns: 110px 90px 90px 1fr 28px;
+  }
+
+  @include xs {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px;
+  }
+
+  &:hover {
+    background: var(--bg-subtle);
+  }
+
+  &--active {
+    background: var(--bg-subtle);
+    border-color: var(--border-color);
+  }
+}
+
+// ─── Name Input ───────────────────────────────────────────────────────────────
+.ccd-name-input {
+  font-size: 0.76rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 8px;
+  width: 100%;
+  min-width: 0;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $primary-main;
+    background: var(--bg-paper);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  @include xs {
+    grid-column: 1 / -1;
+  }
+}
+
+// ─── Preview Chip ─────────────────────────────────────────────────────────────
+.ccd-preview-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  @include xs {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+// ─── Swatch Group (swatch + hex label stacked) ────────────────────────────────
+.ccd-swatch-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+
+  @include xs {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+.ccd-hex-label {
+  font-size: 0.64rem;
+  font-family: "Courier New", monospace;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include sm {
+    display: none;
+  }
+}
+
+// ─── Swatches ─────────────────────────────────────────────────────────────────
+.ccd-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+
+  &--active {
+    transform: scale(1.2);
+    box-shadow:
+      0 0 0 2px var(--bg-paper),
+      0 0 0 4px $primary-main;
+  }
+}
+
+// ─── Reset Button ─────────────────────────────────────────────────────────────
+.ccd-reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 5px;
+  flex-shrink: 0;
+  transition:
+    color 0.12s,
+    background 0.12s;
+
+  &:hover {
+    color: $primary-main;
+    background: rgba($primary-main, 0.08);
+  }
+
+  &--hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+// ─── Color Picker Popup ───────────────────────────────────────────────────────
+.ccp-popup {
+  background: var(--bg-paper);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 220px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  font-family: "Poppins", sans-serif;
+}
+
+.ccp-sb-wrap {
+  position: relative;
+  width: 196px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.ccp-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  cursor: crosshair;
+}
+
+.ccp-cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.ccp-hue {
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    #f00,
+    #ff0,
+    #0f0,
+    #0ff,
+    #00f,
+    #f0f,
+    #f00
+  );
+  outline: none;
+  border: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+}
+
+.ccp-hex-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ccp-hex-preview {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.ccp-hex-input {
+  flex: 1;
+  font-size: 0.72rem;
+  font-family: "Courier New", monospace;
+  padding: 5px 7px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  outline: none;
+
+  &:focus {
+    border-color: $primary-main;
+  }
+}
+
+.ccp-done-btn {
+  background: $primary-main;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.7rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.12s;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}

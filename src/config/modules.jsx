@@ -13,6 +13,9 @@ import MapIcon from "@mui/icons-material/Map";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import WarningIcon from "@mui/icons-material/Warning";
 import FlutterDashIcon from "@mui/icons-material/FlutterDash";
+import SquareFootIcon from "@mui/icons-material/SquareFoot";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import StarIcon from "@mui/icons-material/Star";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -120,6 +123,27 @@ export const MODULES = {
         path: "infestation-levels",
         icon: <WarningIcon sx={iconStyles.child} />,
       },
+      UNITS: {
+        name: "Units",
+        permissionId: "MASTERLIST.UNITS",
+        displayName: "Units",
+        path: "units",
+        icon: <SquareFootIcon sx={iconStyles.child} />,
+      },
+      WASTAGES: {
+        name: "Wastages",
+        permissionId: "MASTERLIST.WASTAGES",
+        displayName: "Wastages",
+        path: "wastages",
+        icon: <DeleteSweepIcon sx={iconStyles.child} />,
+      },
+      SCORES: {
+        name: "Scores",
+        permissionId: "MASTERLIST.SCORES",
+        displayName: "Scores",
+        path: "scores",
+        icon: <StarIcon sx={iconStyles.child} />,
+      },
     },
   },
 
@@ -152,5 +176,32 @@ export const MODULES = {
         icon: <FlutterDashIcon sx={iconStyles.child} />,
       },
     },
+  },
+
+  BIRDS: {
+    name: "Birds",
+    permissionId: "BIRDS",
+    displayName: "Birds",
+    path: "/birds",
+    icon: <FlutterDashIcon sx={iconStyles.main} />,
+    children: null,
+  },
+
+  COBS: {
+    name: "COBS",
+    permissionId: "COBS",
+    displayName: "COBS",
+    path: "/cobs",
+    icon: <SanitizerIcon sx={iconStyles.main} />,
+    children: null,
+  },
+
+  PEST: {
+    name: "Pest",
+    permissionId: "PEST",
+    displayName: "Pest",
+    path: "/pest",
+    icon: <BugReportIcon sx={iconStyles.main} />,
+    children: null,
   },
 };

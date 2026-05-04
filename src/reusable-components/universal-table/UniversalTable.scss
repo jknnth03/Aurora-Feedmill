@@ -32,8 +32,10 @@
 
   &__table {
     width: 100%;
+    min-width: 480px;
     border-collapse: collapse;
     font-size: 0.82rem;
+    table-layout: auto;
   }
 
   &__thead {
@@ -48,7 +50,6 @@
     padding: 14px 16px;
     font-size: 0.78rem;
     font-weight: 600;
-    // ← now driven by the Text Color Picker --text-table-header var
     color: var(--text-table-header, var(--palette-primary, #f37925));
     text-align: left;
     white-space: nowrap;
@@ -60,13 +61,11 @@
       transition: color 0.15s;
 
       &:hover {
-        // slightly darken on hover while still respecting customisation
         filter: brightness(0.85);
       }
     }
 
     &--sorted {
-      // keep the custom color, just ensure it stays vivid
       opacity: 1;
     }
 
@@ -93,7 +92,6 @@
 
     &--active {
       opacity: 1;
-      // inherits parent color — no need to hard-code
       color: inherit;
     }
   }
@@ -140,13 +138,17 @@
     padding: 13px 16px;
     font-size: 0.82rem;
     font-weight: 400;
-    // ← now driven by the Text Color Picker --text-table-body var
     color: var(--text-table-body, var(--text-primary));
     text-align: left;
     vertical-align: middle;
 
     &--actions {
       white-space: nowrap;
+    }
+
+    &--empty {
+      padding: 0;
+      height: 1px;
     }
   }
 
@@ -155,8 +157,6 @@
     align-items: center;
     gap: 6px;
 
-    // Action icon buttons / icon elements inside the actions cell
-    // target MUI SvgIcon, plain svg, and icon buttons
     .MuiIconButton-root,
     .MuiSvgIcon-root,
     svg {
@@ -199,6 +199,44 @@
       width: 64px;
       height: 28px;
       border-radius: 8px;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .ut {
+    &__th,
+    &__td {
+      padding: 11px 12px;
+      font-size: 0.78rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .ut {
+    &__th,
+    &__td {
+      padding: 10px 10px;
+      font-size: 0.74rem;
+    }
+
+    &__th {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .ut {
+    &__th,
+    &__td {
+      padding: 8px 8px;
+      font-size: 0.7rem;
+    }
+
+    &__th {
+      font-size: 0.66rem;
     }
   }
 }
