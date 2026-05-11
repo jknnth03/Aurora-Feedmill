@@ -88,13 +88,6 @@ export const MODULES = {
     path: "/masterlist",
     icon: <ListAltIcon sx={iconStyles.main} />,
     children: {
-      CHECKLIST: {
-        name: "Checklist",
-        permissionId: "MASTERLIST.CHECKLIST",
-        displayName: "Checklist",
-        path: "checklist",
-        icon: <ChecklistIcon sx={iconStyles.child} />,
-      },
       SECTIONS: {
         name: "Sections",
         permissionId: "MASTERLIST.SECTIONS",
@@ -177,16 +170,6 @@ export const MODULES = {
       },
     },
   },
-
-  BIRDS: {
-    name: "Birds",
-    permissionId: "BIRDS",
-    displayName: "Birds",
-    path: "/birds",
-    icon: <FlutterDashIcon sx={iconStyles.main} />,
-    children: null,
-  },
-
   COBS: {
     name: "COBS",
     permissionId: "COBS",
@@ -195,13 +178,20 @@ export const MODULES = {
     icon: <SanitizerIcon sx={iconStyles.main} />,
     children: null,
   },
-
   PEST: {
     name: "Pest",
     permissionId: "PEST",
     displayName: "Pest",
     path: "/pest",
     icon: <BugReportIcon sx={iconStyles.main} />,
+    children: null,
+  },
+  BIRDS: {
+    name: "Birds",
+    permissionId: "BIRDS",
+    displayName: "Birds",
+    path: "/birds",
+    icon: <FlutterDashIcon sx={iconStyles.main} />,
     children: null,
   },
 };

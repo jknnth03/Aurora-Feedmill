@@ -12,7 +12,11 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
+import {
+  SaveButton,
+  EditButton,
+  BackModalButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetInfestationLevelByIdQuery,
   useCreateInfestationLevelMutation,
@@ -32,11 +36,16 @@ const schema = yup.object({
 
 const SkeletonLoader = () => (
   <div className="ilm__skeleton-wrap">
-    {[50, 75, 60, 80].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
-    ))}
+    <div className="ilm__skeleton-group">
+      <span className="ut__skeleton ilm__skeleton-label" />
+      <span className="ut__skeleton ilm__skeleton-field" />
+    </div>
+    <div className="ilm__skeleton-group">
+      <span className="ut__skeleton ilm__skeleton-label" />
+      <span className="ut__skeleton ilm__skeleton-field" />
+    </div>
     <div className="ilm__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "28%" }} />
+      <span className="ut__skeleton ilm__skeleton-btn" />
     </div>
   </div>
 );
@@ -184,11 +193,7 @@ const InfestationLevelModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
             <div className="ilm__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={() => setMode("edit")}
-              />
+              <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
@@ -196,7 +201,6 @@ const InfestationLevelModal = ({ open, onClose, selectedId = null }) => {
             <div className="ilm__group">
               <p className="ilm__group-label">Infestation Level Details</p>
 
-              {/* Name */}
               <div className="ilm__field" style={{ marginBottom: 14 }}>
                 <div
                   className={`ilm__input-wrap${errors.name ? " ilm__input-wrap--error" : ""}`}>
@@ -216,7 +220,6 @@ const InfestationLevelModal = ({ open, onClose, selectedId = null }) => {
                 )}
               </div>
 
-              {/* Type dropdown */}
               <div className="ilm__field">
                 <div
                   className={`ilm__select-wrap${errors.type ? " ilm__select-wrap--error" : ""}`}
@@ -268,14 +271,9 @@ const InfestationLevelModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="ilm__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="ilm__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."

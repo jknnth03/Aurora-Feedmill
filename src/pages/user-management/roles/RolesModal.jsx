@@ -15,8 +15,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
-import UniversalButton, {
+import {
   SaveButton,
+  EditButton,
+  BackModalButton,
 } from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetRoleByIdQuery,
@@ -36,11 +38,16 @@ const schema = yup.object({
 
 const SkeletonLoader = () => (
   <div className="rm__skeleton-wrap">
-    {[50, 75, 60, 80].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
-    ))}
+    <div className="rm__skeleton-group">
+      <span className="ut__skeleton rm__skeleton-label" />
+      <span className="ut__skeleton rm__skeleton-field" />
+    </div>
+    <div className="rm__skeleton-group">
+      <span className="ut__skeleton rm__skeleton-label" />
+      <span className="ut__skeleton rm__skeleton-field rm__skeleton-field--tall" />
+    </div>
     <div className="rm__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "28%" }} />
+      <span className="ut__skeleton rm__skeleton-btn" />
     </div>
   </div>
 );
@@ -329,12 +336,7 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
             </div>
 
             <div className="rm__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={() => setMode("edit")}
-                modalVariant
-              />
+              <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
@@ -385,12 +387,7 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="rm__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="rm__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
               <SaveButton
                 label={

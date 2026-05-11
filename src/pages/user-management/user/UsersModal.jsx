@@ -15,8 +15,10 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import UniversalButton, {
+import {
   SaveButton,
+  EditButton,
+  BackModalButton,
 } from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetUserByIdQuery,
@@ -67,11 +69,28 @@ const FIELD_GROUPS = [
 
 const SkeletonLoader = () => (
   <div className="um__skeleton-wrap">
-    {[40, 60, 40, 60, 80, 50, 70, 55, 65].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
+    {FIELD_GROUPS.map((group) => (
+      <div key={group.label} className="um__skeleton-group">
+        <span className="ut__skeleton um__skeleton-label" />
+        <div className="um__grid">
+          {group.fields
+            .filter((f) => !f.addOnly)
+            .map((f) => (
+              <div
+                key={f.name}
+                className={f.half ? "um__col-half" : "um__col-full"}>
+                <span className="ut__skeleton um__skeleton-field" />
+              </div>
+            ))}
+        </div>
+      </div>
     ))}
+    <div className="um__skeleton-group">
+      <span className="ut__skeleton um__skeleton-label" />
+      <span className="ut__skeleton um__skeleton-field um__col-full" />
+    </div>
     <div className="um__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "25%" }} />
+      <span className="ut__skeleton um__skeleton-btn" />
     </div>
   </div>
 );
@@ -237,7 +256,9 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
 
   const { data: userDetail, isFetching: userLoading } = useGetUserByIdQuery(
     selectedId,
-    { skip: !selectedId || !open },
+    {
+      skip: !selectedId || !open,
+    },
   );
   const rowData = userDetail?.data ?? null;
 
@@ -306,8 +327,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
     try {
       if (mode === "edit") {
         const { password, ...rest } = form;
-        const payload = { id: rowData?.id, ...rest };
-        await updateUser(payload).unwrap();
+        await updateUser({ id: rowData?.id, ...rest }).unwrap();
         window.__snackbar__?.enqueueSnackbar("User updated successfully.", {
           variant: "success",
         });
@@ -322,7 +342,9 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
       console.error("Save failed:", err);
       window.__snackbar__?.enqueueSnackbar(
         "Something went wrong. Please try again.",
-        { variant: "error" },
+        {
+          variant: "error",
+        },
       );
     }
   };
@@ -335,8 +357,6 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
 
   const headerTitle = { add: "Add User", view: "View User", edit: "Edit User" };
   const isView = mode === "view";
-
-  const getVisibleFields = (fields) => fields;
 
   return (
     <Dialog
@@ -366,13 +386,13 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
           <SkeletonLoader />
         ) : isView ? (
           <>
-            {FIELD_GROUPS.map((group) => {
-              const visibleFields = getVisibleFields(group.fields);
-              return (
-                <div key={group.label} className="um__group">
-                  <p className="um__group-label">{group.label}</p>
-                  <div className="um__grid">
-                    {visibleFields.map((f) => (
+            {FIELD_GROUPS.map((group) => (
+              <div key={group.label} className="um__group">
+                <p className="um__group-label">{group.label}</p>
+                <div className="um__grid">
+                  {group.fields
+                    .filter((f) => !f.addOnly)
+                    .map((f) => (
                       <ViewField
                         key={f.name}
                         label={f.label}
@@ -380,10 +400,9 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
                         value={rowData?.[f.name]}
                       />
                     ))}
-                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
             <div className="um__group">
               <p className="um__group-label">Role</p>
               <div className="um__field">
@@ -399,48 +418,39 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
             <div className="um__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={() => setMode("edit")}
-                modalVariant
-              />
+              <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            {FIELD_GROUPS.map((group) => {
-              const visibleFields = getVisibleFields(group.fields);
-              if (visibleFields.length === 0) return null;
-              return (
-                <div key={group.label} className="um__group">
-                  <p className="um__group-label">{group.label}</p>
-                  <div className="um__grid">
-                    {visibleFields.map((f) => (
-                      <div
-                        key={f.name}
-                        className={f.half ? "um__col-half" : "um__col-full"}
-                        style={
-                          f.addOnly && mode !== "add"
-                            ? { display: "none" }
-                            : undefined
-                        }>
-                        <FormField
-                          name={f.name}
-                          label={f.label}
-                          required={f.required}
-                          type={f.type || "text"}
-                          register={register}
-                          errors={errors}
-                          showPass={showPass}
-                          onTogglePass={() => setShowPass((p) => !p)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+            {FIELD_GROUPS.map((group) => (
+              <div key={group.label} className="um__group">
+                <p className="um__group-label">{group.label}</p>
+                <div className="um__grid">
+                  {group.fields.map((f) => (
+                    <div
+                      key={f.name}
+                      className={f.half ? "um__col-half" : "um__col-full"}
+                      style={
+                        f.addOnly && mode !== "add"
+                          ? { display: "none" }
+                          : undefined
+                      }>
+                      <FormField
+                        name={f.name}
+                        label={f.label}
+                        required={f.required}
+                        type={f.type || "text"}
+                        register={register}
+                        errors={errors}
+                        showPass={showPass}
+                        onTogglePass={() => setShowPass((p) => !p)}
+                      />
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
 
             <div className="um__group">
               <p className="um__group-label">Role</p>
@@ -466,12 +476,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="um__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="um__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
               <SaveButton
                 label={

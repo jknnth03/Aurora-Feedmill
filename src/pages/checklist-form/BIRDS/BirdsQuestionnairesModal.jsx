@@ -17,7 +17,7 @@ import {
   useGetBirdByIdQuery,
   useCreateBirdMutation,
   useUpdateBirdMutation,
-} from "../../../features/api/checklist-form/birdsApi";
+} from "../../../features/api/questionnaires/birdsQuestionnairesApi";
 import { useGetInspectionAreasQuery } from "../../../features/api/masterlist/inspectionAreaApi";
 import { useGetInfestationLevelsQuery } from "../../../features/api/masterlist/infestationLevelApi";
 import "./BirdsQuestionnairesModal.scss";

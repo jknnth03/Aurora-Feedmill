@@ -12,14 +12,18 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import CheckIcon from "@mui/icons-material/Check";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
+import {
+  SaveButton,
+  EditButton,
+  BackModalButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetPestsSheetByIdQuery,
   useCreatePestsSheetMutation,
   useUpdatePestsSheetMutation,
-} from "../../../features/api/checklist-form/pestSheetApi";
+} from "../../../features/api/questionnaires/pestQuestionnairesApi";
 import { useGetInspectionAreasQuery } from "../../../features/api/masterlist/inspectionAreaApi";
-import { useGetPestsQuery } from "../../../features/api/masterlist/pestsApi";
+import { useGetPestsQuery } from "../../../features/api/masterlist/pestTypesApi";
 import "./PestSheetModal.scss";
 
 const schema = yup.object({
@@ -37,11 +41,16 @@ const schema = yup.object({
 
 const SkeletonLoader = () => (
   <div className="psm__skeleton-wrap">
-    {[60, 80, 50, 70, 90, 55].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
-    ))}
+    <div className="psm__skeleton-group">
+      <span className="ut__skeleton psm__skeleton-label" />
+      <span className="ut__skeleton psm__skeleton-field" />
+    </div>
+    <div className="psm__skeleton-group">
+      <span className="ut__skeleton psm__skeleton-label" />
+      <span className="ut__skeleton psm__skeleton-field" />
+    </div>
     <div className="psm__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "30%" }} />
+      <span className="ut__skeleton psm__skeleton-btn" />
     </div>
   </div>
 );
@@ -227,7 +236,6 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
   };
 
   const onSubmit = async (form) => {
-    // ✅ backend expects singular key names with array values
     const payload = {
       inspection_area_id: form.inspection_area_ids,
       pest_id: form.pest_ids,
@@ -307,11 +315,7 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
             <div className="psm__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={handleSwitchToEdit}
-              />
+              <EditButton onClick={handleSwitchToEdit} />
             </div>
           </>
         ) : (
@@ -354,14 +358,9 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="psm__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="psm__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."

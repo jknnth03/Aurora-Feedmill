@@ -11,9 +11,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
-  useGetSectionByIdQuery, // ← new
+  SaveButton,
+  EditButton,
+  BackModalButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
+import {
+  useGetSectionByIdQuery,
   useCreateSectionMutation,
   useUpdateSectionMutation,
 } from "../../../features/api/masterlist/sectionsApi";
@@ -23,28 +27,26 @@ const schema = yup.object({
   name: yup.string().required("Section name is required"),
 });
 
-// ← new: matches SkeletonLoader in ChecklistModal
 const SkeletonLoader = () => (
   <div className="sm__skeleton-wrap">
-    {[50, 75, 60, 80].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
-    ))}
+    <div className="sm__skeleton-group">
+      <span className="ut__skeleton sm__skeleton-label" />
+      <span className="ut__skeleton sm__skeleton-field" />
+    </div>
     <div className="sm__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "28%" }} />
+      <span className="ut__skeleton sm__skeleton-btn" />
     </div>
   </div>
 );
 
 const SectionsModal = ({ open, onClose, selectedId = null }) => {
-  // ← prop changed
   const [mode, setMode] = useState("add");
-  const [selectedRow, setSelectedRow] = useState(null); // ← new local state
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const [createSection, { isLoading: isCreating }] = useCreateSectionMutation();
   const [updateSection, { isLoading: isUpdating }] = useUpdateSectionMutation();
   const isLoading = isCreating || isUpdating;
 
-  // ← new: declarative fetch, skips when no id or modal closed
   const { data: sectionData, isFetching: sectionLoading } =
     useGetSectionByIdQuery(selectedId, {
       skip: !selectedId || !open,
@@ -60,7 +62,6 @@ const SectionsModal = ({ open, onClose, selectedId = null }) => {
     defaultValues: { name: "" },
   });
 
-  // Set mode + clear state when modal opens
   useEffect(() => {
     if (open) {
       setMode(selectedId ? "view" : "add");
@@ -71,7 +72,6 @@ const SectionsModal = ({ open, onClose, selectedId = null }) => {
     }
   }, [open, selectedId, reset]);
 
-  // Populate form when API data arrives
   useEffect(() => {
     if (sectionData) {
       const data = sectionData?.data ?? null;
@@ -139,7 +139,7 @@ const SectionsModal = ({ open, onClose, selectedId = null }) => {
       </div>
 
       <DialogContent className="sm__content">
-        {sectionLoading ? ( // ← new: skeleton while fetching
+        {sectionLoading ? (
           <SkeletonLoader />
         ) : isView ? (
           <>
@@ -158,11 +158,7 @@ const SectionsModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
             <div className="sm__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={() => setMode("edit")}
-              />
+              <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
@@ -191,14 +187,9 @@ const SectionsModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="sm__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="sm__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."

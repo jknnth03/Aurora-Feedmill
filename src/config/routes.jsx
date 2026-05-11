@@ -6,7 +6,6 @@ import Dashboard from "../pages/dashboard/Dashboard.jsx";
 import Users from "../pages/user-management/user/Users.jsx";
 import Roles from "../pages/user-management/roles/Roles.jsx";
 import Permissions from "../pages/user-management/permissions/Permissions.jsx";
-import Checklist from "../pages/masterlist/checklists/Checklists.jsx";
 import Sections from "../pages/masterlist/sections/Sections.jsx";
 import InspectionAreas from "../pages/masterlist/inspection-areas/InspectionAreas.jsx";
 import Pests from "../pages/masterlist/pesttypes/PestTypes.jsx";
@@ -68,14 +67,6 @@ export const ROUTES = [
         },
       },
 
-      {
-        id: "MASTERLIST.CHECKLIST",
-        path: `${MODULES.MASTERLIST.path}/${MODULES.MASTERLIST.children.CHECKLIST.path}`,
-        element: <Checklist />,
-        handle: {
-          permission: MODULES.MASTERLIST.children.CHECKLIST.permissionId,
-        },
-      },
       {
         id: "MASTERLIST.SECTIONS",
         path: `${MODULES.MASTERLIST.path}/${MODULES.MASTERLIST.children.SECTIONS.path}`,

@@ -14,7 +14,7 @@ import {
 import {
   useGetBirdsQuery,
   useArchiveBirdMutation,
-} from "../../../features/api/checklist-form/birdsApi";
+} from "../../../features/api/questionnaires/birdsQuestionnairesApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import BirdsModal from "./BirdsQuestionnairesModal";

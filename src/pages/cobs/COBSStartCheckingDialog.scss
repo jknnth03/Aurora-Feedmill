@@ -1,0 +1,697 @@
+@use "../../styles/colors" as *;
+
+.cobs-sc {
+  &__paper {
+    border-radius: 14px !important;
+    font-family: "Poppins", sans-serif;
+    background: $bg-main !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important; // <-- add this
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:hover {
+      scrollbar-width: thin;
+      scrollbar-color: $primary-main transparent;
+
+      &::-webkit-scrollbar {
+        display: block;
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    }
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 6px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: $bg-main;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+    }
+  }
+
+  &__header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__header-icon {
+    font-size: 1.1rem !important;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close {
+    color: $text-muted !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__content {
+    padding: 16px 20px 24px !important;
+    overflow-y: visible !important;
+  }
+
+  &__skeleton-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 0;
+  }
+
+  &__name-row {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+  }
+
+  &__name-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.88);
+    }
+  }
+
+  &__section {
+    border: 1.5px solid $primary-main;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+
+    [data-theme="dark"] & {
+      border-color: $secondary-main;
+    }
+  }
+
+  &__section-header {
+    padding: 8px 12px;
+    background: $primary-main;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 0.4px;
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__table-scroll {
+    width: 100%;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: $primary-main;
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+
+  &__table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+    table-layout: fixed;
+  }
+
+  &__thead-row {
+    border-bottom: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__th {
+    padding: 7px 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: $text-primary;
+    background: rgba($primary-main, 0.03);
+    text-align: left;
+    border-right: 1px solid $border-color;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &--item {
+      width: 28%;
+    }
+    &--compliance {
+      width: 26%;
+    }
+    &--remarks {
+      width: 28%;
+    }
+    &--attachment {
+      width: 18%;
+    }
+  }
+
+  &__tr {
+    border-bottom: 1px solid $border-color;
+    transition: background 0.12s;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+
+    &:hover {
+      background: rgba($primary-main, 0.015);
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.02);
+      }
+    }
+  }
+
+  &__td {
+    padding: 10px 10px;
+    font-size: 0.78rem;
+    color: $text-primary;
+    border-right: 1px solid $border-color;
+    vertical-align: middle;
+    word-break: break-word;
+    white-space: normal;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.8);
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+  }
+
+  &__radio-box {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 8px 10px;
+    background: rgba($primary-main, 0.03);
+    border-radius: 6px;
+    border: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+  }
+
+  &__radio-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__radio-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+
+    &:checked + .cobs-sc__radio-circle {
+      box-shadow: inset 0 0 0 2px #fff;
+
+      &.cobs-sc__radio-circle--0 {
+        border-color: #f44336;
+        background: #f44336;
+      }
+      &.cobs-sc__radio-circle--50 {
+        border-color: #ffc107;
+        background: #ffc107;
+      }
+      &.cobs-sc__radio-circle--75 {
+        border-color: #ff9800;
+        background: #ff9800;
+      }
+      &.cobs-sc__radio-circle--100 {
+        border-color: #4caf50;
+        background: #4caf50;
+      }
+    }
+
+    &:checked + .cobs-sc__temporal-circle {
+      border-color: $primary-main;
+      background: $primary-main;
+      box-shadow: inset 0 0 0 2px #fff;
+
+      [data-theme="dark"] & {
+        border-color: $secondary-main;
+        background: $secondary-main;
+      }
+    }
+  }
+
+  &__radio-circle {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid #bdbdbd;
+    flex-shrink: 0;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  &__radio-text {
+    font-size: 0.75rem;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.75);
+    }
+  }
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+    min-height: 56px;
+
+    &::placeholder {
+      color: $text-muted;
+      opacity: 0.7;
+    }
+
+    &:focus {
+      border-color: $primary-main;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.8);
+
+      &:focus {
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__attach-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  &__attach-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__attach-name {
+    font-size: 0.65rem;
+    font-family: "Poppins", sans-serif;
+    color: $primary-main;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: default;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__attach-remove {
+    color: $status-error !important;
+    opacity: 0.6;
+    flex-shrink: 0;
+    transition: opacity 0.15s !important;
+
+    &:hover {
+      opacity: 1;
+      background: rgba($status-error, 0.08) !important;
+    }
+  }
+
+  &__attach-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    color: $text-muted;
+    transition:
+      color 0.15s,
+      background 0.15s;
+    font-family: "Poppins", sans-serif;
+
+    span {
+      font-size: 0.65rem;
+    }
+
+    &:hover {
+      color: $primary-main;
+      background: rgba($primary-main, 0.06);
+    }
+
+    &--more {
+      flex-direction: row;
+      gap: 4px;
+      font-size: 0.65rem;
+      margin-top: 2px;
+      color: $primary-main;
+
+      [data-theme="dark"] & {
+        color: $secondary-main;
+      }
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+
+      &:hover {
+        color: $secondary-main;
+        background: rgba($secondary-main, 0.08);
+      }
+    }
+  }
+
+  &__others {
+    border: 1.5px solid $primary-main;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+
+    [data-theme="dark"] & {
+      border-color: $secondary-main;
+    }
+  }
+
+  &__others-header {
+    padding: 8px 12px;
+    background: $primary-main;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 0.4px;
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__others-body {
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: $bg-main;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+    }
+  }
+
+  &__others-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__others-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__others-input-box {
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    padding: 11px 14px;
+    background: $bg-main;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
+
+  &__others-time {
+    font-size: 0.85rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    font-weight: 500;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__temporal-options {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  &__temporal-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__temporal-circle {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid #bdbdbd;
+    flex-shrink: 0;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  &__temporal-text {
+    font-size: 0.8rem;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  &__others-textarea {
+    width: 100%;
+    resize: vertical;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 0.8rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    background: $bg-main;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+    min-height: 90px;
+
+    &::placeholder {
+      color: $text-muted;
+      opacity: 0.6;
+    }
+
+    &:focus {
+      border-color: $primary-main;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.02);
+
+      &:focus {
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__footer {
+    padding: 12px 20px !important;
+    border-top: 1px solid $border-color;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: $bg-main;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+      background: $bg-main;
+    }
+  }
+
+  &__footer-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  &__btn-close {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    color: $text-muted !important;
+    text-transform: uppercase !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__btn-draft {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-color: $primary-main !important;
+    color: $primary-main !important;
+    border-radius: 8px !important;
+    text-transform: uppercase !important;
+    padding: 7px 20px !important;
+
+    &:hover {
+      background: rgba($primary-main, 0.04) !important;
+    }
+    &:disabled {
+      opacity: 0.5 !important;
+    }
+
+    [data-theme="dark"] & {
+      border-color: $secondary-main !important;
+      color: $secondary-main !important;
+    }
+  }
+
+  &__btn-submit {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    background-color: $primary-main !important;
+    border-radius: 8px !important;
+    padding: 7px 22px !important;
+    text-transform: uppercase !important;
+    box-shadow: none !important;
+    color: #fff !important;
+
+    &:hover {
+      filter: brightness(0.92);
+      box-shadow: none !important;
+    }
+
+    &:disabled {
+      opacity: 0.5 !important;
+    }
+
+    [data-theme="dark"] & {
+      background-color: $secondary-main !important;
+    }
+  }
+}

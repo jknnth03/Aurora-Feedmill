@@ -14,7 +14,7 @@ import {
 import {
   useGetPestsSheetsQuery,
   useArchivePestsSheetMutation,
-} from "../../../features/api/checklist-form/pestSheetApi";
+} from "../../../features/api/questionnaires/pestQuestionnairesApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import PestSheetModal from "./PestSheetModal";

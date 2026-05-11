@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
@@ -12,141 +11,186 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import SearchIcon from "@mui/icons-material/Search";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import PushPinIcon from "@mui/icons-material/PushPin";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import CheckIcon from "@mui/icons-material/Check";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  SaveButton,
+  EditButton,
+  BackModalButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useLazyGetCobsByIdQuery,
   useCreateCobsMutation,
   useUpdateCobsMutation,
-} from "../../../features/api/checklist-form/cobsApi";
-import { useGetChecklistsQuery } from "../../../features/api/masterlist/checklistApi";
+} from "../../../features/api/questionnaires/cobsQuestionnairesApi";
+import { useGetUnitsQuery } from "../../../features/api/masterlist/unitsApi";
+import { cobsSchema, TYPE_OPTIONS } from "./COBSSchema";
 import "./COBSQuestionnairesModal.scss";
-
-const itemSchema = yup.object({
-  name: yup.string().required("Item name is required"),
-  type: yup.string().required("Type is required"),
-});
-
-const formSchema = yup.object({
-  name: yup.string().required("Area/section name is required"),
-  item: yup.array().of(itemSchema).min(1, "At least one item is required"),
-});
-
-const schema = yup.object({
-  checklist_id: yup
-    .number()
-    .required("Checklist is required")
-    .typeError("Checklist is required"),
-  forms: yup
-    .array()
-    .of(formSchema)
-    .min(1, "At least one form section is required"),
-});
-
-const TYPE_OPTIONS = ["radio button", "checkbox", "text input"];
 
 const SkeletonLoader = () => (
   <div className="cobsm__skeleton-wrap">
-    {[50, 75, 60, 80, 55, 70, 65].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
-    ))}
+    <div className="cobsm__skeleton-group">
+      <span className="ut__skeleton cobsm__skeleton-label" />
+      <span className="ut__skeleton cobsm__skeleton-field" />
+    </div>
+    <div className="cobsm__skeleton-group">
+      <span className="ut__skeleton cobsm__skeleton-label" />
+      <span className="ut__skeleton cobsm__skeleton-field" />
+      <span className="ut__skeleton cobsm__skeleton-field" />
+      <span className="ut__skeleton cobsm__skeleton-field" />
+    </div>
     <div className="cobsm__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "28%" }} />
+      <span className="ut__skeleton cobsm__skeleton-btn" />
     </div>
   </div>
 );
 
-const ChecklistAutocomplete = ({ value, onChange, error, displayValue }) => {
-  const [search, setSearch] = useState("");
+const CustomSelect = ({ value, onChange, options, error }) => {
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-
-  const { data, isFetching } = useGetChecklistsQuery(
-    { status: 1, search, page: 1, per_page: 50 },
-    { skip: !open },
-  );
-  const options = data?.data ?? [];
-  const selected = options.find((c) => c.id === value) ?? null;
+  const ref = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div
+      className={`cobsm__custom-select${error ? " cobsm__custom-select--error" : ""}`}
+      ref={ref}>
+      <label className="cobsm__label">Type</label>
+      <div
+        className="cobsm__custom-select-box"
+        onClick={() => setOpen((p) => !p)}>
+        <span className="cobsm__custom-select-value">{value}</span>
+        <KeyboardArrowDownIcon
+          className={`cobsm__custom-select-arrow${open ? " cobsm__custom-select-arrow--open" : ""}`}
+        />
+      </div>
+      {open && (
+        <div className="cobsm__custom-select-dropdown">
+          {options.map((opt) => (
+            <div
+              key={opt}
+              className={`cobsm__custom-select-option${value === opt ? " cobsm__custom-select-option--selected" : ""}`}
+              onClick={() => {
+                onChange(opt);
+                setOpen(false);
+              }}>
+              <span>{opt}</span>
+              {value === opt && <CheckIcon sx={{ fontSize: "0.85rem" }} />}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SingleSelect = ({
+  value = [],
+  onChange,
+  options = [],
+  error,
+  label,
+  placeholder,
+  searchable,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
         setSearch("");
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleSelect = (checklist) => {
-    onChange(checklist.id);
-    setSearch("");
+  const filtered = searchable
+    ? options.filter((o) =>
+        o.label.toLowerCase().includes(search.toLowerCase()),
+      )
+    : options;
+
+  const selectedId = Array.isArray(value) && value.length > 0 ? value[0] : null;
+  const selectedLabel =
+    options.find((o) => o.value === selectedId)?.label ?? null;
+
+  const handleSelect = (id) => {
+    if (selectedId === id) {
+      onChange([]);
+    } else {
+      onChange([id]);
+    }
     setOpen(false);
+    setSearch("");
   };
 
   return (
     <div
-      className={`cobsm__ac${error ? " cobsm__ac--error" : ""}`}
-      ref={wrapRef}>
-      <label className="cobsm__ac-label">
-        Checklist
-        <span className="cobsm__ac-required">
+      className={`cobsm__multiselect${error ? " cobsm__multiselect--error" : ""}`}
+      ref={ref}>
+      <label className="cobsm__label">
+        {label}
+        <span className="cobsm__required">
           <PushPinIcon />
         </span>
       </label>
-
-      <div className="cobsm__ac-box" onClick={() => setOpen((p) => !p)}>
-        {open ? (
-          <div className="cobsm__ac-search-wrap">
-            <SearchIcon
-              sx={{ fontSize: "0.9rem", flexShrink: 0, color: "inherit" }}
-            />
-            <input
-              autoFocus
-              type="text"
-              placeholder="Search checklist..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="cobsm__ac-input"
-              onClick={(e) => e.stopPropagation()}
-              autoComplete="off"
-            />
+      <div
+        className="cobsm__multiselect-box"
+        onClick={() => setOpen((p) => !p)}>
+        {selectedLabel ? (
+          <div className="cobsm__multiselect-tags">
+            <span className="cobsm__multiselect-tag">{selectedLabel}</span>
           </div>
         ) : (
-          <span
-            className={
-              selected || displayValue
-                ? "cobsm__ac-value"
-                : "cobsm__ac-placeholder"
-            }>
-            {selected ? selected.name : displayValue || "Select checklist..."}
-          </span>
+          <span className="cobsm__multiselect-placeholder">{placeholder}</span>
         )}
-        <span className="cobsm__ac-arrow">
-          {open ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
-        </span>
+        <KeyboardArrowDownIcon
+          className={`cobsm__custom-select-arrow${open ? " cobsm__custom-select-arrow--open" : ""}`}
+        />
       </div>
-
       {open && (
-        <div className="cobsm__ac-dropdown">
-          <div className="cobsm__ac-options">
-            {isFetching ? (
-              <p className="cobsm__ac-empty">Loading...</p>
-            ) : options.length === 0 ? (
-              <p className="cobsm__ac-empty">No checklists found.</p>
+        <div className="cobsm__custom-select-dropdown">
+          {searchable && (
+            <div className="cobsm__multiselect-search">
+              <SearchIcon sx={{ fontSize: "0.9rem" }} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+              />
+            </div>
+          )}
+          <div className="cobsm__custom-select-options">
+            {filtered.length === 0 ? (
+              <p className="cobsm__ac-empty">No results found</p>
             ) : (
-              options.map((c) => (
-                <div
-                  key={c.id}
-                  className={`cobsm__ac-option${value === c.id ? " cobsm__ac-option--selected" : ""}`}
-                  onClick={() => handleSelect(c)}>
-                  {c.name}
-                </div>
-              ))
+              filtered.map((opt) => {
+                const selected = selectedId === opt.value;
+                return (
+                  <div
+                    key={opt.value}
+                    className={`cobsm__custom-select-option${selected ? " cobsm__custom-select-option--selected" : ""}`}
+                    onClick={() => handleSelect(opt.value)}>
+                    <span>{opt.label}</span>
+                    {selected && <CheckIcon sx={{ fontSize: "0.85rem" }} />}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -155,26 +199,178 @@ const ChecklistAutocomplete = ({ value, onChange, error, displayValue }) => {
   );
 };
 
-const FormSection = ({
-  formIdx,
+const SubItemRow = ({
+  catIdx,
+  areaIdx,
+  subIdx,
+  register,
+  errors,
+  onRemove,
+  canRemove,
+  watch,
+  setValue,
+}) => {
+  const subError =
+    errors?.items?.[catIdx]?.items?.[areaIdx]?.sub_items?.[subIdx];
+  const typeValue = watch(
+    `items.${catIdx}.items.${areaIdx}.sub_items.${subIdx}.type`,
+  );
+
+  return (
+    <div className="cobsm__item-row">
+      <div
+        className={`cobsm__input-wrap cobsm__input-wrap--grow${subError?.name ? " cobsm__input-wrap--error" : ""}`}>
+        <label className="cobsm__label">Sub-item Name</label>
+        <input
+          type="text"
+          {...register(
+            `items.${catIdx}.items.${areaIdx}.sub_items.${subIdx}.name`,
+          )}
+          autoComplete="off"
+          placeholder="e.g. Malinis ang sahig."
+        />
+      </div>
+      <CustomSelect
+        value={typeValue}
+        onChange={(val) =>
+          setValue(
+            `items.${catIdx}.items.${areaIdx}.sub_items.${subIdx}.type`,
+            val,
+            { shouldValidate: true },
+          )
+        }
+        options={TYPE_OPTIONS}
+        error={!!subError?.type}
+      />
+      {canRemove && (
+        <button
+          type="button"
+          className="cobsm__remove-item-btn"
+          onClick={onRemove}>
+          <DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+const AreaCard = ({
+  catIdx,
+  areaIdx,
   control,
   register,
   errors,
   onRemove,
   canRemove,
+  watch,
+  setValue,
 }) => {
   const {
-    fields: itemFields,
-    append: appendItem,
-    remove: removeItem,
-  } = useFieldArray({ control, name: `forms.${formIdx}.item` });
+    fields: subFields,
+    append: appendSub,
+    remove: removeSub,
+  } = useFieldArray({
+    control,
+    name: `items.${catIdx}.items.${areaIdx}.sub_items`,
+  });
 
-  const sectionError = errors?.forms?.[formIdx];
+  const areaError = errors?.items?.[catIdx]?.items?.[areaIdx];
+
+  return (
+    <div className="cobsm__area-card">
+      <div className="cobsm__area-card-header">
+        <span className="cobsm__area-badge">Area {areaIdx + 1}</span>
+        {canRemove && (
+          <button
+            type="button"
+            className="cobsm__remove-btn"
+            onClick={onRemove}>
+            <DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />
+          </button>
+        )}
+      </div>
+
+      <div
+        className={`cobsm__input-wrap${areaError?.name ? " cobsm__input-wrap--error" : ""}`}
+        style={{ marginBottom: 10 }}>
+        <label className="cobsm__label">Area Name</label>
+        <input
+          type="text"
+          {...register(`items.${catIdx}.items.${areaIdx}.name`)}
+          autoComplete="off"
+          placeholder="e.g. Front Gate"
+        />
+      </div>
+      {areaError?.name && (
+        <p className="cobsm__error" style={{ marginBottom: 8 }}>
+          <ReportProblemIcon />
+          {areaError.name.message}
+        </p>
+      )}
+
+      <div className="cobsm__items-wrap">
+        <div className="cobsm__items-header">
+          <p className="cobsm__sub-label">Sub-items</p>
+          <button
+            type="button"
+            className="cobsm__add-item-btn"
+            onClick={() => appendSub({ name: "", type: "radio button" })}>
+            <AddIcon sx={{ fontSize: "0.8rem" }} />
+            Add Sub-item
+          </button>
+        </div>
+        <div className="cobsm__subitems-list">
+          {subFields.map((subField, subIdx) => (
+            <SubItemRow
+              key={subField.id}
+              catIdx={catIdx}
+              areaIdx={areaIdx}
+              subIdx={subIdx}
+              register={register}
+              errors={errors}
+              onRemove={() => removeSub(subIdx)}
+              canRemove={subFields.length > 1}
+              watch={watch}
+              setValue={setValue}
+            />
+          ))}
+        </div>
+        {areaError?.sub_items && !Array.isArray(areaError.sub_items) && (
+          <p className="cobsm__error" style={{ marginTop: 6 }}>
+            <ReportProblemIcon />
+            {areaError.sub_items.message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const CategoryCard = ({
+  catIdx,
+  control,
+  register,
+  errors,
+  onRemove,
+  canRemove,
+  watch,
+  setValue,
+}) => {
+  const {
+    fields: areaFields,
+    append: appendArea,
+    remove: removeArea,
+  } = useFieldArray({
+    control,
+    name: `items.${catIdx}.items`,
+  });
+
+  const catError = errors?.items?.[catIdx];
 
   return (
     <div className="cobsm__section-card">
       <div className="cobsm__section-card-header">
-        <span className="cobsm__section-badge">Section {formIdx + 1}</span>
+        <span className="cobsm__section-badge">Category {catIdx + 1}</span>
         {canRemove && (
           <button
             type="button"
@@ -187,78 +383,80 @@ const FormSection = ({
 
       <div className="cobsm__field" style={{ marginBottom: 14 }}>
         <div
-          className={`cobsm__input-wrap${sectionError?.name ? " cobsm__input-wrap--error" : ""}`}>
-          <label className="cobsm__label">Area / Section Name</label>
+          className={`cobsm__input-wrap${catError?.name ? " cobsm__input-wrap--error" : ""}`}>
+          <label className="cobsm__label">Category Name</label>
           <input
             type="text"
-            {...register(`forms.${formIdx}.name`)}
+            {...register(`items.${catIdx}.name`)}
             autoComplete="off"
-            placeholder="e.g. UV Cabinets"
+            placeholder="e.g. CLEANLINESS"
           />
         </div>
-        {sectionError?.name && (
+        {catError?.name && (
           <p className="cobsm__error">
             <ReportProblemIcon />
-            {sectionError.name.message}
+            {catError.name.message}
           </p>
         )}
       </div>
 
       <div className="cobsm__items-wrap">
         <div className="cobsm__items-header">
-          <p className="cobsm__sub-label">Items</p>
+          <p className="cobsm__sub-label">Areas</p>
           <button
             type="button"
             className="cobsm__add-item-btn"
-            onClick={() => appendItem({ name: "", type: "radio button" })}>
+            onClick={() =>
+              appendArea({
+                name: "",
+                sub_items: [{ name: "", type: "radio button" }],
+              })
+            }>
             <AddIcon sx={{ fontSize: "0.8rem" }} />
-            Add Item
+            Add Area
           </button>
         </div>
-
-        {itemFields.map((itemField, itemIdx) => (
-          <div key={itemField.id} className="cobsm__item-row">
-            <div
-              className={`cobsm__input-wrap cobsm__input-wrap--grow${sectionError?.item?.[itemIdx]?.name ? " cobsm__input-wrap--error" : ""}`}>
-              <label className="cobsm__label">Item Name</label>
-              <input
-                type="text"
-                {...register(`forms.${formIdx}.item.${itemIdx}.name`)}
-                autoComplete="off"
-                placeholder="e.g. Malinis ang sahig."
-              />
-            </div>
-            <div
-              className={`cobsm__select-wrap${sectionError?.item?.[itemIdx]?.type ? " cobsm__select-wrap--error" : ""}`}>
-              <label className="cobsm__label">Type</label>
-              <select {...register(`forms.${formIdx}.item.${itemIdx}.type`)}>
-                {TYPE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {itemFields.length > 1 && (
-              <button
-                type="button"
-                className="cobsm__remove-item-btn"
-                onClick={() => removeItem(itemIdx)}>
-                <DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />
-              </button>
-            )}
-          </div>
-        ))}
-
-        {sectionError?.item && !Array.isArray(sectionError.item) && (
+        <div className="cobsm__subitems-list">
+          {areaFields.map((areaField, areaIdx) => (
+            <AreaCard
+              key={areaField.id}
+              catIdx={catIdx}
+              areaIdx={areaIdx}
+              control={control}
+              register={register}
+              errors={errors}
+              onRemove={() => removeArea(areaIdx)}
+              canRemove={areaFields.length > 1}
+              watch={watch}
+              setValue={setValue}
+            />
+          ))}
+        </div>
+        {catError?.items && !Array.isArray(catError.items) && (
           <p className="cobsm__error">
             <ReportProblemIcon />
-            {sectionError.item.message}
+            {catError.items.message}
           </p>
         )}
       </div>
     </div>
   );
+};
+
+const DEFAULT_VALUES = {
+  checklist_name: "",
+  unit_ids: [],
+  items: [
+    {
+      name: "",
+      items: [
+        {
+          name: "",
+          sub_items: [{ name: "", type: "radio button" }],
+        },
+      ],
+    },
+  ],
 };
 
 const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
@@ -269,7 +467,15 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
   const [fetchCobsById] = useLazyGetCobsByIdQuery();
   const [createCobs, { isLoading: isCreating }] = useCreateCobsMutation();
   const [updateCobs, { isLoading: isUpdating }] = useUpdateCobsMutation();
+
+  const { data: unitsData } = useGetUnitsQuery(undefined, {
+    skip: !open || mode === "view",
+  });
+
   const isLoading = isCreating || isUpdating;
+
+  const unitOptions =
+    unitsData?.data?.map((u) => ({ value: u.id, label: u.name })) ?? [];
 
   const {
     register,
@@ -277,22 +483,23 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
     reset,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      checklist_id: "",
-      forms: [{ name: "", item: [{ name: "", type: "radio button" }] }],
-    },
+    resolver: yupResolver(cobsSchema),
+    defaultValues: DEFAULT_VALUES,
   });
 
-  const checklist_id = watch("checklist_id");
+  const unitIds = watch("unit_ids");
 
   const {
-    fields: formFields,
-    append: appendForm,
-    remove: removeForm,
-  } = useFieldArray({ control, name: "forms" });
+    fields: catFields,
+    append: appendCat,
+    remove: removeCat,
+  } = useFieldArray({
+    control,
+    name: "items",
+  });
 
   useEffect(() => {
     if (open) {
@@ -300,10 +507,7 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
       setSelectedRow(null);
 
       if (!selectedId) {
-        reset({
-          checklist_id: "",
-          forms: [{ name: "", item: [{ name: "", type: "radio button" }] }],
-        });
+        reset(DEFAULT_VALUES);
       } else {
         setCobsLoading(true);
         fetchCobsById(selectedId, true)
@@ -311,18 +515,36 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
           .then((res) => {
             const data = res?.data ?? null;
             setSelectedRow(data);
-            const allForms = data?.forms ?? [];
+
+            const mappedUnitIds = Array.isArray(data?.units)
+              ? data.units.slice(0, 1).map((u) => u.id)
+              : [];
+
             reset({
-              checklist_id: data?.checklist_id ?? "",
-              forms:
-                allForms.length > 0
-                  ? allForms.map((f) => ({
-                      name: f.name ?? "",
-                      item: Array.isArray(f.item)
-                        ? f.item.map((i) => ({ name: i.name, type: i.type }))
-                        : [{ name: "", type: "radio button" }],
+              checklist_name: data?.checklist_name ?? "",
+              unit_ids: mappedUnitIds,
+              items:
+                Array.isArray(data?.items) && data.items.length > 0
+                  ? data.items.map((cat) => ({
+                      name: cat.name ?? "",
+                      items: Array.isArray(cat.items)
+                        ? cat.items.map((area) => ({
+                            name: area.name ?? "",
+                            sub_items: Array.isArray(area.sub_items)
+                              ? area.sub_items.map((s) => ({
+                                  name: s.name ?? "",
+                                  type: s.type ?? "radio button",
+                                }))
+                              : [{ name: "", type: "radio button" }],
+                          }))
+                        : [
+                            {
+                              name: "",
+                              sub_items: [{ name: "", type: "radio button" }],
+                            },
+                          ],
                     }))
-                  : [{ name: "", item: [{ name: "", type: "radio button" }] }],
+                  : DEFAULT_VALUES.items,
             });
           })
           .catch((err) => console.error("Fetch failed:", err))
@@ -332,15 +554,16 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
   }, [open, selectedId, reset, fetchCobsById]);
 
   const onSubmit = async (form) => {
+    const payload = { ...form, section_id: 1 };
     try {
       if (mode === "edit") {
-        await updateCobs({ id: selectedId, ...form }).unwrap();
+        await updateCobs({ id: selectedId, ...payload }).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "COBS questionnaire updated successfully.",
           { variant: "success" },
         );
       } else {
-        await createCobs(form).unwrap();
+        await createCobs(payload).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "COBS questionnaire created successfully.",
           { variant: "success" },
@@ -369,7 +592,10 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
   };
 
   const isView = mode === "view";
-  const viewForms = selectedRow?.forms ?? [];
+
+  const viewUnitLabels = Array.isArray(selectedRow?.units)
+    ? selectedRow.units.map((u) => u.name)
+    : [];
 
   return (
     <Dialog
@@ -400,10 +626,38 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
             <div className="cobsm__group">
               <p className="cobsm__group-label">Checklist Info</p>
               <div className="cobsm__input-wrap cobsm__input-wrap--disabled">
-                <label className="cobsm__label">Checklist</label>
+                <label className="cobsm__label">Checklist Name</label>
                 <input
                   type="text"
-                  value={selectedRow?.checklist ?? "—"}
+                  value={selectedRow?.checklist_name ?? "—"}
+                  disabled
+                  readOnly
+                  autoComplete="off"
+                />
+              </div>
+
+              <div
+                className="cobsm__input-wrap cobsm__input-wrap--disabled"
+                style={{ marginTop: 14 }}>
+                <label className="cobsm__label">Units</label>
+                <input
+                  type="text"
+                  value={
+                    viewUnitLabels.length > 0 ? viewUnitLabels.join(", ") : "—"
+                  }
+                  disabled
+                  readOnly
+                  autoComplete="off"
+                />
+              </div>
+
+              <div
+                className="cobsm__input-wrap cobsm__input-wrap--disabled"
+                style={{ marginTop: 14 }}>
+                <label className="cobsm__label">Section</label>
+                <input
+                  type="text"
+                  value={selectedRow?.section?.name ?? "COBS"}
                   disabled
                   readOnly
                   autoComplete="off"
@@ -413,138 +667,179 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="cobsm__group">
               <p className="cobsm__group-label">Questionnaire Details</p>
-              {viewForms.map((form, idx) => (
+              {(selectedRow?.items ?? []).map((cat, catIdx) => (
                 <div
-                  key={idx}
+                  key={catIdx}
                   className="cobsm__section-card"
                   style={{ marginBottom: 12 }}>
                   <div className="cobsm__section-card-header">
                     <span className="cobsm__section-badge">
-                      Section {idx + 1}
+                      Category {catIdx + 1}: {cat.name}
                     </span>
                   </div>
-                  <div
-                    className="cobsm__input-wrap cobsm__input-wrap--disabled"
-                    style={{ marginBottom: 10 }}>
-                    <label className="cobsm__label">Area / Section Name</label>
-                    <input
-                      type="text"
-                      value={form.name ?? "—"}
-                      disabled
-                      readOnly
-                      autoComplete="off"
-                    />
-                  </div>
-                  <p className="cobsm__sub-label">Items</p>
-                  {Array.isArray(form.item) &&
-                    form.item.map((item, iIdx) => (
-                      <div
-                        key={iIdx}
-                        className="cobsm__item-row cobsm__item-row--disabled">
-                        <div className="cobsm__input-wrap cobsm__input-wrap--disabled cobsm__input-wrap--grow">
-                          <label className="cobsm__label">Item Name</label>
-                          <input
-                            type="text"
-                            value={item.name}
-                            disabled
-                            readOnly
-                            autoComplete="off"
-                          />
-                        </div>
-                        <div className="cobsm__input-wrap cobsm__input-wrap--disabled cobsm__input-wrap--type">
-                          <label className="cobsm__label">Type</label>
-                          <input
-                            type="text"
-                            value={item.type}
-                            disabled
-                            readOnly
-                            autoComplete="off"
-                          />
-                        </div>
+                  {(cat.items ?? []).map((area, areaIdx) => (
+                    <div
+                      key={areaIdx}
+                      className="cobsm__area-card"
+                      style={{ marginBottom: 10 }}>
+                      <div className="cobsm__area-card-header">
+                        <span className="cobsm__area-badge">
+                          Area {areaIdx + 1}
+                          {area.name ? `: ${area.name}` : ""}
+                        </span>
                       </div>
-                    ))}
+                      <p className="cobsm__sub-label">Sub-items</p>
+                      <div className="cobsm__subitems-list">
+                        {(area.sub_items ?? []).map((sub, subIdx) => (
+                          <div
+                            key={subIdx}
+                            className="cobsm__item-row cobsm__item-row--disabled">
+                            <div className="cobsm__input-wrap cobsm__input-wrap--disabled cobsm__input-wrap--grow">
+                              <label className="cobsm__label">
+                                Sub-item Name
+                              </label>
+                              <input
+                                type="text"
+                                value={sub.name}
+                                disabled
+                                readOnly
+                                autoComplete="off"
+                              />
+                            </div>
+                            <div className="cobsm__input-wrap cobsm__input-wrap--disabled cobsm__input-wrap--type">
+                              <label className="cobsm__label">Type</label>
+                              <input
+                                type="text"
+                                value={sub.type}
+                                disabled
+                                readOnly
+                                autoComplete="off"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
 
             <div className="cobsm__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={() => setMode("edit")}
-              />
+              <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="cobsm__group">
-              <p className="cobsm__group-label">Checklist</p>
-              <Controller
-                name="checklist_id"
-                control={control}
-                render={({ field }) => (
-                  <ChecklistAutocomplete
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={!!errors.checklist_id}
-                    displayValue={selectedRow?.checklist ?? ""}
-                  />
-                )}
-              />
-              {errors.checklist_id && (
-                <p className="cobsm__error" style={{ marginTop: 6 }}>
+              <p className="cobsm__group-label">Checklist Info</p>
+
+              <div
+                className={`cobsm__input-wrap${errors.checklist_name ? " cobsm__input-wrap--error" : ""}`}
+                style={{ marginBottom: errors.checklist_name ? 6 : 14 }}>
+                <label className="cobsm__label">
+                  Checklist Name
+                  <span className="cobsm__required">
+                    <PushPinIcon />
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  {...register("checklist_name")}
+                  autoComplete="off"
+                  placeholder="e.g. Sample name"
+                />
+              </div>
+              {errors.checklist_name && (
+                <p className="cobsm__error" style={{ marginBottom: 14 }}>
                   <ReportProblemIcon />
-                  {errors.checklist_id?.message}
+                  {errors.checklist_name.message}
                 </p>
               )}
+
+              <SingleSelect
+                label="Units"
+                placeholder="Select a unit..."
+                value={unitIds}
+                onChange={(val) =>
+                  setValue("unit_ids", val, { shouldValidate: true })
+                }
+                options={unitOptions}
+                error={!!errors.unit_ids}
+                searchable
+              />
+              {errors.unit_ids && (
+                <p
+                  className="cobsm__error"
+                  style={{ marginTop: 6, marginBottom: 14 }}>
+                  <ReportProblemIcon />
+                  {errors.unit_ids.message}
+                </p>
+              )}
+
+              <div
+                className="cobsm__input-wrap cobsm__input-wrap--disabled"
+                style={{ marginTop: 14 }}>
+                <label className="cobsm__label">Section</label>
+                <input
+                  type="text"
+                  value="COBS"
+                  disabled
+                  readOnly
+                  autoComplete="off"
+                />
+              </div>
             </div>
 
             <div className="cobsm__group">
               <div className="cobsm__section-header">
-                <p className="cobsm__group-label">Questionnaire Sections</p>
+                <p className="cobsm__group-label">Categories</p>
                 <button
                   type="button"
                   className="cobsm__add-section-btn"
                   onClick={() =>
-                    appendForm({
+                    appendCat({
                       name: "",
-                      item: [{ name: "", type: "radio button" }],
+                      items: [
+                        {
+                          name: "",
+                          sub_items: [{ name: "", type: "radio button" }],
+                        },
+                      ],
                     })
                   }>
                   <AddIcon sx={{ fontSize: "0.85rem" }} />
-                  Add Section
+                  Add Category
                 </button>
               </div>
 
-              {formFields.map((formField, formIdx) => (
-                <FormSection
-                  key={formField.id}
-                  formIdx={formIdx}
+              {catFields.map((catField, catIdx) => (
+                <CategoryCard
+                  key={catField.id}
+                  catIdx={catIdx}
                   control={control}
                   register={register}
                   errors={errors}
-                  onRemove={() => removeForm(formIdx)}
-                  canRemove={formFields.length > 1}
+                  onRemove={() => removeCat(catIdx)}
+                  canRemove={catFields.length > 1}
+                  watch={watch}
+                  setValue={setValue}
                 />
               ))}
-              {errors.forms && !Array.isArray(errors.forms) && (
+
+              {errors.items && !Array.isArray(errors.items) && (
                 <p className="cobsm__error">
                   <ReportProblemIcon />
-                  {errors.forms.message}
+                  {errors.items.message}
                 </p>
               )}
             </div>
 
             <div className="cobsm__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="cobsm__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."

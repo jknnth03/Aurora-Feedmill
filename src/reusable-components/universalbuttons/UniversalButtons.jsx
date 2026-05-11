@@ -2,6 +2,7 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
+import EditIcon from "@mui/icons-material/Edit";
 import { useTheme } from "../../styles/Themecontext";
 import "./UniversalButtons.scss";
 
@@ -232,6 +233,113 @@ export const BackButton = ({
         "&.Mui-disabled": {
           color: "rgba(0,0,0,0.26)",
           border: "1px solid rgba(0,0,0,0.12)",
+        },
+      }}>
+      {label}
+    </Button>
+  );
+
+  if (tooltip) {
+    return (
+      <Tooltip title={tooltip} placement="bottom">
+        <span>{btn}</span>
+      </Tooltip>
+    );
+  }
+
+  return btn;
+};
+
+export const EditButton = ({
+  label = "Edit",
+  onClick,
+  disabled,
+  tooltip,
+  size = "small",
+}) => {
+  const btn = (
+    <Button
+      variant="contained"
+      size={size}
+      startIcon={<EditIcon />}
+      onClick={onClick}
+      disabled={disabled}
+      sx={{
+        height: "34px",
+        minHeight: "unset",
+        backgroundColor: "#E07B39",
+        color: "#ffffff",
+        fontFamily: "Poppins, sans-serif",
+        fontWeight: 600,
+        fontSize: "0.8rem",
+        textTransform: "none",
+        boxShadow: "none",
+        borderRadius: "8px",
+        paddingLeft: "18px",
+        paddingRight: "18px",
+        border: "1px solid #E07B39",
+        "&:hover": {
+          backgroundColor: "#c96a2b",
+          boxShadow: "none",
+          border: "1px solid #c96a2b",
+        },
+        "&.Mui-disabled": {
+          backgroundColor: "rgba(224, 123, 57, 0.4)",
+          color: "rgba(255, 255, 255, 0.6)",
+          border: "1px solid rgba(224, 123, 57, 0.3)",
+        },
+      }}>
+      {label}
+    </Button>
+  );
+
+  if (tooltip) {
+    return (
+      <Tooltip title={tooltip} placement="bottom">
+        <span>{btn}</span>
+      </Tooltip>
+    );
+  }
+
+  return btn;
+};
+
+export const BackModalButton = ({
+  label = "← Back",
+  onClick,
+  disabled,
+  tooltip,
+  size = "small",
+}) => {
+  const btn = (
+    <Button
+      variant="outlined"
+      size={size}
+      onClick={onClick}
+      disabled={disabled}
+      sx={{
+        height: "34px",
+        minHeight: "unset",
+        backgroundColor: "transparent",
+        color: "#888580",
+        fontFamily: "Poppins, sans-serif",
+        fontWeight: 600,
+        fontSize: "0.78rem",
+        textTransform: "none",
+        boxShadow: "none",
+        borderRadius: "8px",
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        border: "1.5px dashed #c8c4be",
+        opacity: 0.75,
+        "&:hover": {
+          opacity: 1,
+          boxShadow: "none",
+          border: "1.5px dashed #888580",
+          backgroundColor: "transparent",
+        },
+        "&.Mui-disabled": {
+          opacity: 0.4,
         },
       }}>
       {label}

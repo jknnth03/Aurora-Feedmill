@@ -14,7 +14,7 @@ import {
 import {
   useGetPestsQuery,
   useArchivePestMutation,
-} from "../../../features/api/masterlist/pestsApi";
+} from "../../../features/api/masterlist/pestTypesApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import PestsModal from "./PestTypesModal";

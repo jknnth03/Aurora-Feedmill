@@ -11,12 +11,16 @@ import EditIcon from "@mui/icons-material/Edit";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import UniversalButton from "../../../reusable-components/universalbuttons/UniversalButtons";
+import {
+  SaveButton,
+  EditButton,
+  BackModalButton,
+} from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
   useGetPestByIdQuery,
   useCreatePestMutation,
   useUpdatePestMutation,
-} from "../../../features/api/masterlist/pestsApi";
+} from "../../../features/api/masterlist/pestTypesApi";
 import "./PestTypesModal.scss";
 
 const schema = yup.object({
@@ -25,11 +29,12 @@ const schema = yup.object({
 
 const SkeletonLoader = () => (
   <div className="pm__skeleton-wrap">
-    {[50, 75, 60, 80].map((w, i) => (
-      <span key={i} className="ut__skeleton" style={{ width: `${w}%` }} />
-    ))}
+    <div className="pm__skeleton-group">
+      <span className="ut__skeleton pm__skeleton-label" />
+      <span className="ut__skeleton pm__skeleton-field" />
+    </div>
     <div className="pm__skeleton-footer">
-      <span className="ut__skeleton" style={{ width: "28%" }} />
+      <span className="ut__skeleton pm__skeleton-btn" />
     </div>
   </div>
 );
@@ -153,11 +158,7 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
             <div className="pm__footer">
-              <UniversalButton
-                label="Edit"
-                icon={<EditIcon />}
-                onClick={() => setMode("edit")}
-              />
+              <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
@@ -186,14 +187,9 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
 
             <div className="pm__footer">
               {selectedId && (
-                <button
-                  type="button"
-                  className="pm__back-btn"
-                  onClick={() => setMode("view")}>
-                  ← Back
-                </button>
+                <BackModalButton onClick={() => setMode("view")} />
               )}
-              <UniversalButton
+              <SaveButton
                 label={
                   isLoading
                     ? "Saving..."
