@@ -33,6 +33,26 @@ const STATUS_CHIP_MAP = {
   rejected: "chip-rejected",
 };
 
+const getCompletedWeeksCount = (weekMap) => {
+  let count = 0;
+  Object.values(weekMap).forEach((entries) => {
+    if (!Array.isArray(entries) || entries.length === 0) return;
+    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+    const status = latest?.status?.toLowerCase() ?? "";
+    if (status === "completed" || status === "done") {
+      count += 1;
+    }
+  });
+  return count;
+};
+
+const getLatestWeekStatus = (weekMap) => {
+  const allBatches = Object.values(weekMap).flat();
+  if (allBatches.length === 0) return null;
+  const latest = allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+  return latest?.status ?? null;
+};
+
 const flattenCobsData = (rawData) => {
   if (!rawData) return [];
 
@@ -40,9 +60,12 @@ const flattenCobsData = (rawData) => {
 
   Object.entries(rawData).forEach(([unitKey, unitData]) => {
     const unitName = unitKey.replace(/^Unit:\s*/i, "").trim();
-    const checklists = unitData?.checklists ?? [];
     const weekMap = unitData?.weeks ?? {};
+    const checklists = unitData?.checklists ?? [];
     const totalWeeks = Object.keys(weekMap).length;
+
+    const completedWeeks = getCompletedWeeksCount(weekMap);
+    const latestStatus = getLatestWeekStatus(weekMap);
 
     const allBatches = Object.values(weekMap).flat();
     const latestBatch =
@@ -50,15 +73,16 @@ const flattenCobsData = (rawData) => {
         ? allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a))
         : null;
 
-    const firstChecklist = checklists[0] ?? null;
+    const checklistName = checklists[0]?.checklist_name ?? "—";
 
     rows.push({
       unit: unitName,
-      checklist_name: firstChecklist?.checklist_name ?? "—",
-      week: `0/${totalWeeks}`,
-      status: "—",
+      checklist_name: checklistName,
+      week: `${completedWeeks}/${totalWeeks}`,
+      status: latestStatus ?? "—",
       _raw: latestBatch,
       _unitKey: unitKey,
+      _unitData: unitData,
     });
   });
 
@@ -183,7 +207,7 @@ const COBS = () => {
       <COBSModal
         open={Boolean(selectedRow)}
         unitName={selectedRow?.unit}
-        unitData={data?.[selectedRow?._unitKey]}
+        unitData={selectedRow?._unitData}
         month={Number(currentMonth.format("MM"))}
         year={Number(currentMonth.format("YYYY"))}
         onClose={() => setSelectedRow(null)}

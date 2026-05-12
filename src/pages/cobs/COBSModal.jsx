@@ -9,6 +9,8 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Skeleton from "@mui/material/Skeleton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import {
   getChipBg,
@@ -17,6 +19,7 @@ import {
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import COBSStartCheckingDialog from "./COBSStartCheckingDialog";
+import COBSShowReportDialog from "./COBSShowReportDialog";
 import "./COBSModal.scss";
 
 const WEEK_LABELS = ["Week 1", "Week 2", "Week 3", "Week 4"];
@@ -71,10 +74,8 @@ const formatDateTime = (raw) => {
 
 const StatusChip = ({ status }) => {
   useChipColors();
-
   const chipId = STATUS_CHIP_MAP[status?.toLowerCase()] ?? null;
   if (!chipId) return <span className="cobs-cm__dash">—</span>;
-
   return (
     <span
       className="cobs-cm__chip"
@@ -93,10 +94,23 @@ const RowActionMenu = ({
   entries,
   checklistId,
   unitDataId,
+  fallbackApproverId,
   onStartChecking,
+  onShowReport,
+  onShowChecklist,
 }) => {
   const [anchor, setAnchor] = useState(null);
   const latest = getLatestEntry(entries);
+  const status = getWeekStatus(entries);
+  const isForApproval =
+    status?.toLowerCase() === "for approval" ||
+    status?.toLowerCase() === "completed";
+
+  const close = () => setAnchor(null);
+
+  const resolvedUnitId = latest?.unit_id ?? unitDataId;
+  const resolvedApproverId = latest?.approver_id ?? fallbackApproverId;
+  const resolvedChecklistId = latest?.checklist_id ?? checklistId;
 
   return (
     <div className="cobs-cm__actions-cell">
@@ -113,25 +127,62 @@ const RowActionMenu = ({
       <Menu
         anchorEl={anchor}
         open={Boolean(anchor)}
-        onClose={() => setAnchor(null)}
+        onClose={close}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{ className: "cobs-cm__menu-paper" }}>
-        <MenuItem
-          className="cobs-cm__menu-item"
-          onClick={() => {
-            setAnchor(null);
-            onStartChecking?.({
-              week,
-              unitName,
-              unitId: latest?.unit_id ?? unitDataId,
-              approverId: latest?.approver_id,
-              checklistId,
-            });
-          }}>
-          <PlayArrowIcon className="cobs-cm__menu-icon" />
-          Start Checking
-        </MenuItem>
+        {isForApproval ? (
+          [
+            <MenuItem
+              key="report"
+              className="cobs-cm__menu-item"
+              onClick={() => {
+                close();
+                onShowReport?.({
+                  week,
+                  unitName,
+                  unitId: resolvedUnitId,
+                  checklistId: resolvedChecklistId,
+                  batchEntry: latest,
+                });
+              }}>
+              <AssessmentIcon className="cobs-cm__menu-icon" />
+              Show Report
+            </MenuItem>,
+            <MenuItem
+              key="checklist"
+              className="cobs-cm__menu-item"
+              onClick={() => {
+                close();
+                onShowChecklist?.({
+                  week,
+                  unitName,
+                  unitId: resolvedUnitId,
+                  checklistId: resolvedChecklistId,
+                  batchEntry: latest,
+                });
+              }}>
+              <VisibilityIcon className="cobs-cm__menu-icon" />
+              Show Checklist
+            </MenuItem>,
+          ]
+        ) : (
+          <MenuItem
+            className="cobs-cm__menu-item"
+            onClick={() => {
+              close();
+              onStartChecking?.({
+                week,
+                unitName,
+                unitId: resolvedUnitId,
+                approverId: resolvedApproverId,
+                checklistId: resolvedChecklistId,
+              });
+            }}>
+            <PlayArrowIcon className="cobs-cm__menu-icon" />
+            Start Checking
+          </MenuItem>
+        )}
       </Menu>
     </div>
   );
@@ -147,12 +198,19 @@ const COBSModal = ({
   isFetching,
 }) => {
   const [startCheckingData, setStartCheckingData] = useState(null);
+  const [showReportData, setShowReportData] = useState(null);
+  const [showChecklistData, setShowChecklistData] = useState(null);
+
   const monthLabel = MONTHS[(month ?? 1) - 1];
 
   const weekMap = unitData?.weeks ?? {};
   const checklists = unitData?.checklists ?? [];
+  const unitDataId = unitData?.unit_id ?? null;
   const checklistId = checklists[0]?.id ?? null;
-  const unitDataId = unitData?.id ?? null;
+
+  const allBatches = Object.values(weekMap).flat();
+  const fallbackApproverId =
+    allBatches.find((b) => b?.approver_id != null)?.approver_id ?? null;
 
   const rows = WEEK_LABELS.map((label) => ({
     week: label,
@@ -219,7 +277,10 @@ const COBSModal = ({
                             entries={entries}
                             checklistId={checklistId}
                             unitDataId={unitDataId}
+                            fallbackApproverId={fallbackApproverId}
                             onStartChecking={setStartCheckingData}
+                            onShowReport={setShowReportData}
+                            onShowChecklist={setShowChecklistData}
                           />
                         </td>
                       </tr>
@@ -247,6 +308,27 @@ const COBSModal = ({
         unitId={startCheckingData?.unitId}
         approverId={startCheckingData?.approverId}
         checklistId={startCheckingData?.checklistId}
+        month={month}
+        year={year}
+      />
+
+      <COBSStartCheckingDialog
+        open={Boolean(showChecklistData)}
+        onClose={() => setShowChecklistData(null)}
+        unitName={showChecklistData?.unitName}
+        week={showChecklistData?.week}
+        checklistId={showChecklistData?.checklistId}
+        month={month}
+        year={year}
+        viewMode
+        batchEntry={showChecklistData?.batchEntry}
+      />
+
+      <COBSShowReportDialog
+        open={Boolean(showReportData)}
+        onClose={() => setShowReportData(null)}
+        unitName={showReportData?.unitName}
+        week={showReportData?.week}
         month={month}
         year={year}
       />

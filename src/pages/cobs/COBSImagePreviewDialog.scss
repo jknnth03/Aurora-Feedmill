@@ -1,0 +1,126 @@
+@use "../../styles/colors" as *;
+
+.cobs-img {
+  &__paper {
+    border-radius: 14px !important;
+    font-family: "Poppins", sans-serif;
+    background: #111 !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden !important;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__counter {
+    font-size: 0.78rem;
+    font-family: "Poppins", sans-serif;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.04em;
+  }
+
+  &__close {
+    color: rgba(255, 255, 255, 0.5) !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: #fff !important;
+    }
+  }
+
+  &__body {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    max-height: 72vh;
+    padding: 16px 56px;
+    background: #111;
+  }
+
+  &__img-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-height: 68vh;
+    overflow: hidden;
+  }
+
+  &__img {
+    max-width: 100%;
+    max-height: 68vh;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+    animation: cobsImgFadeIn 0.18s ease;
+  }
+
+  &__nav {
+    position: absolute !important;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    transition: background 0.15s !important;
+    z-index: 2;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18) !important;
+    }
+
+    &--prev {
+      left: 10px;
+    }
+    &--next {
+      right: 10px;
+    }
+  }
+
+  &__dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0 14px;
+    background: #111;
+  }
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background 0.15s,
+      transform 0.15s;
+
+    &--active {
+      background: $primary-main;
+      transform: scale(1.25);
+    }
+  }
+}
+
+@keyframes cobsImgFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

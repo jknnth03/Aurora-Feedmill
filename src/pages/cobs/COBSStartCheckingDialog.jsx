@@ -12,10 +12,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ImageIcon from "@mui/icons-material/Image";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   useGetQuestionnaireQuery,
   useCreateCobMutation,
 } from "../../features/api/cobs/cobsApi";
+import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
 import "./COBSStartCheckingDialog.scss";
 
 const SCORE_OPTIONS = [0, 50, 75, 100];
@@ -35,6 +38,30 @@ const getNow = () => {
   });
 };
 
+const formatDateTime = (raw) => {
+  if (!raw) return "—";
+  const date = new Date(raw);
+  if (isNaN(date)) return "—";
+  return date.toLocaleString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const buildResponseMap = (responses = []) => {
+  const map = {};
+  responses.forEach(({ response, images }) => {
+    const subKey = response.sub_item ?? response.sub_name ?? "";
+    const key = `${response.checklist}__${response.item}__${subKey}`;
+    map[key] = { ...response, images: images ?? [] };
+  });
+  return map;
+};
+
 const COBSStartCheckingDialog = ({
   open,
   onClose,
@@ -45,6 +72,8 @@ const COBSStartCheckingDialog = ({
   checklistId = 1,
   unitId,
   approverId,
+  viewMode = false,
+  batchEntry = null,
 }) => {
   const [answers, setAnswers] = useState({});
   const [remarks, setRemarks] = useState({});
@@ -59,6 +88,12 @@ const COBSStartCheckingDialog = ({
     message: "",
     severity: "success",
   });
+  const [previewState, setPreviewState] = useState({
+    open: false,
+    images: [],
+    index: 0,
+  });
+
   const fileInputRefs = useRef({});
   const intervalRef = useRef(null);
 
@@ -68,8 +103,10 @@ const COBSStartCheckingDialog = ({
   const [createCob, { isLoading }] = useCreateCobMutation();
 
   const questionnaireData = data?.data;
+  const responseMap = viewMode ? buildResponseMap(batchEntry?.responses) : {};
 
   useEffect(() => {
+    if (viewMode) return;
     if (!open) {
       clearInterval(intervalRef.current);
       return;
@@ -80,10 +117,13 @@ const COBSStartCheckingDialog = ({
       setEndTime(getNow());
     }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [open]);
+  }, [open, viewMode]);
 
   const getKey = (categoryName, itemName, itemIndex, subItemIndex) =>
     `${categoryName}__${itemName}__${itemIndex}__${subItemIndex}`;
+
+  const getViewKey = (categoryName, itemName, subItemName) =>
+    `${categoryName}__${itemName}__${subItemName}`;
 
   const handleScore = (key, score) =>
     setAnswers((prev) => ({ ...prev, [key]: score }));
@@ -103,12 +143,20 @@ const COBSStartCheckingDialog = ({
       [key]: prev[key].filter((_, i) => i !== idx),
     }));
 
+  const openPreview = (imgs, idx) =>
+    setPreviewState({ open: true, images: imgs, index: idx });
+
+  const closePreview = () => setPreviewState((p) => ({ ...p, open: false }));
+
   const buildFormData = (isCompleted) => {
     const formData = new FormData();
     formData.append("checklist_id", checklistId);
     formData.append("unit_id", unitId ?? "");
     formData.append("approver_id", approverId ?? "");
     formData.append("is_completed", isCompleted);
+    formData.append("good_points", goodPoints);
+    formData.append("temporal_audit", temporalAudit);
+    formData.append("remarks", othersRemarks);
 
     let responseIndex = 0;
     const keyToIndex = {};
@@ -163,15 +211,17 @@ const COBSStartCheckingDialog = ({
   };
 
   const handleClose = () => {
-    setAnswers({});
-    setRemarks({});
-    setImages({});
-    setTemporalAudit("");
-    setGoodPoints("");
-    setOthersRemarks("");
-    setStartTime("");
-    setEndTime("");
-    clearInterval(intervalRef.current);
+    if (!viewMode) {
+      setAnswers({});
+      setRemarks({});
+      setImages({});
+      setTemporalAudit("");
+      setGoodPoints("");
+      setOthersRemarks("");
+      setStartTime("");
+      setEndTime("");
+      clearInterval(intervalRef.current);
+    }
     onClose();
   };
 
@@ -180,17 +230,17 @@ const COBSStartCheckingDialog = ({
       <Dialog
         open={open}
         onClose={(_, reason) => {
-          if (reason === "backdropClick") return;
+          if (!viewMode && reason === "backdropClick") return;
           handleClose();
         }}
-        disableEscapeKeyDown
+        disableEscapeKeyDown={!viewMode}
         maxWidth="md"
         fullWidth
         PaperProps={{ className: "cobs-sc__paper" }}>
         <div className="cobs-sc__header">
           <div className="cobs-sc__header-title">
             <ChecklistIcon className="cobs-sc__header-icon" />
-            <span>Start Checking</span>
+            <span>{viewMode ? "View Checklist" : "Start Checking"}</span>
           </div>
           <span className="cobs-sc__name-value">
             {unitName} — {week} ({month}/{year})
@@ -202,6 +252,41 @@ const COBSStartCheckingDialog = ({
             <CloseIcon fontSize="small" />
           </IconButton>
         </div>
+
+        {viewMode && batchEntry && !isFetching && (
+          <div className="cobs-sc__info-strip">
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Submitted by</span>
+              <span className="cobs-sc__info-value">
+                {batchEntry.user ?? "—"}
+              </span>
+            </div>
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Approver</span>
+              <span className="cobs-sc__info-value">
+                {batchEntry.approver ?? "—"}
+              </span>
+            </div>
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Start</span>
+              <span className="cobs-sc__info-value">
+                {formatDateTime(batchEntry.start_at)}
+              </span>
+            </div>
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">End</span>
+              <span className="cobs-sc__info-value">
+                {formatDateTime(batchEntry.end_at)}
+              </span>
+            </div>
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Progress</span>
+              <span className="cobs-sc__info-value cobs-sc__info-value--accent">
+                {batchEntry.progress ?? "—"}
+              </span>
+            </div>
+          </div>
+        )}
 
         <DialogContent className="cobs-sc__content">
           {isFetching ? (
@@ -249,34 +334,55 @@ const COBSStartCheckingDialog = ({
                       <tbody>
                         {category.items?.map((item, itemIdx) =>
                           item.sub_items?.map((subItem, subIdx) => {
-                            const key = getKey(
+                            const editKey = getKey(
                               category.name,
                               item.name,
                               itemIdx,
                               subIdx,
                             );
-                            const selectedScore = answers[key];
-                            const fileList = images[key] ?? [];
+                            const viewKey = getViewKey(
+                              category.name,
+                              item.name,
+                              subItem.name,
+                            );
+                            const resp = viewMode ? responseMap[viewKey] : null;
+                            const fileList = !viewMode
+                              ? (images[editKey] ?? [])
+                              : [];
 
                             return (
-                              <tr key={key} className="cobs-sc__tr">
+                              <tr key={editKey} className="cobs-sc__tr">
                                 <td className="cobs-sc__td cobs-sc__td--item">
                                   {subIdx + 1}. {subItem.name}
                                 </td>
+
                                 <td className="cobs-sc__td cobs-sc__td--compliance">
                                   <div className="cobs-sc__radio-box">
                                     {SCORE_OPTIONS.map((score) => (
                                       <label
                                         key={score}
-                                        className="cobs-sc__radio-item">
+                                        className={`cobs-sc__radio-item${viewMode ? " cobs-sc__radio-item--readonly" : ""}`}>
                                         <input
                                           type="radio"
-                                          name={key}
-                                          value={score}
-                                          checked={selectedScore === score}
-                                          onChange={() =>
-                                            handleScore(key, score)
+                                          name={
+                                            viewMode
+                                              ? `view-${editKey}`
+                                              : editKey
                                           }
+                                          value={score}
+                                          checked={
+                                            viewMode
+                                              ? resp?.score === score
+                                              : answers[editKey] === score
+                                          }
+                                          onChange={
+                                            viewMode
+                                              ? undefined
+                                              : () =>
+                                                  handleScore(editKey, score)
+                                          }
+                                          readOnly={viewMode}
+                                          disabled={viewMode}
                                           className="cobs-sc__radio-input"
                                         />
                                         <span
@@ -289,79 +395,174 @@ const COBSStartCheckingDialog = ({
                                     ))}
                                   </div>
                                 </td>
+
                                 <td className="cobs-sc__td cobs-sc__td--remarks">
                                   <textarea
                                     className="cobs-sc__textarea"
-                                    placeholder="Enter your response"
-                                    value={remarks[key] ?? ""}
-                                    onChange={(e) =>
-                                      handleRemarks(key, e.target.value)
+                                    placeholder={
+                                      viewMode ? "—" : "Enter your response"
                                     }
+                                    value={
+                                      viewMode
+                                        ? (resp?.remarks ?? "")
+                                        : (remarks[editKey] ?? "")
+                                    }
+                                    onChange={
+                                      viewMode
+                                        ? undefined
+                                        : (e) =>
+                                            handleRemarks(
+                                              editKey,
+                                              e.target.value,
+                                            )
+                                    }
+                                    readOnly={viewMode}
                                     rows={2}
+                                    className={`cobs-sc__textarea${viewMode ? " cobs-sc__textarea--readonly" : ""}`}
                                   />
                                 </td>
+
                                 <td className="cobs-sc__td cobs-sc__td--attachment">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    style={{ display: "none" }}
-                                    ref={(el) =>
-                                      (fileInputRefs.current[key] = el)
-                                    }
-                                    onChange={(e) =>
-                                      handleImageChange(key, e.target.files)
-                                    }
-                                  />
-                                  {fileList.length > 0 ? (
-                                    <div className="cobs-sc__attach-list">
-                                      {fileList.map((file, i) => (
-                                        <div
-                                          key={i}
-                                          className="cobs-sc__attach-item">
-                                          <Tooltip
-                                            title={file.name}
-                                            placement="top">
-                                            <span className="cobs-sc__attach-name">
-                                              {file.name}
-                                            </span>
-                                          </Tooltip>
-                                          <IconButton
-                                            size="small"
-                                            className="cobs-sc__attach-remove"
+                                  {viewMode ? (
+                                    resp?.images?.length > 0 ? (
+                                      <div className="cobs-sc__attach-file-list">
+                                        {resp.images.map((url, i) => {
+                                          const filename =
+                                            decodeURIComponent(
+                                              url
+                                                .split("/")
+                                                .pop()
+                                                .split("?")[0],
+                                            ) || `file-${i + 1}`;
+                                          return (
+                                            <div
+                                              key={i}
+                                              className="cobs-sc__attach-file-row">
+                                              <Tooltip
+                                                title={filename}
+                                                placement="top">
+                                                <span className="cobs-sc__attach-file-name">
+                                                  {filename}
+                                                </span>
+                                              </Tooltip>
+                                              <Tooltip
+                                                title="View image"
+                                                placement="top">
+                                                <IconButton
+                                                  size="small"
+                                                  className="cobs-sc__attach-eye"
+                                                  onClick={() =>
+                                                    openPreview(resp.images, i)
+                                                  }>
+                                                  <VisibilityIcon
+                                                    sx={{ fontSize: 13 }}
+                                                  />
+                                                </IconButton>
+                                              </Tooltip>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <span className="cobs-sc__no-attach">
+                                        —
+                                      </span>
+                                    )
+                                  ) : (
+                                    <>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        style={{ display: "none" }}
+                                        ref={(el) =>
+                                          (fileInputRefs.current[editKey] = el)
+                                        }
+                                        onChange={(e) =>
+                                          handleImageChange(
+                                            editKey,
+                                            e.target.files,
+                                          )
+                                        }
+                                      />
+                                      {fileList.length > 0 ? (
+                                        <div className="cobs-sc__attach-list">
+                                          {fileList.map((file, i) => (
+                                            <div
+                                              key={i}
+                                              className="cobs-sc__attach-item">
+                                              <Tooltip
+                                                title={file.name}
+                                                placement="top">
+                                                <span className="cobs-sc__attach-name">
+                                                  {file.name}
+                                                </span>
+                                              </Tooltip>
+                                              <Tooltip
+                                                title="Preview"
+                                                placement="top">
+                                                <IconButton
+                                                  size="small"
+                                                  className="cobs-sc__attach-eye"
+                                                  onClick={() => {
+                                                    const urls = (
+                                                      images[editKey] ?? []
+                                                    ).map((f) =>
+                                                      URL.createObjectURL(f),
+                                                    );
+                                                    openPreview(urls, i);
+                                                  }}>
+                                                  <VisibilityIcon
+                                                    sx={{ fontSize: 13 }}
+                                                  />
+                                                </IconButton>
+                                              </Tooltip>
+                                              <IconButton
+                                                size="small"
+                                                className="cobs-sc__attach-remove"
+                                                onClick={() =>
+                                                  handleRemoveImage(editKey, i)
+                                                }>
+                                                <DeleteOutlineIcon
+                                                  sx={{ fontSize: 13 }}
+                                                />
+                                              </IconButton>
+                                            </div>
+                                          ))}
+                                          <button
+                                            type="button"
+                                            className="cobs-sc__attach-btn cobs-sc__attach-btn--more"
                                             onClick={() =>
-                                              handleRemoveImage(key, i)
+                                              fileInputRefs.current[
+                                                editKey
+                                              ]?.click()
                                             }>
-                                            <DeleteOutlineIcon
+                                            <AttachFileIcon
                                               sx={{ fontSize: 13 }}
                                             />
-                                          </IconButton>
+                                            Add more
+                                          </button>
                                         </div>
-                                      ))}
-                                      <button
-                                        type="button"
-                                        className="cobs-sc__attach-btn cobs-sc__attach-btn--more"
-                                        onClick={() =>
-                                          fileInputRefs.current[key]?.click()
-                                        }>
-                                        <AttachFileIcon sx={{ fontSize: 13 }} />
-                                        Add more
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <Tooltip
-                                      title="Attach file"
-                                      placement="top">
-                                      <button
-                                        type="button"
-                                        className="cobs-sc__attach-btn"
-                                        onClick={() =>
-                                          fileInputRefs.current[key]?.click()
-                                        }>
-                                        <AttachFileIcon sx={{ fontSize: 14 }} />
-                                        <span>No file</span>
-                                      </button>
-                                    </Tooltip>
+                                      ) : (
+                                        <Tooltip
+                                          title="Attach file"
+                                          placement="top">
+                                          <button
+                                            type="button"
+                                            className="cobs-sc__attach-btn"
+                                            onClick={() =>
+                                              fileInputRefs.current[
+                                                editKey
+                                              ]?.click()
+                                            }>
+                                            <AttachFileIcon
+                                              sx={{ fontSize: 14 }}
+                                            />
+                                            <span>No file</span>
+                                          </button>
+                                        </Tooltip>
+                                      )}
+                                    </>
                                   )}
                                 </td>
                               </tr>
@@ -380,14 +581,22 @@ const COBSStartCheckingDialog = ({
                   <div className="cobs-sc__others-field">
                     <span className="cobs-sc__others-label">Start Time</span>
                     <div className="cobs-sc__others-input-box">
-                      <span className="cobs-sc__others-time">{startTime}</span>
+                      <span className="cobs-sc__others-time">
+                        {viewMode
+                          ? formatDateTime(batchEntry?.start_at)
+                          : startTime}
+                      </span>
                     </div>
                   </div>
 
                   <div className="cobs-sc__others-field">
                     <span className="cobs-sc__others-label">End Time</span>
                     <div className="cobs-sc__others-input-box">
-                      <span className="cobs-sc__others-time">{endTime}</span>
+                      <span className="cobs-sc__others-time">
+                        {viewMode
+                          ? formatDateTime(batchEntry?.end_at)
+                          : endTime}
+                      </span>
                     </div>
                   </div>
 
@@ -398,13 +607,29 @@ const COBSStartCheckingDialog = ({
                     <div className="cobs-sc__others-input-box">
                       <div className="cobs-sc__temporal-options">
                         {TEMPORAL_AUDIT_OPTIONS.map((opt) => (
-                          <label key={opt} className="cobs-sc__temporal-item">
+                          <label
+                            key={opt}
+                            className={`cobs-sc__temporal-item${viewMode ? " cobs-sc__temporal-item--readonly" : ""}`}>
                             <input
                               type="radio"
-                              name="temporal_audit"
+                              name={
+                                viewMode
+                                  ? "view_temporal_audit"
+                                  : "temporal_audit"
+                              }
                               value={opt}
-                              checked={temporalAudit === opt}
-                              onChange={() => setTemporalAudit(opt)}
+                              checked={
+                                viewMode
+                                  ? (batchEntry?.temporal_audit ?? "") === opt
+                                  : temporalAudit === opt
+                              }
+                              onChange={
+                                viewMode
+                                  ? undefined
+                                  : () => setTemporalAudit(opt)
+                              }
+                              readOnly={viewMode}
+                              disabled={viewMode}
                               className="cobs-sc__radio-input"
                             />
                             <span className="cobs-sc__temporal-circle" />
@@ -420,10 +645,19 @@ const COBSStartCheckingDialog = ({
                   <div className="cobs-sc__others-field">
                     <span className="cobs-sc__others-label">Good Points</span>
                     <textarea
-                      className="cobs-sc__others-textarea"
-                      placeholder="Enter good points observed"
-                      value={goodPoints}
-                      onChange={(e) => setGoodPoints(e.target.value)}
+                      className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}`}
+                      placeholder={
+                        viewMode ? "—" : "Enter good points observed"
+                      }
+                      value={
+                        viewMode ? (batchEntry?.good_points ?? "") : goodPoints
+                      }
+                      onChange={
+                        viewMode
+                          ? undefined
+                          : (e) => setGoodPoints(e.target.value)
+                      }
+                      readOnly={viewMode}
                       rows={4}
                     />
                   </div>
@@ -431,10 +665,19 @@ const COBSStartCheckingDialog = ({
                   <div className="cobs-sc__others-field">
                     <span className="cobs-sc__others-label">Remarks</span>
                     <textarea
-                      className="cobs-sc__others-textarea"
-                      placeholder="Enter remarks"
-                      value={othersRemarks}
-                      onChange={(e) => setOthersRemarks(e.target.value)}
+                      className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}`}
+                      placeholder={viewMode ? "—" : "Enter remarks"}
+                      value={
+                        viewMode
+                          ? (batchEntry?.other_remarks ?? "")
+                          : othersRemarks
+                      }
+                      onChange={
+                        viewMode
+                          ? undefined
+                          : (e) => setOthersRemarks(e.target.value)
+                      }
+                      readOnly={viewMode}
                       rows={4}
                     />
                   </div>
@@ -445,31 +688,49 @@ const COBSStartCheckingDialog = ({
         </DialogContent>
 
         <DialogActions className="cobs-sc__footer">
-          <Button
-            variant="text"
-            onClick={handleClose}
-            disabled={isLoading}
-            className="cobs-sc__btn-close">
-            CLOSE
-          </Button>
-          <div className="cobs-sc__footer-right">
+          {viewMode ? (
             <Button
-              variant="outlined"
-              onClick={() => handleSubmit(0)}
-              disabled={isLoading}
-              className="cobs-sc__btn-draft">
-              {isLoading ? "Saving..." : "SAVE AS DRAFT"}
+              variant="text"
+              onClick={handleClose}
+              className="cobs-sc__btn-close">
+              CLOSE
             </Button>
-            <Button
-              variant="contained"
-              onClick={() => handleSubmit(1)}
-              disabled={isLoading}
-              className="cobs-sc__btn-submit">
-              {isLoading ? "Submitting..." : "SUBMIT"}
-            </Button>
-          </div>
+          ) : (
+            <>
+              <Button
+                variant="text"
+                onClick={handleClose}
+                disabled={isLoading}
+                className="cobs-sc__btn-close">
+                CLOSE
+              </Button>
+              <div className="cobs-sc__footer-right">
+                <Button
+                  variant="outlined"
+                  onClick={() => handleSubmit(0)}
+                  disabled={isLoading}
+                  className="cobs-sc__btn-draft">
+                  {isLoading ? "Saving..." : "SAVE AS DRAFT"}
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleSubmit(1)}
+                  disabled={isLoading}
+                  className="cobs-sc__btn-submit">
+                  {isLoading ? "Submitting..." : "SUBMIT"}
+                </Button>
+              </div>
+            </>
+          )}
         </DialogActions>
       </Dialog>
+
+      <COBSImagePreviewDialog
+        open={previewState.open}
+        onClose={closePreview}
+        images={previewState.images}
+        initialIndex={previewState.index}
+      />
 
       <Snackbar
         open={snackbar.open}
