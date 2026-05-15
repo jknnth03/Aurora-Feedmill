@@ -16,6 +16,7 @@ import FlutterDashIcon from "@mui/icons-material/FlutterDash";
 import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import StarIcon from "@mui/icons-material/Star";
+import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -170,6 +171,7 @@ export const MODULES = {
       },
     },
   },
+
   COBS: {
     name: "COBS",
     permissionId: "COBS",
@@ -178,6 +180,7 @@ export const MODULES = {
     icon: <SanitizerIcon sx={iconStyles.main} />,
     children: null,
   },
+
   PEST: {
     name: "Pest",
     permissionId: "PEST",
@@ -186,6 +189,7 @@ export const MODULES = {
     icon: <BugReportIcon sx={iconStyles.main} />,
     children: null,
   },
+
   BIRDS: {
     name: "Birds",
     permissionId: "BIRDS",
@@ -193,5 +197,22 @@ export const MODULES = {
     path: "/birds",
     icon: <FlutterDashIcon sx={iconStyles.main} />,
     children: null,
+  },
+
+  APPROVAL: {
+    name: "Approval",
+    permissionId: "APPROVAL",
+    displayName: "Approval",
+    path: "/approval",
+    icon: <GppMaybeIcon sx={iconStyles.main} />,
+    children: {
+      COBS: {
+        name: "COBS",
+        permissionId: "APPROVAL.COBS",
+        displayName: "COBS",
+        path: "cobs",
+        icon: <SanitizerIcon sx={iconStyles.child} />,
+      },
+    },
   },
 };

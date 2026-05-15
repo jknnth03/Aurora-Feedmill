@@ -12,10 +12,10 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   getChipBg,
   getChipTextColor,
-  getChipName,
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import COBSStartCheckingDialog from "./COBSStartCheckingDialog";
@@ -40,22 +40,49 @@ const MONTHS = [
 ];
 
 const STATUS_CHIP_MAP = {
-  completed: "chip-completed",
+  done: "chip-done",
+  "for acknowledgement": "chip-for-approval",
   "for approval": "chip-for-approval",
-  "on going": "chip-processing",
+  "on going": "chip-on-going",
   pending: "chip-pending",
   rejected: "chip-rejected",
+  "on progress": "chip-draft",
+  "saved as draft": "chip-draft",
 };
 
 const getWeekStatus = (entries) => {
   if (!Array.isArray(entries) || entries.length === 0) return "Pending";
   const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-  return latest.status ?? "Pending";
+  const raw = latest.status?.toLowerCase() ?? "pending";
+  if (raw === "approved" || raw === "done" || raw === "completed")
+    return "Done";
+  if (raw === "for approval" || raw === "for acknowledgement")
+    return "For Approval";
+  if (raw === "on going") return "On Going";
+  if (raw === "rejected") return "Rejected";
+  if (raw === "on progress") return "Saved as Draft";
+  if (latest.is_completed === 0 || latest.is_completed === false)
+    return "Saved as Draft";
+  return "Pending";
+};
+
+const isWeekDone = (entries) => {
+  const status = getWeekStatus(entries)?.toLowerCase();
+  return (
+    status === "done" ||
+    status === "for approval" ||
+    status === "for acknowledgement"
+  );
 };
 
 const getLatestEntry = (entries) => {
   if (!Array.isArray(entries) || entries.length === 0) return null;
   return entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+};
+
+const isDraftEntry = (entry) => {
+  if (!entry) return false;
+  return entry.is_completed === 0 || entry.is_completed === false;
 };
 
 const formatDateTime = (raw) => {
@@ -75,7 +102,7 @@ const formatDateTime = (raw) => {
 const StatusChip = ({ status }) => {
   useChipColors();
   const chipId = STATUS_CHIP_MAP[status?.toLowerCase()] ?? null;
-  if (!chipId) return <span className="cobs-cm__dash">—</span>;
+  if (!chipId) return <span className="cobs-cm__dash">{status ?? "—"}</span>;
   return (
     <span
       className="cobs-cm__chip"
@@ -83,7 +110,7 @@ const StatusChip = ({ status }) => {
         background: getChipBg(chipId),
         color: getChipTextColor(chipId),
       }}>
-      {getChipName(chipId)}
+      {status}
     </span>
   );
 };
@@ -95,16 +122,26 @@ const RowActionMenu = ({
   checklistId,
   unitDataId,
   fallbackApproverId,
+  isPreviousWeekDone,
   onStartChecking,
+  onContinueChecking,
   onShowReport,
   onShowChecklist,
 }) => {
   const [anchor, setAnchor] = useState(null);
   const latest = getLatestEntry(entries);
   const status = getWeekStatus(entries);
+  const statusLower = status?.toLowerCase();
   const isForApproval =
-    status?.toLowerCase() === "for approval" ||
-    status?.toLowerCase() === "completed";
+    statusLower === "for approval" ||
+    statusLower === "for acknowledgement" ||
+    statusLower === "done";
+  const isDraft = latest ? isDraftEntry(latest) : false;
+
+  const hasEntries = Array.isArray(entries) && entries.length > 0;
+  const canAct = hasEntries || isPreviousWeekDone;
+
+  if (!canAct) return <span className="cobs-cm__dash">—</span>;
 
   const close = () => setAnchor(null);
 
@@ -166,6 +203,23 @@ const RowActionMenu = ({
               Show Checklist
             </MenuItem>,
           ]
+        ) : isDraft ? (
+          <MenuItem
+            className="cobs-cm__menu-item"
+            onClick={() => {
+              close();
+              onContinueChecking?.({
+                week,
+                unitName,
+                unitId: resolvedUnitId,
+                approverId: resolvedApproverId,
+                checklistId: resolvedChecklistId,
+                batchEntry: latest,
+              });
+            }}>
+            <EditIcon className="cobs-cm__menu-icon" />
+            Continue Checking
+          </MenuItem>
         ) : (
           <MenuItem
             className="cobs-cm__menu-item"
@@ -198,6 +252,7 @@ const COBSModal = ({
   isFetching,
 }) => {
   const [startCheckingData, setStartCheckingData] = useState(null);
+  const [continueCheckingData, setContinueCheckingData] = useState(null);
   const [showReportData, setShowReportData] = useState(null);
   const [showChecklistData, setShowChecklistData] = useState(null);
 
@@ -255,8 +310,12 @@ const COBSModal = ({
                       ))}
                     </tr>
                   ))
-                : rows.map(({ week, entries }) => {
+                : rows.map(({ week, entries }, index) => {
                     const latest = getLatestEntry(entries);
+                    const previousEntries =
+                      index === 0 ? null : rows[index - 1].entries;
+                    const isPreviousWeekDone =
+                      index === 0 || isWeekDone(previousEntries);
                     return (
                       <tr key={week} className="cobs-cm__tr">
                         <td className="cobs-cm__td">{unitName}</td>
@@ -278,7 +337,9 @@ const COBSModal = ({
                             checklistId={checklistId}
                             unitDataId={unitDataId}
                             fallbackApproverId={fallbackApproverId}
+                            isPreviousWeekDone={isPreviousWeekDone}
                             onStartChecking={setStartCheckingData}
+                            onContinueChecking={setContinueCheckingData}
                             onShowReport={setShowReportData}
                             onShowChecklist={setShowChecklistData}
                           />
@@ -303,6 +364,7 @@ const COBSModal = ({
       <COBSStartCheckingDialog
         open={Boolean(startCheckingData)}
         onClose={() => setStartCheckingData(null)}
+        onSuccess={() => setStartCheckingData(null)}
         unitName={startCheckingData?.unitName}
         week={startCheckingData?.week}
         unitId={startCheckingData?.unitId}
@@ -310,6 +372,21 @@ const COBSModal = ({
         checklistId={startCheckingData?.checklistId}
         month={month}
         year={year}
+      />
+
+      <COBSStartCheckingDialog
+        open={Boolean(continueCheckingData)}
+        onClose={() => setContinueCheckingData(null)}
+        onSuccess={() => setContinueCheckingData(null)}
+        unitName={continueCheckingData?.unitName}
+        week={continueCheckingData?.week}
+        unitId={continueCheckingData?.unitId}
+        approverId={continueCheckingData?.approverId}
+        checklistId={continueCheckingData?.checklistId}
+        month={month}
+        year={year}
+        continueMode
+        batchEntry={continueCheckingData?.batchEntry}
       />
 
       <COBSStartCheckingDialog
@@ -327,6 +404,7 @@ const COBSModal = ({
       <COBSShowReportDialog
         open={Boolean(showReportData)}
         onClose={() => setShowReportData(null)}
+        reportData={showReportData?.batchEntry}
         unitName={showReportData?.unitName}
         week={showReportData?.week}
         month={month}

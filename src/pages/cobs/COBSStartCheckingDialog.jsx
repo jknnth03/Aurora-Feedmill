@@ -12,8 +12,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import ImageIcon from "@mui/icons-material/Image";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import {
   useGetQuestionnaireQuery,
   useCreateCobMutation,
@@ -52,6 +52,17 @@ const formatDateTime = (raw) => {
   });
 };
 
+const formatDateDisplay = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return "—";
+  return d.toLocaleDateString("en-PH", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const buildResponseMap = (responses = []) => {
   const map = {};
   responses.forEach(({ response, images }) => {
@@ -62,9 +73,48 @@ const buildResponseMap = (responses = []) => {
   return map;
 };
 
+const buildDraftAnswers = (questionnaireData, responses = []) => {
+  const answers = {};
+  const remarks = {};
+  const existingImages = {};
+
+  const responseByKey = {};
+  responses.forEach(({ response, images }) => {
+    const subKey = response.sub_item ?? response.sub_name ?? "";
+    const key = `${response.checklist}__${response.item}__${subKey}`;
+    responseByKey[key] = {
+      score: response.score,
+      remarks: response.remarks ?? "",
+      images: images ?? [],
+    };
+  });
+
+  if (!questionnaireData?.items) return { answers, remarks, existingImages };
+
+  questionnaireData.items.forEach((category) => {
+    category.items?.forEach((item, itemIdx) => {
+      item.sub_items?.forEach((subItem, subIdx) => {
+        const editKey = `${category.name}__${item.name}__${itemIdx}__${subIdx}`;
+        const lookupKey = `${category.name}__${item.name}__${subItem.name}`;
+        const found = responseByKey[lookupKey];
+        if (found) {
+          answers[editKey] = found.score;
+          remarks[editKey] = found.remarks;
+          if (found.images && found.images.length > 0) {
+            existingImages[editKey] = found.images;
+          }
+        }
+      });
+    });
+  });
+
+  return { answers, remarks, existingImages };
+};
+
 const COBSStartCheckingDialog = ({
   open,
   onClose,
+  onSuccess,
   unitName,
   week,
   month,
@@ -73,16 +123,20 @@ const COBSStartCheckingDialog = ({
   unitId,
   approverId,
   viewMode = false,
+  continueMode = false,
   batchEntry = null,
 }) => {
   const [answers, setAnswers] = useState({});
   const [remarks, setRemarks] = useState({});
   const [images, setImages] = useState({});
+  const [existingImages, setExistingImages] = useState({});
   const [temporalAudit, setTemporalAudit] = useState("");
   const [goodPoints, setGoodPoints] = useState("");
   const [othersRemarks, setOthersRemarks] = useState("");
+  const [startAt, setStartAt] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [dateError, setDateError] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -111,13 +165,52 @@ const COBSStartCheckingDialog = ({
       clearInterval(intervalRef.current);
       return;
     }
+
     setStartTime(getNow());
     setEndTime(getNow());
     intervalRef.current = setInterval(() => {
       setEndTime(getNow());
     }, 1000);
+
+    if (continueMode && batchEntry) {
+      const rawDate = batchEntry.start_at
+        ? batchEntry.start_at.split(" ")[0]
+        : "";
+      setStartAt(rawDate);
+      setTemporalAudit(batchEntry.temporal_audit ?? "");
+      setGoodPoints(batchEntry.good_points ?? "");
+      setOthersRemarks(batchEntry.remarks ?? "");
+      setDateError(false);
+    } else {
+      setStartAt("");
+      setDateError(false);
+      setTemporalAudit("");
+      setGoodPoints("");
+      setOthersRemarks("");
+    }
+
     return () => clearInterval(intervalRef.current);
-  }, [open, viewMode]);
+  }, [open, viewMode, continueMode, batchEntry]);
+
+  useEffect(() => {
+    if (!open || viewMode) return;
+    if (continueMode && batchEntry && questionnaireData) {
+      const {
+        answers: draftAnswers,
+        remarks: draftRemarks,
+        existingImages: draftImages,
+      } = buildDraftAnswers(questionnaireData, batchEntry.responses ?? []);
+      setAnswers(draftAnswers);
+      setRemarks(draftRemarks);
+      setExistingImages(draftImages);
+      setImages({});
+    } else if (!continueMode) {
+      setAnswers({});
+      setRemarks({});
+      setImages({});
+      setExistingImages({});
+    }
+  }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
 
   const getKey = (categoryName, itemName, itemIndex, subItemIndex) =>
     `${categoryName}__${itemName}__${itemIndex}__${subItemIndex}`;
@@ -143,6 +236,12 @@ const COBSStartCheckingDialog = ({
       [key]: prev[key].filter((_, i) => i !== idx),
     }));
 
+  const handleRemoveExistingImage = (key, idx) =>
+    setExistingImages((prev) => ({
+      ...prev,
+      [key]: prev[key].filter((_, i) => i !== idx),
+    }));
+
   const openPreview = (imgs, idx) =>
     setPreviewState({ open: true, images: imgs, index: idx });
 
@@ -157,6 +256,7 @@ const COBSStartCheckingDialog = ({
     formData.append("good_points", goodPoints);
     formData.append("temporal_audit", temporalAudit);
     formData.append("remarks", othersRemarks);
+    formData.append("start_at", startAt);
 
     let responseIndex = 0;
     const keyToIndex = {};
@@ -193,6 +293,11 @@ const COBSStartCheckingDialog = ({
   };
 
   const handleSubmit = async (isCompleted) => {
+    if (!startAt) {
+      setDateError(true);
+      return;
+    }
+    setDateError(false);
     try {
       await createCob(buildFormData(isCompleted)).unwrap();
       setSnackbar({
@@ -200,6 +305,7 @@ const COBSStartCheckingDialog = ({
         message: isCompleted ? "Submitted successfully!" : "Saved as draft!",
         severity: "success",
       });
+      onSuccess?.();
       handleClose();
     } catch {
       setSnackbar({
@@ -215,14 +321,23 @@ const COBSStartCheckingDialog = ({
       setAnswers({});
       setRemarks({});
       setImages({});
+      setExistingImages({});
       setTemporalAudit("");
       setGoodPoints("");
       setOthersRemarks("");
+      setStartAt("");
+      setDateError(false);
       setStartTime("");
       setEndTime("");
       clearInterval(intervalRef.current);
     }
     onClose();
+  };
+
+  const getDialogTitle = () => {
+    if (viewMode) return "View Checklist";
+    if (continueMode) return "Continue Checking";
+    return "Start Checking";
   };
 
   return (
@@ -240,7 +355,7 @@ const COBSStartCheckingDialog = ({
         <div className="cobs-sc__header">
           <div className="cobs-sc__header-title">
             <ChecklistIcon className="cobs-sc__header-icon" />
-            <span>{viewMode ? "View Checklist" : "Start Checking"}</span>
+            <span>{getDialogTitle()}</span>
           </div>
           <span className="cobs-sc__name-value">
             {unitName} — {week} ({month}/{year})
@@ -277,6 +392,29 @@ const COBSStartCheckingDialog = ({
               <span className="cobs-sc__info-label">End</span>
               <span className="cobs-sc__info-value">
                 {formatDateTime(batchEntry.end_at)}
+              </span>
+            </div>
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Progress</span>
+              <span className="cobs-sc__info-value cobs-sc__info-value--accent">
+                {batchEntry.progress ?? "—"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {continueMode && batchEntry && !isFetching && (
+          <div className="cobs-sc__info-strip cobs-sc__info-strip--draft">
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Draft by</span>
+              <span className="cobs-sc__info-value">
+                {batchEntry.user ?? "—"}
+              </span>
+            </div>
+            <div className="cobs-sc__info-item">
+              <span className="cobs-sc__info-label">Started</span>
+              <span className="cobs-sc__info-value">
+                {formatDateTime(batchEntry.start_at)}
               </span>
             </div>
             <div className="cobs-sc__info-item">
@@ -349,6 +487,9 @@ const COBSStartCheckingDialog = ({
                             const fileList = !viewMode
                               ? (images[editKey] ?? [])
                               : [];
+                            const existingFileList = continueMode
+                              ? (existingImages[editKey] ?? [])
+                              : [];
 
                             return (
                               <tr key={editKey} className="cobs-sc__tr">
@@ -398,7 +539,6 @@ const COBSStartCheckingDialog = ({
 
                                 <td className="cobs-sc__td cobs-sc__td--remarks">
                                   <textarea
-                                    className="cobs-sc__textarea"
                                     placeholder={
                                       viewMode ? "—" : "Enter your response"
                                     }
@@ -485,11 +625,65 @@ const COBSStartCheckingDialog = ({
                                           )
                                         }
                                       />
-                                      {fileList.length > 0 ? (
+
+                                      {existingFileList.length > 0 ||
+                                      fileList.length > 0 ? (
                                         <div className="cobs-sc__attach-list">
+                                          {existingFileList.map((url, i) => {
+                                            const filename =
+                                              decodeURIComponent(
+                                                url
+                                                  .split("/")
+                                                  .pop()
+                                                  .split("?")[0],
+                                              ) || `file-${i + 1}`;
+                                            return (
+                                              <div
+                                                key={`existing-${i}`}
+                                                className="cobs-sc__attach-item">
+                                                <Tooltip
+                                                  title={filename}
+                                                  placement="top">
+                                                  <span className="cobs-sc__attach-name">
+                                                    {filename}
+                                                  </span>
+                                                </Tooltip>
+                                                <Tooltip
+                                                  title="Preview"
+                                                  placement="top">
+                                                  <IconButton
+                                                    size="small"
+                                                    className="cobs-sc__attach-eye"
+                                                    onClick={() =>
+                                                      openPreview(
+                                                        existingFileList,
+                                                        i,
+                                                      )
+                                                    }>
+                                                    <VisibilityIcon
+                                                      sx={{ fontSize: 13 }}
+                                                    />
+                                                  </IconButton>
+                                                </Tooltip>
+                                                <IconButton
+                                                  size="small"
+                                                  className="cobs-sc__attach-remove"
+                                                  onClick={() =>
+                                                    handleRemoveExistingImage(
+                                                      editKey,
+                                                      i,
+                                                    )
+                                                  }>
+                                                  <DeleteOutlineIcon
+                                                    sx={{ fontSize: 13 }}
+                                                  />
+                                                </IconButton>
+                                              </div>
+                                            );
+                                          })}
                                           {fileList.map((file, i) => (
                                             <div
-                                              key={i}
+                                              key={`new-${i}`}
                                               className="cobs-sc__attach-item">
                                               <Tooltip
                                                 title={file.name}
@@ -579,24 +773,66 @@ const COBSStartCheckingDialog = ({
                 <div className="cobs-sc__others-header">Others</div>
                 <div className="cobs-sc__others-body">
                   <div className="cobs-sc__others-field">
-                    <span className="cobs-sc__others-label">Start Time</span>
-                    <div className="cobs-sc__others-input-box">
-                      <span className="cobs-sc__others-time">
-                        {viewMode
-                          ? formatDateTime(batchEntry?.start_at)
-                          : startTime}
-                      </span>
-                    </div>
+                    <span className="cobs-sc__others-label">
+                      Date <span className="cobs-sc__required">*</span>
+                    </span>
+                    {viewMode ? (
+                      <div className="cobs-sc__others-input-box">
+                        <span className="cobs-sc__others-time">
+                          {batchEntry?.start_at
+                            ? formatDateDisplay(
+                                batchEntry.start_at.split(" ")[0],
+                              )
+                            : "—"}
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div
+                          className={`cobs-sc__date-picker-wrap${dateError ? " cobs-sc__date-picker-wrap--error" : ""}`}>
+                          <CalendarTodayIcon className="cobs-sc__date-icon" />
+                          <input
+                            type="date"
+                            className="cobs-sc__date-input"
+                            value={startAt}
+                            onChange={(e) => {
+                              setStartAt(e.target.value);
+                              if (e.target.value) setDateError(false);
+                            }}
+                          />
+                          <span className="cobs-sc__date-display">
+                            {startAt ? formatDateDisplay(startAt) : ""}
+                          </span>
+                        </div>
+                        {dateError && (
+                          <span className="cobs-sc__date-error">
+                            Date is required.
+                          </span>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   <div className="cobs-sc__others-field">
-                    <span className="cobs-sc__others-label">End Time</span>
-                    <div className="cobs-sc__others-input-box">
-                      <span className="cobs-sc__others-time">
-                        {viewMode
-                          ? formatDateTime(batchEntry?.end_at)
-                          : endTime}
-                      </span>
+                    <span className="cobs-sc__others-label">Time</span>
+                    <div className="cobs-sc__time-row">
+                      <div className="cobs-sc__time-block cobs-sc__time-block--disabled">
+                        <span className="cobs-sc__time-block-label">Start</span>
+                        <span className="cobs-sc__time-block-value">
+                          {viewMode
+                            ? formatDateTime(batchEntry?.start_at)
+                            : startTime || "—"}
+                        </span>
+                      </div>
+                      <div className="cobs-sc__time-divider">—</div>
+                      <div className="cobs-sc__time-block cobs-sc__time-block--disabled">
+                        <span className="cobs-sc__time-block-label">End</span>
+                        <span className="cobs-sc__time-block-value">
+                          {viewMode
+                            ? formatDateTime(batchEntry?.end_at)
+                            : endTime || "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

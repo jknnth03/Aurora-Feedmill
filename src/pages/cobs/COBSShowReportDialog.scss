@@ -1,6 +1,4 @@
-// ── COBSShowReportDialog.scss ─────────────────────────────────────────────────
-// Matches the Report Summary modal design from the screenshot.
-// Color palette follows the existing orange/warm COBS theme.
+@use "../../styles/colors" as *;
 
 $accent: #e66414;
 $accent-light: #fdf0e7;
@@ -13,23 +11,31 @@ $bg-card: #fffaf7;
 $bg-paper: #ffffff;
 $red-deduct: #d84040;
 
-// ── Paper ────────────────────────────────────────────────────────────────────
 .cobs-sr__paper {
   border-radius: 14px !important;
   background: $bg-paper !important;
   box-shadow: 0 12px 48px rgba(230, 100, 20, 0.14) !important;
   overflow: hidden !important;
   font-family: "Poppins", sans-serif !important;
+
+  [data-theme="dark"] & {
+    background: $bg-main !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4) !important;
+  }
 }
 
-// ── Header ───────────────────────────────────────────────────────────────────
 .cobs-sr__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px 14px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid $border;
   background: $bg-paper;
+
+  [data-theme="dark"] & {
+    background: $bg-main;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .cobs-sr__header-left {
@@ -41,6 +47,10 @@ $red-deduct: #d84040;
 .cobs-sr__header-icon {
   color: $accent !important;
   font-size: 22px !important;
+
+  [data-theme="dark"] & {
+    color: var(--palette-primary) !important;
+  }
 }
 
 .cobs-sr__header-title {
@@ -49,31 +59,50 @@ $red-deduct: #d84040;
   color: $text-primary;
   font-family: "Poppins", sans-serif;
   letter-spacing: 0.01em;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .cobs-sr__close {
   color: $text-muted !important;
   transition: color 0.18s;
+
   &:hover {
     color: $accent !important;
+
+    [data-theme="dark"] & {
+      color: var(--palette-primary) !important;
+    }
+  }
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.4) !important;
   }
 }
 
-// ── Content ───────────────────────────────────────────────────────────────────
 .cobs-sr__content {
   padding: 20px 24px !important;
   background: #faf6f2;
   overflow-y: auto;
   max-height: 70vh;
+
+  [data-theme="dark"] & {
+    background: $bg-main;
+  }
 }
 
 .cobs-sr__body {
   display: flex;
   gap: 20px;
-  align-items: flex-start;
+  align-items: stretch;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
 }
 
-// ── Left Column ───────────────────────────────────────────────────────────────
 .cobs-sr__left {
   display: flex;
   flex-direction: column;
@@ -81,14 +110,36 @@ $red-deduct: #d84040;
   min-width: 210px;
   max-width: 230px;
   flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    max-width: 100%;
+    min-width: unset;
+  }
 }
 
-.cobs-sr__details-card,
+.cobs-sr__details-card {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 14px 16px;
+  flex: 1;
+
+  [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
 .cobs-sr__signed-card {
   background: $bg-card;
   border: 1px solid $border;
   border-radius: 10px;
   padding: 14px 16px;
+
+  [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .cobs-sr__details-title,
@@ -98,6 +149,10 @@ $red-deduct: #d84040;
   color: $text-primary;
   margin: 0 0 10px 0;
   font-family: "Poppins", sans-serif;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .cobs-sr__detail-row {
@@ -110,6 +165,10 @@ $red-deduct: #d84040;
   font-size: 0.72rem;
   color: $text-muted;
   font-family: "Poppins", sans-serif;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.4);
+  }
 }
 
 .cobs-sr__detail-value {
@@ -118,13 +177,20 @@ $red-deduct: #d84040;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
 
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
   &--accent {
     color: $accent;
     font-weight: 600;
+
+    [data-theme="dark"] & {
+      color: var(--palette-primary);
+    }
   }
 }
 
-// Signed by
 .cobs-sr__signature-box {
   width: 100%;
   height: 90px;
@@ -136,6 +202,11 @@ $red-deduct: #d84040;
   background: #fff;
   margin-bottom: 8px;
   overflow: hidden;
+
+  [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
 }
 
 .cobs-sr__signature-img {
@@ -156,9 +227,12 @@ $red-deduct: #d84040;
   font-family: "Poppins", sans-serif;
   font-weight: 500;
   margin: 0;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 
-// ── Right Column ──────────────────────────────────────────────────────────────
 .cobs-sr__right {
   display: flex;
   flex-direction: column;
@@ -167,12 +241,16 @@ $red-deduct: #d84040;
   min-width: 0;
 }
 
-// ── Section Cards ─────────────────────────────────────────────────────────────
 .cobs-sr__section-card {
   background: $bg-card;
   border: 1px solid $border;
   border-radius: 10px;
   overflow: hidden;
+
+  [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .cobs-sr__section-label {
@@ -185,10 +263,16 @@ $red-deduct: #d84040;
   margin: 0;
   font-family: "Poppins", sans-serif;
   letter-spacing: 0.02em;
+
+  [data-theme="dark"] & {
+    color: #fff;
+    background: var(--palette-primary);
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
 }
 
 .cobs-sr__section-body {
-  padding: 10px 14px;
+  padding: 8px 14px;
 }
 
 .cobs-sr__section-text {
@@ -197,15 +281,22 @@ $red-deduct: #d84040;
   font-family: "Poppins", sans-serif;
   margin: 0;
   line-height: 1.5;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.65);
+  }
 }
 
 .cobs-sr__empty {
   font-size: 0.8rem;
   color: $text-muted;
   font-family: "Poppins", sans-serif;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.3);
+  }
 }
 
-// ── Remarks ───────────────────────────────────────────────────────────────────
 .cobs-sr__remark-row {
   display: flex;
   align-items: baseline;
@@ -215,21 +306,37 @@ $red-deduct: #d84040;
   font-size: 0.8rem;
   color: $text-secondary;
   margin-bottom: 4px;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.65);
+  }
 }
 
 .cobs-sr__remark-bullet {
   color: $accent;
   font-weight: 700;
   flex-shrink: 0;
+
+  [data-theme="dark"] & {
+    color: var(--palette-primary);
+  }
 }
 
 .cobs-sr__remark-category {
   font-weight: 700;
   color: $text-primary;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .cobs-sr__remark-note {
   color: $text-secondary;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 
 .cobs-sr__remark-deduction {
@@ -238,57 +345,94 @@ $red-deduct: #d84040;
   font-size: 0.78rem;
 }
 
-// ── Bottom row (Score + Attachment) ──────────────────────────────────────────
 .cobs-sr__bottom-row {
   display: flex;
   gap: 14px;
-  align-items: flex-start;
+  align-items: stretch;
+  flex: 1;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
 }
 
 .cobs-sr__score-card {
   flex: 1.4;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .cobs-sr__attach-card {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-// Score rows
 .cobs-sr__score-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 5px;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
   font-family: "Poppins", sans-serif;
   font-size: 0.78rem;
   color: $text-secondary;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed $border;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.6);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .cobs-sr__score-category {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: $text-primary;
+  word-break: break-word;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .cobs-sr__score-value {
-  white-space: nowrap;
-  font-weight: 600;
-  color: $text-primary;
   font-size: 0.76rem;
+  font-weight: 500;
+  color: $text-secondary;
+  white-space: nowrap;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 
 .cobs-sr__score-pct {
   color: $accent;
-  font-weight: 500;
+  font-weight: 600;
+
+  [data-theme="dark"] & {
+    color: var(--palette-primary);
+  }
 }
 
 .cobs-sr__score-divider {
   border: none;
   border-top: 1.5px solid $border;
   margin: 8px 0;
+
+  [data-theme="dark"] & {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .cobs-sr__score-total-row {
@@ -296,6 +440,7 @@ $red-deduct: #d84040;
   align-items: baseline;
   gap: 8px;
   font-family: "Poppins", sans-serif;
+  flex-wrap: wrap;
 }
 
 .cobs-sr__score-total-label {
@@ -303,24 +448,35 @@ $red-deduct: #d84040;
   font-weight: 700;
   color: $text-primary;
   flex: 1;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .cobs-sr__score-total-value {
   font-size: 0.84rem;
   font-weight: 700;
   color: $text-primary;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .cobs-sr__score-total-pct {
   font-size: 0.84rem;
   font-weight: 700;
   color: $accent;
+
+  [data-theme="dark"] & {
+    color: var(--palette-primary);
+  }
 }
 
-// Attachment
 .cobs-sr__attach-body {
   padding: 10px 14px;
-  min-height: 80px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -339,18 +495,29 @@ $red-deduct: #d84040;
   border-radius: 8px;
   padding: 18px 24px;
   width: 100%;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .cobs-sr__attach-icon {
   font-size: 28px !important;
   color: $border !important;
   opacity: 0.7;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.15) !important;
+  }
 }
 
 .cobs-sr__attach-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-content: flex-start;
+  width: 100%;
 }
 
 .cobs-sr__attach-thumb {
@@ -363,13 +530,21 @@ $red-deduct: #d84040;
   transition:
     transform 0.15s,
     border-color 0.15s;
+
   &:hover {
     transform: scale(1.06);
     border-color: $accent;
+
+    [data-theme="dark"] & {
+      border-color: var(--palette-primary);
+    }
+  }
+
+  [data-theme="dark"] & {
+    border-color: rgba(255, 255, 255, 0.12);
   }
 }
 
-// ── Footer ───────────────────────────────────────────────────────────────────
 .cobs-sr__footer {
   padding: 12px 20px !important;
   border-top: 1px solid $border;
@@ -377,19 +552,17 @@ $red-deduct: #d84040;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
+
+  [data-theme="dark"] & {
+    background: $bg-main;
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .cobs-sr__footer-left {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.cobs-sr__download-label {
-  font-size: 0.68rem;
-  color: $text-muted;
-  font-family: "Poppins", sans-serif;
-  margin: 0 0 3px 0;
 }
 
 .cobs-sr__download-select {
@@ -403,16 +576,33 @@ $red-deduct: #d84040;
   background: $bg-card !important;
   border-radius: 7px !important;
 
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
   .MuiOutlinedInput-notchedOutline {
     border-color: $border !important;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12) !important;
+    }
   }
 
   &:hover .MuiOutlinedInput-notchedOutline {
     border-color: $accent-mid !important;
+
+    [data-theme="dark"] & {
+      border-color: var(--palette-primary) !important;
+    }
   }
 
   &.Mui-focused .MuiOutlinedInput-notchedOutline {
     border-color: $accent !important;
+
+    [data-theme="dark"] & {
+      border-color: var(--palette-primary) !important;
+    }
   }
 }
 
@@ -436,6 +626,17 @@ $red-deduct: #d84040;
   &:hover {
     background: $accent-light !important;
     border-color: $accent-mid !important;
+
+    [data-theme="dark"] & {
+      background: rgba(230, 100, 20, 0.2) !important;
+      border-color: var(--palette-primary) !important;
+    }
+  }
+
+  [data-theme="dark"] & {
+    color: var(--palette-primary) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
   }
 }
 
@@ -461,6 +662,18 @@ $red-deduct: #d84040;
     background: $accent-light;
     color: $accent;
     border-color: $accent-mid;
+
+    [data-theme="dark"] & {
+      background: rgba(230, 100, 20, 0.2);
+      color: var(--palette-primary);
+      border-color: var(--palette-primary);
+    }
+  }
+
+  [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.6);
   }
 }
 
@@ -483,5 +696,54 @@ $red-deduct: #d84040;
     background: #f5ece4;
     color: $accent;
     border-color: $accent-mid;
+
+    [data-theme="dark"] & {
+      background: rgba(230, 100, 20, 0.2);
+      color: var(--palette-primary);
+      border-color: var(--palette-primary);
+    }
+  }
+
+  [data-theme="dark"] & {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.cobs-sr__btn-add-signature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px dashed #f5a96b;
+  background: #fffaf7;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e66414;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+
+  &:hover {
+    background: #fdf0e7;
+    border-color: #e66414;
+
+    [data-theme="dark"] & {
+      background: rgba(230, 100, 20, 0.2);
+      border-color: var(--palette-primary);
+    }
+  }
+
+  [data-theme="dark"] & {
+    background: rgba(230, 100, 20, 0.08);
+    border-color: rgba(230, 100, 20, 0.5);
+    color: var(--palette-primary);
   }
 }

@@ -68,6 +68,28 @@ export const CHIP_VARS = [
     defaultTextDark: "#ef9a9a",
   },
   {
+    id: "chip-done",
+    label: "Done",
+    defaultName: "Done",
+    cssVar: "--chip-done-bg",
+    cssVarText: "--chip-done-text",
+    defaultLight: "#e8f5e9",
+    defaultDark: "#0a2e12",
+    defaultTextLight: "#1b5e20",
+    defaultTextDark: "#81c784",
+  },
+  {
+    id: "chip-on-going",
+    label: "On Going",
+    defaultName: "On Going",
+    cssVar: "--chip-on-going-bg",
+    cssVarText: "--chip-on-going-text",
+    defaultLight: "#e0f7fa",
+    defaultDark: "#003a3a",
+    defaultTextLight: "#00695c",
+    defaultTextDark: "#4db6ac",
+  },
+  {
     id: "chip-draft",
     label: "Draft",
     defaultName: "Draft",
@@ -139,6 +161,8 @@ export const CHIP_GROUPS = [
   {
     label: "Workflow",
     ids: [
+      "chip-done",
+      "chip-on-going",
       "chip-draft",
       "chip-processing",
       "chip-cancelled",

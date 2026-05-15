@@ -20,6 +20,7 @@ import Birds from "../pages/checklist-form/BIRDS/BirdsQuestionnaires.jsx";
 import StandaloneBirds from "../pages/birds/Birds.jsx";
 import StandaloneCOBS from "../pages/cobs/COBS.jsx";
 import StandalonePest from "../pages/pest/Pest.jsx";
+import COBSApproval from "../pages/approval/COBS/COBSApproval.jsx";
 
 export const ROUTES = [
   {
@@ -167,6 +168,13 @@ export const ROUTES = [
         path: MODULES.PEST.path,
         element: <StandalonePest />,
         handle: { permission: MODULES.PEST.permissionId },
+      },
+
+      {
+        id: "APPROVAL.COBS",
+        path: `${MODULES.APPROVAL.path}/${MODULES.APPROVAL.children.COBS.path}`,
+        element: <COBSApproval />,
+        handle: { permission: MODULES.APPROVAL.children.COBS.permissionId },
       },
     ],
   },

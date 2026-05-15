@@ -27,7 +27,10 @@ const COLUMNS = [
 
 const STATUS_CHIP_MAP = {
   completed: "chip-completed",
-  "for approval": "chip-pending",
+  done: "chip-completed",
+  approved: "chip-completed",
+  "for acknowledgement": "chip-for-approval",
+  "for approval": "chip-for-approval",
   "on going": "chip-processing",
   pending: "chip-pending",
   rejected: "chip-rejected",
@@ -39,18 +42,29 @@ const getCompletedWeeksCount = (weekMap) => {
     if (!Array.isArray(entries) || entries.length === 0) return;
     const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
     const status = latest?.status?.toLowerCase() ?? "";
-    if (status === "completed" || status === "done") {
+    if (status === "completed" || status === "done" || status === "approved") {
       count += 1;
     }
   });
   return count;
 };
 
-const getLatestWeekStatus = (weekMap) => {
-  const allBatches = Object.values(weekMap).flat();
-  if (allBatches.length === 0) return null;
-  const latest = allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-  return latest?.status ?? null;
+const hasAnyInProgressWeek = (weekMap) => {
+  return Object.values(weekMap).some((entries) => {
+    if (!Array.isArray(entries) || entries.length === 0) return false;
+    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+    const status = latest?.status?.toLowerCase() ?? "";
+    return status === "for acknowledgement" || status === "for approval";
+  });
+};
+
+const getDerivedTableStatus = (weekMap) => {
+  const totalWeeks = Object.keys(weekMap).length;
+  const completedWeeks = getCompletedWeeksCount(weekMap);
+  if (completedWeeks === 0 && !hasAnyInProgressWeek(weekMap)) return "Pending";
+  if (completedWeeks === totalWeeks && !hasAnyInProgressWeek(weekMap))
+    return "Completed";
+  return "On Going";
 };
 
 const flattenCobsData = (rawData) => {
@@ -65,7 +79,7 @@ const flattenCobsData = (rawData) => {
     const totalWeeks = Object.keys(weekMap).length;
 
     const completedWeeks = getCompletedWeeksCount(weekMap);
-    const latestStatus = getLatestWeekStatus(weekMap);
+    const derivedStatus = getDerivedTableStatus(weekMap);
 
     const allBatches = Object.values(weekMap).flat();
     const latestBatch =
@@ -79,7 +93,7 @@ const flattenCobsData = (rawData) => {
       unit: unitName,
       checklist_name: checklistName,
       week: `${completedWeeks}/${totalWeeks}`,
-      status: latestStatus ?? "—",
+      status: derivedStatus,
       _raw: latestBatch,
       _unitKey: unitKey,
       _unitData: unitData,
@@ -115,7 +129,7 @@ const COBS = () => {
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedUnitKey, setSelectedUnitKey] = useState(null);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -134,6 +148,10 @@ const COBS = () => {
     (page - 1) * rowsPerPage,
     page * rowsPerPage,
   );
+
+  const selectedRow = selectedUnitKey
+    ? (tableData.find((r) => r._unitKey === selectedUnitKey) ?? null)
+    : null;
 
   const handleSort = (key, order) => {
     setSortBy(key);
@@ -200,7 +218,7 @@ const COBS = () => {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          onRowClick={(row) => setSelectedRow(row)}
+          onRowClick={(row) => setSelectedUnitKey(row._unitKey)}
         />
       </PageContainer>
 
@@ -210,7 +228,7 @@ const COBS = () => {
         unitData={selectedRow?._unitData}
         month={Number(currentMonth.format("MM"))}
         year={Number(currentMonth.format("YYYY"))}
-        onClose={() => setSelectedRow(null)}
+        onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
       />
     </>

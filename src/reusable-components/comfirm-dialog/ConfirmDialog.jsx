@@ -12,6 +12,7 @@ const ConfirmDialog = ({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   isLoading = false,
+  confirmVariant = "danger",
 }) => {
   return (
     <Dialog
@@ -36,7 +37,7 @@ const ConfirmDialog = ({
             {cancelLabel}
           </button>
           <button
-            className="cd__confirm-btn"
+            className={`cd__confirm-btn cd__confirm-btn--${confirmVariant}`}
             onClick={onConfirm}
             disabled={isLoading}>
             {isLoading ? "Processing..." : confirmLabel}
