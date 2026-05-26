@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Collapse, Tooltip } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -25,7 +25,13 @@ const getFilteredNavItems = (user) => {
     });
 };
 
-const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
+const NavItem = ({
+  item,
+  sidebarOpen,
+  onExpandSidebar,
+  onCloseSidebar,
+  level = 0,
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const hasChildren = item.children && Object.keys(item.children).length > 0;
@@ -66,6 +72,7 @@ const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
         setOpen(true);
       } else {
         navigate(item.path);
+        onCloseSidebar();
       }
       return;
     }
@@ -74,6 +81,7 @@ const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
       setOpen((p) => !p);
     } else {
       navigate(item.path);
+      onCloseSidebar();
     }
   };
 
@@ -111,7 +119,6 @@ const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
   );
 
   return (
-    // ✅ wrapper div ensures gap applies between item + its collapse as a unit
     <div className="nav-item-wrap">
       {!sidebarOpen && level === 0 ? (
         <Tooltip title={item.displayName} placement="right">
@@ -133,6 +140,7 @@ const NavItem = ({ item, sidebarOpen, onExpandSidebar, level = 0 }) => {
                 }}
                 sidebarOpen={sidebarOpen}
                 onExpandSidebar={onExpandSidebar}
+                onCloseSidebar={onCloseSidebar}
                 level={level + 1}
               />
             ))}
@@ -148,6 +156,7 @@ const SidebarInner = ({
   isMobile = false,
   onCloseMobile,
   onExpandSidebar,
+  onCloseSidebar,
   navItems,
   user,
   initials,
@@ -177,6 +186,7 @@ const SidebarInner = ({
           item={item}
           sidebarOpen={open || isMobile}
           onExpandSidebar={onExpandSidebar}
+          onCloseSidebar={isMobile ? onCloseMobile : onCloseSidebar}
         />
       ))}
     </nav>
@@ -196,8 +206,10 @@ const Sidebar = ({
   mobileSidebarOpen = false,
   onCloseMobile = () => {},
   onToggleSidebar = () => {},
+  onCloseSidebar = () => {},
 }) => {
   const rawUser = JSON.parse(localStorage.getItem("user")) || {};
+  const sidebarRef = useRef(null);
 
   const fullName =
     rawUser.first_name && rawUser.last_name
@@ -216,14 +228,31 @@ const Sidebar = ({
 
   const navItems = getFilteredNavItems(rawUser);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (e) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        onCloseSidebar();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open, onCloseSidebar]);
+
   return (
     <>
       <div
-        className={`sidebar-wrapper sidebar-wrapper--desktop ${open ? "sidebar-wrapper--open" : "sidebar-wrapper--closed"}`}>
+        ref={sidebarRef}
+        className={`sidebar-wrapper sidebar-wrapper--desktop ${
+          open ? "sidebar-wrapper--open" : "sidebar-wrapper--closed"
+        }`}>
         <SidebarInner
           open={open}
           onCloseMobile={onCloseMobile}
           onExpandSidebar={onToggleSidebar}
+          onCloseSidebar={onCloseSidebar}
           navItems={navItems}
           user={user}
           initials={initials}
@@ -239,6 +268,7 @@ const Sidebar = ({
               isMobile
               onCloseMobile={onCloseMobile}
               onExpandSidebar={onToggleSidebar}
+              onCloseSidebar={onCloseSidebar}
               navItems={navItems}
               user={user}
               initials={initials}

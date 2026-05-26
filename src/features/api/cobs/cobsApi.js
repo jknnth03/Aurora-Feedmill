@@ -26,6 +26,24 @@ const cobsApi = apiSlice.injectEndpoints({
       }),
       providesTags: (result, error, id) => [{ type: "Cobs", id }],
     }),
+
+    evaluateResponse: builder.mutation({
+      query: (formData) => ({
+        url: "/api/responses/evaluate",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: [],
+    }),
+
+    mergeCobs: builder.mutation({
+      query: ({ month, year }) => ({
+        url: "/api/responses/merge",
+        method: "POST",
+        params: { month, year },
+      }),
+      invalidatesTags: ["Cobs"],
+    }),
   }),
 });
 
@@ -33,4 +51,6 @@ export const {
   useGetCobsQuery,
   useCreateCobMutation,
   useGetQuestionnaireQuery,
+  useEvaluateResponseMutation,
+  useMergeCobsMutation,
 } = cobsApi;

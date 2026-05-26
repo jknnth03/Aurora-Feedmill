@@ -1,6 +1,6 @@
 import { apiSlice } from "../../../app/apiSlice";
 
-const cobsApi = apiSlice.injectEndpoints({
+const cobsApproval = apiSlice.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
     getCobs: builder.query({
@@ -36,11 +36,26 @@ const cobsApi = apiSlice.injectEndpoints({
     }),
 
     approveApproval: builder.mutation({
-      query: (batch_no) => ({
-        url: "/api/approvals/approve",
-        method: "PUT",
-        params: { batch_no },
-      }),
+      query: ({ batch_no, approver_id, approvers = [], signatureFile }) => {
+        const formData = new FormData();
+        formData.append("batch_no", String(batch_no));
+        formData.append("approver_id", String(approver_id));
+        approvers.forEach((approver, i) => {
+          formData.append(`approve[${i}]`, JSON.stringify(approver));
+        });
+        if (signatureFile) {
+          formData.append(
+            "approve_image[0]",
+            signatureFile,
+            signatureFile.name,
+          );
+        }
+        return {
+          url: "/api/approvals/approve",
+          method: "POST",
+          body: formData,
+        };
+      },
       invalidatesTags: ["Approvals"],
     }),
   }),
@@ -52,4 +67,4 @@ export const {
   useGetQuestionnaireQuery,
   useGetApprovalsQuery,
   useApproveApprovalMutation,
-} = cobsApi;
+} = cobsApproval;

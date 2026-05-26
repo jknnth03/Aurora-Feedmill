@@ -2,6 +2,7 @@
 @use "../../styles/colors" as *;
 
 .sidebar-wrapper {
+  clip-path: inset(0 -20px 0 0);
   flex-shrink: 0;
   height: 100vh;
   z-index: 100;
@@ -58,7 +59,7 @@
 }
 
 .sidebar {
-  height: 100vh;
+  height: 100dvh;
   background-color: $bg-main;
   border-right: none;
   display: flex;
@@ -77,7 +78,7 @@
   &__brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
     padding: 24px 14px;
     flex-shrink: 0;
     min-height: 64px;
@@ -143,6 +144,7 @@
     flex-direction: column;
     gap: 0;
     scrollbar-gutter: stable;
+    min-height: 0;
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -308,6 +310,7 @@
     color: var(--text-sidebar-icon);
     flex-shrink: 0;
     transition: color 0.15s;
+    position: relative;
 
     svg {
       font-size: 20px;
@@ -318,6 +321,9 @@
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 
   &__arrow {

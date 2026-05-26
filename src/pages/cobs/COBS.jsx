@@ -134,11 +134,16 @@ const COBS = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, isFetching, error } = useGetCobsQuery({
-    month: currentMonth.format("MM"),
-    year: currentMonth.format("YYYY"),
-    search: debouncedSearch,
-  });
+  const { data, isFetching, error } = useGetCobsQuery(
+    {
+      month: currentMonth.format("MM"),
+      year: currentMonth.format("YYYY"),
+      search: debouncedSearch,
+    },
+    {
+      refetchOnMountOrArgChange: true,
+    },
+  );
 
   const is404 = error?.status === 404;
   const tableData = flattenCobsData(data);

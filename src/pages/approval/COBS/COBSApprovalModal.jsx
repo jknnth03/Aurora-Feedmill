@@ -10,6 +10,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useState } from "react";
 import COBSImagePreviewDialog from "../../cobs/COBSImagePreviewDialog";
+import COBSSignatureDialog from "./COBSSignatureDialog";
+import { useApproveApprovalMutation } from "../../../features/api/approval/cobsApproval";
 import "./COBSApprovalModal.scss";
 
 const SCORE_OPTIONS = [0, 50, 75, 100];
@@ -60,15 +62,44 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     images: [],
     index: 0,
   });
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [approveApproval, { isLoading: isApproving }] =
+    useApproveApprovalMutation();
 
   const openPreview = (imgs, idx) =>
     setPreviewState({ open: true, images: imgs, index: idx });
-
   const closePreview = () => setPreviewState((p) => ({ ...p, open: false }));
 
   const groupedResponses = batchEntry
     ? groupResponsesByCategory(batchEntry.responses ?? [])
     : {};
+
+  const handleAcknowledge = ({ blob }) => {
+    if (!batchEntry || !blob) return;
+
+    const signatureFile = new File([blob], "signature.png", {
+      type: "image/png",
+    });
+
+    approveApproval({
+      batch_no: batchEntry.batch_no,
+      approver_id: 1,
+      approvers: [
+        {
+          id: 1,
+          name: batchEntry.approver ?? "",
+        },
+      ],
+      signatureFile,
+    })
+      .unwrap()
+      .then(() => {
+        onApprove?.(batchEntry);
+      })
+      .catch((err) => {
+        console.error("Acknowledge failed:", err);
+      });
+  };
 
   return (
     <>
@@ -183,7 +214,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                                 </span>
                               )}
                             </td>
-
                             <td className="cobsam__td cobsam__td--compliance">
                               <div className="cobsam__radio-box">
                                 {SCORE_OPTIONS.map((score) => (
@@ -208,7 +238,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                                 ))}
                               </div>
                             </td>
-
                             <td className="cobsam__td cobsam__td--remarks">
                               <textarea
                                 className="cobsam__textarea cobsam__textarea--readonly"
@@ -218,7 +247,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                                 placeholder="—"
                               />
                             </td>
-
                             <td className="cobsam__td cobsam__td--attachment">
                               {images.length > 0 ? (
                                 <div className="cobsam__attach-file-list">
@@ -281,7 +309,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                       </span>
                     </div>
                   </div>
-
                   <div className="cobsam__others-field">
                     <span className="cobsam__others-label">Time</span>
                     <div className="cobsam__time-row">
@@ -300,7 +327,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                       </div>
                     </div>
                   </div>
-
                   <div className="cobsam__others-field">
                     <span className="cobsam__others-label">Temporal Audit</span>
                     <div className="cobsam__others-input-box">
@@ -327,7 +353,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                       </div>
                     </div>
                   </div>
-
                   <div className="cobsam__others-field">
                     <span className="cobsam__others-label">Good Points</span>
                     <textarea
@@ -338,7 +363,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                       placeholder="—"
                     />
                   </div>
-
                   <div className="cobsam__others-field">
                     <span className="cobsam__others-label">Remarks</span>
                     <textarea
@@ -359,6 +383,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
           <Button
             variant="text"
             onClick={onClose}
+            disabled={isApproving}
             className="cobsam__btn-close">
             CLOSE
           </Button>
@@ -367,13 +392,25 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             <Button
               variant="contained"
               startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-              onClick={() => onApprove?.(batchEntry)}
+              onClick={() => setSignatureDialogOpen(true)}
+              disabled={isApproving}
               className="cobsam__btn-approve">
-              ACKNOWLEDGE
+              {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
             </Button>
           )}
         </DialogActions>
       </Dialog>
+
+      <COBSSignatureDialog
+        open={signatureDialogOpen}
+        onClose={() => setSignatureDialogOpen(false)}
+        onSubmit={({ blob }) => {
+          setSignatureDialogOpen(false);
+          handleAcknowledge({ blob });
+        }}
+        signerName={batchEntry?.approver ?? ""}
+        isSubmitting={isApproving}
+      />
 
       <COBSImagePreviewDialog
         open={previewState.open}

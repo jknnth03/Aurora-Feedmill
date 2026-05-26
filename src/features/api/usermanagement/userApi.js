@@ -42,6 +42,27 @@ const userApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Users"],
     }),
+
+    getEvaluators: builder.query({
+      query: () => ({
+        url: "/api/dropdown/evaluators",
+      }),
+      providesTags: ["Users"],
+    }),
+
+    getApprovers: builder.query({
+      query: () => ({
+        url: "/api/dropdown/approvers",
+      }),
+      providesTags: ["Users"],
+    }),
+
+    getAssessors: builder.query({
+      query: () => ({
+        url: "/api/dropdown/assessors",
+      }),
+      providesTags: ["Users"],
+    }),
   }),
 });
 
@@ -51,4 +72,7 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useArchiveUserMutation,
+  useGetEvaluatorsQuery,
+  useGetApproversQuery,
+  useGetAssessorsQuery,
 } = userApi;

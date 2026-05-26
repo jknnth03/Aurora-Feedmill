@@ -5,11 +5,7 @@ import UniversalTable from "../../../reusable-components/universal-table/Univers
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
-import {
-  useGetApprovalsQuery,
-  useApproveApprovalMutation,
-} from "../../../features/api/approval/cobsApproval";
+import { useGetApprovalsQuery } from "../../../features/api/approval/cobsApproval";
 import COBSApprovalModal from "./COBSApprovalModal";
 import "./COBSApproval.scss";
 
@@ -62,11 +58,8 @@ const COBSApproval = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
-
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [toApprove, setToApprove] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -76,8 +69,6 @@ const COBSApproval = () => {
   const { data, isFetching, error } = useGetApprovalsQuery({
     status: "pending",
   });
-  const [approveApproval, { isLoading: isApproving }] =
-    useApproveApprovalMutation();
 
   const is404 = error?.status === 404;
   const rawData = data ?? {};
@@ -99,30 +90,14 @@ const COBSApproval = () => {
     setModalOpen(true);
   };
 
-  const handleApproveClick = (row) => {
-    setToApprove(row);
-    setConfirmOpen(true);
-  };
-
-  const handleConfirmApprove = async () => {
-    try {
-      await approveApproval(toApprove.batch_no).unwrap();
-      setSnackbar({
-        open: true,
-        message: `Batch #${toApprove.batch_no} approved successfully.`,
-        severity: "success",
-      });
-      setConfirmOpen(false);
-      setToApprove(null);
-      setModalOpen(false);
-      setSelectedBatch(null);
-    } catch {
-      setSnackbar({
-        open: true,
-        message: "Something went wrong. Please try again.",
-        severity: "error",
-      });
-    }
+  const handleApprove = (row) => {
+    setSnackbar({
+      open: true,
+      message: `Batch #${row.batch_no} acknowledged successfully.`,
+      severity: "success",
+    });
+    setModalOpen(false);
+    setSelectedBatch(null);
   };
 
   return (
@@ -158,22 +133,7 @@ const COBSApproval = () => {
           setSelectedBatch(null);
         }}
         batchEntry={selectedBatch}
-        onApprove={(row) => {
-          handleApproveClick(row);
-        }}
-      />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        onClose={() => {
-          setConfirmOpen(false);
-          setToApprove(null);
-        }}
-        onConfirm={handleConfirmApprove}
-        isLoading={isApproving}
-        title="Acknowledge Batch"
-        message={`Are you sure you want to acknowledge Batch #${toApprove?.batch_no}? This action cannot be undone.`}
-        confirmVariant="success"
+        onApprove={handleApprove}
       />
 
       <Snackbar

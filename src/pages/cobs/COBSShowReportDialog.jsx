@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
@@ -14,14 +14,60 @@ import PrintIcon from "@mui/icons-material/Print";
 import ImageIcon from "@mui/icons-material/Image";
 import DrawIcon from "@mui/icons-material/Draw";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
+import COBSSignatureDialog from "./COBSSignatureDialog";
+import { useEvaluateResponseMutation } from "../../features/api/cobs/cobsApi";
 import "./COBSShowReportDialog.scss";
 
 const COBSShowReportDialog = ({ open, onClose, reportData }) => {
   const [downloadType, setDownloadType] = useState("PDF");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
+  const [signatureOpen, setSignatureOpen] = useState(false);
+  const [signaturePreviewOpen, setSignaturePreviewOpen] = useState(false);
+  const [frozenData, setFrozenData] = useState(null);
+  const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
+  const [localSignatoryName, setLocalSignatoryName] = useState(null);
 
-  if (!reportData) return null;
+  const [evaluateResponse, { isLoading: isSubmitting }] =
+    useEvaluateResponseMutation();
+
+  useEffect(() => {
+    if (open && reportData) {
+      setFrozenData(reportData);
+      setLocalSignatureDataUrl(null);
+      setLocalSignatoryName(null);
+    }
+    if (!open) {
+      setFrozenData(null);
+      setLocalSignatureDataUrl(null);
+      setLocalSignatoryName(null);
+    }
+  }, [open]);
+
+  const data = frozenData;
+  if (!data) return null;
+
+  const signatureRecordUrls = data.responses
+    ? data.responses
+        .filter((r) => r.response === null || r.response === undefined)
+        .flatMap((r) => r.images || [])
+    : [];
+
+  const signatureFromServer =
+    data.signatory_1?.evaluate_image ?? signatureRecordUrls[0] ?? null;
+
+  const signatureDataUrl = localSignatureDataUrl ?? signatureFromServer ?? null;
+  const signatoryName = localSignatoryName ?? data.signatory_1?.name ?? null;
+
+  const signatory2 = data.signatory_2 ?? null;
+  const signatory3 = data.signatory_3 ?? null;
+
+  const allImages = data.responses
+    ? data.responses
+        .filter((r) => r.response !== null && r.response !== undefined)
+        .flatMap((r) => r.images || [])
+        .filter((url) => !signatureRecordUrls.includes(url))
+    : [];
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -42,16 +88,13 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
     });
   };
 
-  const totalAllocation = reportData.score_breakdown
-    ? reportData.score_breakdown.reduce(
-        (sum, s) => sum + (s.allocation ?? 0),
-        0,
-      )
+  const totalAllocation = data.score_breakdown
+    ? data.score_breakdown.reduce((sum, s) => sum + (s.allocation ?? 0), 0)
     : 100;
 
   const scorePercent =
     totalAllocation > 0
-      ? ((reportData.score / totalAllocation) * 100).toFixed(2)
+      ? ((data.score / totalAllocation) * 100).toFixed(2)
       : "0.00";
 
   const handleDownload = () => {
@@ -62,8 +105,49 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
     window.print();
   };
 
-  const handleAddSignature = () => {
-    console.log("Add signature clicked");
+  const handleSignatureSubmit = async ({
+    dataUrl,
+    blob,
+    selectedEvaluator,
+    selectedApprover,
+    selectedAssessor,
+  }) => {
+    setLocalSignatureDataUrl(dataUrl);
+    setLocalSignatoryName(selectedEvaluator?.full_name ?? "");
+
+    const formData = new FormData();
+    formData.append("batch_no", data.batch_no ?? "");
+    formData.append("evaluator_id", selectedEvaluator?.id ?? "");
+    formData.append("approver_id", selectedApprover?.id ?? "");
+    formData.append("assessor_id", selectedAssessor?.id ?? "");
+    formData.append(
+      "evaluate[0]",
+      JSON.stringify({
+        id: selectedEvaluator?.id ?? "",
+        name: selectedEvaluator?.full_name ?? "",
+      }),
+    );
+    formData.append("evaluate_image[0]", blob, "signature.png");
+
+    try {
+      const result = await evaluateResponse(formData).unwrap();
+      const returnedUrl =
+        result?.signature_url ??
+        result?.evaluate_image?.[0] ??
+        result?.image_url ??
+        null;
+      if (returnedUrl) {
+        setLocalSignatureDataUrl(returnedUrl);
+      }
+    } catch (err) {
+      console.error("[COBSShowReportDialog] evaluateResponse ERROR", err);
+    } finally {
+      setSignatureOpen(false);
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
   };
 
   const handleImageClick = (index) => {
@@ -71,15 +155,11 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
     setPreviewOpen(true);
   };
 
-  const allImages = reportData.responses
-    ? reportData.responses.flatMap((r) => r.images || [])
-    : [];
-
   return (
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={handleClose}
         maxWidth="md"
         fullWidth
         className="cobs-sr"
@@ -89,7 +169,10 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
             <AssessmentIcon className="cobs-sr__header-icon" />
             <span className="cobs-sr__header-title">Report Summary</span>
           </div>
-          <IconButton size="small" className="cobs-sr__close" onClick={onClose}>
+          <IconButton
+            size="small"
+            className="cobs-sr__close"
+            onClick={handleClose}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </div>
@@ -102,43 +185,63 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
                 <div className="cobs-sr__detail-row">
                   <span className="cobs-sr__detail-label">Date:</span>
                   <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {formatDate(reportData.start_at)}
+                    {formatDate(data.start_at)}
                   </span>
                 </div>
                 <div className="cobs-sr__detail-row">
                   <span className="cobs-sr__detail-label">Time in:</span>
                   <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {formatTime(reportData.start_at)}
+                    {formatTime(data.start_at)}
                   </span>
                 </div>
                 <div className="cobs-sr__detail-row">
                   <span className="cobs-sr__detail-label">Time out:</span>
                   <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {formatTime(reportData.end_at)}
+                    {formatTime(data.end_at)}
                   </span>
                 </div>
                 <div className="cobs-sr__detail-row">
                   <span className="cobs-sr__detail-label">Unit:</span>
                   <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {reportData.unit || "—"}
+                    {data.unit || "—"}
                   </span>
                 </div>
                 <div className="cobs-sr__detail-row">
                   <span className="cobs-sr__detail-label">QA Name:</span>
                   <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {reportData.user || "—"}
+                    {data.user || "—"}
                   </span>
                 </div>
               </div>
 
               <div className="cobs-sr__signed-card">
-                <p className="cobs-sr__signed-title">Signed by</p>
-                <button
-                  className="cobs-sr__btn-add-signature"
-                  onClick={handleAddSignature}>
-                  <DrawIcon style={{ fontSize: 16 }} />
-                  Add Signature
-                </button>
+                <p className="cobs-sr__signed-title">Acknowledge by</p>
+                {signatureDataUrl ? (
+                  <>
+                    <Tooltip title="View signature" placement="top">
+                      <div
+                        className="cobs-sr__signature-box cobs-sr__signature-box--clickable"
+                        onClick={() => setSignaturePreviewOpen(true)}>
+                        <img
+                          src={signatureDataUrl}
+                          alt="signature"
+                          className="cobs-sr__signature-img"
+                        />
+                      </div>
+                    </Tooltip>
+                    {signatoryName && (
+                      <p className="cobs-sr__signee-name">{signatoryName}</p>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    className="cobs-sr__btn-add-signature"
+                    onClick={() => setSignatureOpen(true)}
+                    disabled={isSubmitting}>
+                    <DrawIcon style={{ fontSize: 16 }} />
+                    {isSubmitting ? "Saving..." : "Add Signature"}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -146,10 +249,8 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
               <div className="cobs-sr__section-card">
                 <p className="cobs-sr__section-label">Remarks</p>
                 <div className="cobs-sr__section-body">
-                  {reportData.remarks ? (
-                    <p className="cobs-sr__section-text">
-                      {reportData.remarks}
-                    </p>
+                  {data.remarks ? (
+                    <p className="cobs-sr__section-text">{data.remarks}</p>
                   ) : (
                     <span className="cobs-sr__empty">—</span>
                   )}
@@ -160,7 +261,7 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
                 <p className="cobs-sr__section-label">Temporal Audit</p>
                 <div className="cobs-sr__section-body">
                   <p className="cobs-sr__section-text">
-                    {reportData.temporal_audit || "—"}
+                    {data.temporal_audit || "—"}
                   </p>
                 </div>
               </div>
@@ -169,8 +270,8 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
                 <div className="cobs-sr__section-card cobs-sr__score-card">
                   <p className="cobs-sr__section-label">Score Summary</p>
                   <div className="cobs-sr__section-body">
-                    {reportData.score_breakdown &&
-                      reportData.score_breakdown.map((s, i) => (
+                    {data.score_breakdown &&
+                      data.score_breakdown.map((s, i) => (
                         <div key={i} className="cobs-sr__score-row">
                           <span className="cobs-sr__score-category">
                             {s.category}
@@ -189,7 +290,7 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
                         Total —
                       </span>
                       <span className="cobs-sr__score-total-value">
-                        {reportData.score}
+                        {data.score}
                       </span>
                       <span className="cobs-sr__score-total-pct">
                         {scorePercent}%
@@ -214,7 +315,6 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
                               src={url}
                               alt={`attachment-${i}`}
                               className="cobs-sr__attach-thumb"
-                              style={{ cursor: "pointer" }}
                               onClick={() => handleImageClick(i)}
                             />
                           </Tooltip>
@@ -226,6 +326,53 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
               </div>
             </div>
           </div>
+
+          {(signatory2 || signatory3) && (
+            <div className="cobs-sr__signatories-row">
+              {signatory2 && (
+                <div className="cobs-sr__signatory-item">
+                  <span className="cobs-sr__signatory-label">Reviewed by:</span>
+                  {signatory2.approve_image ? (
+                    <div className="cobs-sr__signatory-img-box">
+                      <img
+                        src={signatory2.approve_image}
+                        alt="reviewed-by"
+                        className="cobs-sr__signatory-img"
+                      />
+                    </div>
+                  ) : (
+                    <div className="cobs-sr__signatory-img-box cobs-sr__signatory-img-box--empty" />
+                  )}
+                  {signatory2.name && (
+                    <span className="cobs-sr__signatory-name">
+                      {signatory2.name}
+                    </span>
+                  )}
+                </div>
+              )}
+              {signatory3 && (
+                <div className="cobs-sr__signatory-item">
+                  <span className="cobs-sr__signatory-label">Noted by:</span>
+                  {signatory3.approve_image ? (
+                    <div className="cobs-sr__signatory-img-box">
+                      <img
+                        src={signatory3.approve_image}
+                        alt="noted-by"
+                        className="cobs-sr__signatory-img"
+                      />
+                    </div>
+                  ) : (
+                    <div className="cobs-sr__signatory-img-box cobs-sr__signatory-img-box--empty" />
+                  )}
+                  {signatory3.name && (
+                    <span className="cobs-sr__signatory-name">
+                      {signatory3.name}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
 
         <DialogActions className="cobs-sr__footer">
@@ -253,11 +400,18 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
               PRINT
             </button>
           </div>
-          <button className="cobs-sr__btn-close" onClick={onClose}>
+          <button className="cobs-sr__btn-close" onClick={handleClose}>
             Close
           </button>
         </DialogActions>
       </Dialog>
+
+      <COBSSignatureDialog
+        open={signatureOpen}
+        onClose={() => setSignatureOpen(false)}
+        onSubmit={handleSignatureSubmit}
+        isSubmitting={isSubmitting}
+      />
 
       <COBSImagePreviewDialog
         open={previewOpen}
@@ -265,6 +419,34 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
         images={allImages}
         initialIndex={previewIndex}
       />
+
+      <Dialog
+        open={signaturePreviewOpen}
+        onClose={() => setSignaturePreviewOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ className: "cobs-sr__sig-preview-paper" }}>
+        <div className="cobs-sr__sig-preview-header">
+          <span className="cobs-sr__sig-preview-title">Signature</span>
+          <IconButton
+            size="small"
+            onClick={() => setSignaturePreviewOpen(false)}>
+            <CloseIcon fontSize="small" style={{ color: "#fff" }} />
+          </IconButton>
+        </div>
+        <div className="cobs-sr__sig-preview-body">
+          {signatureDataUrl && (
+            <img
+              src={signatureDataUrl}
+              alt="signature-preview"
+              className="cobs-sr__sig-preview-img"
+            />
+          )}
+          {signatoryName && (
+            <p className="cobs-sr__sig-preview-name">{signatoryName}</p>
+          )}
+        </div>
+      </Dialog>
     </>
   );
 };

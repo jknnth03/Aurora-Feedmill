@@ -5,8 +5,6 @@ import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
 import Skeleton from "@mui/material/Skeleton";
 import CloseIcon from "@mui/icons-material/Close";
 import ChecklistIcon from "@mui/icons-material/Checklist";
@@ -14,11 +12,13 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import {
   useGetQuestionnaireQuery,
   useCreateCobMutation,
 } from "../../features/api/cobs/cobsApi";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
+import { validateForm } from "./COBSStartCheckingValidation";
 import "./COBSStartCheckingDialog.scss";
 
 const SCORE_OPTIONS = [0, 50, 75, 100];
@@ -63,9 +63,30 @@ const formatDateDisplay = (iso) => {
   });
 };
 
+const getWeekDateRange = (week, month, year) => {
+  const m = parseInt(month) - 1;
+  const y = parseInt(year);
+  const w = parseInt(String(week).replace(/\D/g, ""));
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const ranges = [
+    { start: 1, end: 7 },
+    { start: 8, end: 14 },
+    { start: 15, end: 21 },
+    { start: 22, end: lastDay },
+  ];
+  const range = ranges[w - 1] ?? ranges[0];
+  const pad = (n) => String(n).padStart(2, "0");
+  const monthStr = pad(parseInt(month));
+  return {
+    min: `${y}-${monthStr}-${pad(range.start)}`,
+    max: `${y}-${monthStr}-${pad(range.end)}`,
+  };
+};
+
 const buildResponseMap = (responses = []) => {
   const map = {};
   responses.forEach(({ response, images }) => {
+    if (!response) return;
     const subKey = response.sub_item ?? response.sub_name ?? "";
     const key = `${response.checklist}__${response.item}__${subKey}`;
     map[key] = { ...response, images: images ?? [] };
@@ -80,6 +101,7 @@ const buildDraftAnswers = (questionnaireData, responses = []) => {
 
   const responseByKey = {};
   responses.forEach(({ response, images }) => {
+    if (!response) return;
     const subKey = response.sub_item ?? response.sub_name ?? "";
     const key = `${response.checklist}__${response.item}__${subKey}`;
     responseByKey[key] = {
@@ -111,6 +133,8 @@ const buildDraftAnswers = (questionnaireData, responses = []) => {
   return { answers, remarks, existingImages };
 };
 
+const RequiredStar = () => <span className="cobs-sc__required">*</span>;
+
 const COBSStartCheckingDialog = ({
   open,
   onClose,
@@ -136,12 +160,9 @@ const COBSStartCheckingDialog = ({
   const [startAt, setStartAt] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [dateError, setDateError] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  const [errors, setErrors] = useState({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewState, setPreviewState] = useState({
     open: false,
     images: [],
@@ -150,6 +171,7 @@ const COBSStartCheckingDialog = ({
 
   const fileInputRefs = useRef({});
   const intervalRef = useRef(null);
+  const firstErrorRef = useRef(null);
 
   const { data, isFetching } = useGetQuestionnaireQuery(checklistId, {
     skip: !open,
@@ -158,6 +180,8 @@ const COBSStartCheckingDialog = ({
 
   const questionnaireData = data?.data;
   const responseMap = viewMode ? buildResponseMap(batchEntry?.responses) : {};
+  const errorCount = Object.keys(errors).length;
+  const { min: dateMin, max: dateMax } = getWeekDateRange(week, month, year);
 
   useEffect(() => {
     if (viewMode) return;
@@ -168,9 +192,7 @@ const COBSStartCheckingDialog = ({
 
     setStartTime(getNow());
     setEndTime(getNow());
-    intervalRef.current = setInterval(() => {
-      setEndTime(getNow());
-    }, 1000);
+    intervalRef.current = setInterval(() => setEndTime(getNow()), 1000);
 
     if (continueMode && batchEntry) {
       const rawDate = batchEntry.start_at
@@ -180,15 +202,15 @@ const COBSStartCheckingDialog = ({
       setTemporalAudit(batchEntry.temporal_audit ?? "");
       setGoodPoints(batchEntry.good_points ?? "");
       setOthersRemarks(batchEntry.remarks ?? "");
-      setDateError(false);
     } else {
-      setStartAt("");
-      setDateError(false);
+      setStartAt(dateMin);
       setTemporalAudit("");
       setGoodPoints("");
       setOthersRemarks("");
     }
 
+    setErrors({});
+    setSubmitAttempted(false);
     return () => clearInterval(intervalRef.current);
   }, [open, viewMode, continueMode, batchEntry]);
 
@@ -212,17 +234,39 @@ const COBSStartCheckingDialog = ({
     }
   }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
 
+  useEffect(() => {
+    if (submitAttempted && firstErrorRef.current) {
+      firstErrorRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [errors, submitAttempted]);
+
   const getKey = (categoryName, itemName, itemIndex, subItemIndex) =>
     `${categoryName}__${itemName}__${itemIndex}__${subItemIndex}`;
 
   const getViewKey = (categoryName, itemName, subItemName) =>
     `${categoryName}__${itemName}__${subItemName}`;
 
-  const handleScore = (key, score) =>
-    setAnswers((prev) => ({ ...prev, [key]: score }));
+  const clearFieldError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
-  const handleRemarks = (key, value) =>
+  const handleScore = (key, score) => {
+    setAnswers((prev) => ({ ...prev, [key]: score }));
+    clearFieldError(`score__${key}`);
+  };
+
+  const handleRemarks = (key, value) => {
     setRemarks((prev) => ({ ...prev, [key]: value }));
+    if (value.trim()) clearFieldError(`remarks__${key}`);
+  };
 
   const handleImageChange = (key, files) =>
     setImages((prev) => ({
@@ -244,7 +288,6 @@ const COBSStartCheckingDialog = ({
 
   const openPreview = (imgs, idx) =>
     setPreviewState({ open: true, images: imgs, index: idx });
-
   const closePreview = () => setPreviewState((p) => ({ ...p, open: false }));
 
   const buildFormData = (isCompleted) => {
@@ -257,6 +300,10 @@ const COBSStartCheckingDialog = ({
     formData.append("temporal_audit", temporalAudit);
     formData.append("remarks", othersRemarks);
     formData.append("start_at", startAt);
+    formData.append(
+      "batch_no",
+      continueMode ? (batchEntry?.batch_no ?? "") : "",
+    );
 
     let responseIndex = 0;
     const keyToIndex = {};
@@ -293,26 +340,34 @@ const COBSStartCheckingDialog = ({
   };
 
   const handleSubmit = async (isCompleted) => {
-    if (!startAt) {
-      setDateError(true);
+    setSubmitAttempted(true);
+    const { valid, errors: validationErrors } = await validateForm(
+      isCompleted,
+      {
+        answers,
+        remarks,
+        startAt,
+        temporalAudit,
+        goodPoints,
+        othersRemarks,
+        questionnaireData,
+      },
+    );
+
+    if (!valid) {
+      setErrors(validationErrors);
       return;
     }
-    setDateError(false);
+
+    setIsSubmitting(true);
     try {
-      await createCob(buildFormData(isCompleted)).unwrap();
-      setSnackbar({
-        open: true,
-        message: isCompleted ? "Submitted successfully!" : "Saved as draft!",
-        severity: "success",
-      });
-      onSuccess?.();
+      const result = await createCob(buildFormData(isCompleted)).unwrap();
+      onSuccess?.(result);
       handleClose();
     } catch {
-      setSnackbar({
-        open: true,
-        message: "Something went wrong.",
-        severity: "error",
-      });
+      setErrors({ _submit: "Something went wrong. Please try again." });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -326,7 +381,8 @@ const COBSStartCheckingDialog = ({
       setGoodPoints("");
       setOthersRemarks("");
       setStartAt("");
-      setDateError(false);
+      setErrors({});
+      setSubmitAttempted(false);
       setStartTime("");
       setEndTime("");
       clearInterval(intervalRef.current);
@@ -338,6 +394,15 @@ const COBSStartCheckingDialog = ({
     if (viewMode) return "View Checklist";
     if (continueMode) return "Continue Checking";
     return "Start Checking";
+  };
+
+  let firstErrorSet = false;
+  const getFirstErrorRef = (hasError) => {
+    if (hasError && !firstErrorSet) {
+      firstErrorSet = true;
+      return firstErrorRef;
+    }
+    return null;
   };
 
   return (
@@ -459,10 +524,10 @@ const COBSStartCheckingDialog = ({
                             Item
                           </th>
                           <th className="cobs-sc__th cobs-sc__th--compliance">
-                            Compliance
+                            Compliance <RequiredStar />
                           </th>
                           <th className="cobs-sc__th cobs-sc__th--remarks">
-                            Remarks
+                            Remarks <RequiredStar />
                           </th>
                           <th className="cobs-sc__th cobs-sc__th--attachment">
                             Attachment
@@ -490,15 +555,22 @@ const COBSStartCheckingDialog = ({
                             const existingFileList = continueMode
                               ? (existingImages[editKey] ?? [])
                               : [];
+                            const scoreError = errors[`score__${editKey}`];
+                            const remarksError = errors[`remarks__${editKey}`];
+                            const rowHasError = !!(scoreError || remarksError);
 
                             return (
-                              <tr key={editKey} className="cobs-sc__tr">
+                              <tr
+                                key={editKey}
+                                ref={getFirstErrorRef(rowHasError)}
+                                className={`cobs-sc__tr${rowHasError ? " cobs-sc__tr--error" : ""}`}>
                                 <td className="cobs-sc__td cobs-sc__td--item">
                                   {subIdx + 1}. {subItem.name}
                                 </td>
 
                                 <td className="cobs-sc__td cobs-sc__td--compliance">
-                                  <div className="cobs-sc__radio-box">
+                                  <div
+                                    className={`cobs-sc__radio-box${scoreError ? " cobs-sc__radio-box--error" : ""}`}>
                                     {SCORE_OPTIONS.map((score) => (
                                       <label
                                         key={score}
@@ -535,6 +607,12 @@ const COBSStartCheckingDialog = ({
                                       </label>
                                     ))}
                                   </div>
+                                  {scoreError && (
+                                    <span className="cobs-sc__inline-error">
+                                      <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                                      {scoreError}
+                                    </span>
+                                  )}
                                 </td>
 
                                 <td className="cobs-sc__td cobs-sc__td--remarks">
@@ -558,8 +636,14 @@ const COBSStartCheckingDialog = ({
                                     }
                                     readOnly={viewMode}
                                     rows={2}
-                                    className={`cobs-sc__textarea${viewMode ? " cobs-sc__textarea--readonly" : ""}`}
+                                    className={`cobs-sc__textarea${viewMode ? " cobs-sc__textarea--readonly" : ""}${remarksError ? " cobs-sc__textarea--error" : ""}`}
                                   />
+                                  {remarksError && (
+                                    <span className="cobs-sc__inline-error">
+                                      <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                                      {remarksError}
+                                    </span>
+                                  )}
                                 </td>
 
                                 <td className="cobs-sc__td cobs-sc__td--attachment">
@@ -625,7 +709,6 @@ const COBSStartCheckingDialog = ({
                                           )
                                         }
                                       />
-
                                       {existingFileList.length > 0 ||
                                       fileList.length > 0 ? (
                                         <div className="cobs-sc__attach-list">
@@ -774,7 +857,7 @@ const COBSStartCheckingDialog = ({
                 <div className="cobs-sc__others-body">
                   <div className="cobs-sc__others-field">
                     <span className="cobs-sc__others-label">
-                      Date <span className="cobs-sc__required">*</span>
+                      Date <RequiredStar />
                     </span>
                     {viewMode ? (
                       <div className="cobs-sc__others-input-box">
@@ -789,24 +872,28 @@ const COBSStartCheckingDialog = ({
                     ) : (
                       <>
                         <div
-                          className={`cobs-sc__date-picker-wrap${dateError ? " cobs-sc__date-picker-wrap--error" : ""}`}>
+                          ref={errors.start_at ? getFirstErrorRef(true) : null}
+                          className={`cobs-sc__date-picker-wrap${errors.start_at ? " cobs-sc__date-picker-wrap--error" : ""}`}>
                           <CalendarTodayIcon className="cobs-sc__date-icon" />
                           <input
                             type="date"
                             className="cobs-sc__date-input"
                             value={startAt}
+                            min={dateMin}
+                            max={dateMax}
                             onChange={(e) => {
                               setStartAt(e.target.value);
-                              if (e.target.value) setDateError(false);
+                              if (e.target.value) clearFieldError("start_at");
                             }}
                           />
                           <span className="cobs-sc__date-display">
                             {startAt ? formatDateDisplay(startAt) : ""}
                           </span>
                         </div>
-                        {dateError && (
-                          <span className="cobs-sc__date-error">
-                            Date is required.
+                        {errors.start_at && (
+                          <span className="cobs-sc__inline-error">
+                            <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                            {errors.start_at}
                           </span>
                         )}
                       </>
@@ -838,9 +925,13 @@ const COBSStartCheckingDialog = ({
 
                   <div className="cobs-sc__others-field">
                     <span className="cobs-sc__others-label">
-                      Temporal Audit
+                      Temporal Audit <RequiredStar />
                     </span>
-                    <div className="cobs-sc__others-input-box">
+                    <div
+                      ref={
+                        errors.temporal_audit ? getFirstErrorRef(true) : null
+                      }
+                      className={`cobs-sc__others-input-box${errors.temporal_audit ? " cobs-sc__others-input-box--error" : ""}`}>
                       <div className="cobs-sc__temporal-options">
                         {TEMPORAL_AUDIT_OPTIONS.map((opt) => (
                           <label
@@ -862,7 +953,10 @@ const COBSStartCheckingDialog = ({
                               onChange={
                                 viewMode
                                   ? undefined
-                                  : () => setTemporalAudit(opt)
+                                  : () => {
+                                      setTemporalAudit(opt);
+                                      clearFieldError("temporal_audit");
+                                    }
                               }
                               readOnly={viewMode}
                               disabled={viewMode}
@@ -876,12 +970,21 @@ const COBSStartCheckingDialog = ({
                         ))}
                       </div>
                     </div>
+                    {errors.temporal_audit && (
+                      <span className="cobs-sc__inline-error">
+                        <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                        {errors.temporal_audit}
+                      </span>
+                    )}
                   </div>
 
                   <div className="cobs-sc__others-field">
-                    <span className="cobs-sc__others-label">Good Points</span>
+                    <span className="cobs-sc__others-label">
+                      Good Points <RequiredStar />
+                    </span>
                     <textarea
-                      className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}`}
+                      ref={errors.good_points ? getFirstErrorRef(true) : null}
+                      className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}${errors.good_points ? " cobs-sc__others-textarea--error" : ""}`}
                       placeholder={
                         viewMode ? "—" : "Enter good points observed"
                       }
@@ -891,17 +994,30 @@ const COBSStartCheckingDialog = ({
                       onChange={
                         viewMode
                           ? undefined
-                          : (e) => setGoodPoints(e.target.value)
+                          : (e) => {
+                              setGoodPoints(e.target.value);
+                              if (e.target.value.trim())
+                                clearFieldError("good_points");
+                            }
                       }
                       readOnly={viewMode}
                       rows={4}
                     />
+                    {errors.good_points && (
+                      <span className="cobs-sc__inline-error">
+                        <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                        {errors.good_points}
+                      </span>
+                    )}
                   </div>
 
                   <div className="cobs-sc__others-field">
-                    <span className="cobs-sc__others-label">Remarks</span>
+                    <span className="cobs-sc__others-label">
+                      Remarks <RequiredStar />
+                    </span>
                     <textarea
-                      className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}`}
+                      ref={errors.remarks ? getFirstErrorRef(true) : null}
+                      className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}${errors.remarks ? " cobs-sc__others-textarea--error" : ""}`}
                       placeholder={viewMode ? "—" : "Enter remarks"}
                       value={
                         viewMode
@@ -911,12 +1027,29 @@ const COBSStartCheckingDialog = ({
                       onChange={
                         viewMode
                           ? undefined
-                          : (e) => setOthersRemarks(e.target.value)
+                          : (e) => {
+                              setOthersRemarks(e.target.value);
+                              if (e.target.value.trim())
+                                clearFieldError("remarks");
+                            }
                       }
                       readOnly={viewMode}
                       rows={4}
                     />
+                    {errors.remarks && (
+                      <span className="cobs-sc__inline-error">
+                        <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                        {errors.remarks}
+                      </span>
+                    )}
                   </div>
+
+                  {errors._submit && (
+                    <span className="cobs-sc__inline-error cobs-sc__inline-error--block">
+                      <ErrorOutlineIcon sx={{ fontSize: 13 }} />
+                      {errors._submit}
+                    </span>
+                  )}
                 </div>
               </div>
             </>
@@ -933,27 +1066,36 @@ const COBSStartCheckingDialog = ({
             </Button>
           ) : (
             <>
-              <Button
-                variant="text"
-                onClick={handleClose}
-                disabled={isLoading}
-                className="cobs-sc__btn-close">
-                CLOSE
-              </Button>
+              <div className="cobs-sc__footer-left">
+                {errorCount > 0 && (
+                  <span className="cobs-sc__error-summary">
+                    <ErrorOutlineIcon sx={{ fontSize: 13 }} />
+                    {errorCount} field{errorCount > 1 ? "s" : ""} need
+                    {errorCount === 1 ? "s" : ""} attention
+                  </span>
+                )}
+              </div>
               <div className="cobs-sc__footer-right">
+                <Button
+                  variant="text"
+                  onClick={handleClose}
+                  disabled={isLoading || isSubmitting}
+                  className="cobs-sc__btn-close">
+                  CLOSE
+                </Button>
                 <Button
                   variant="outlined"
                   onClick={() => handleSubmit(0)}
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   className="cobs-sc__btn-draft">
-                  {isLoading ? "Saving..." : "SAVE AS DRAFT"}
+                  {isLoading || isSubmitting ? "Saving..." : "SAVE AS DRAFT"}
                 </Button>
                 <Button
                   variant="contained"
                   onClick={() => handleSubmit(1)}
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   className="cobs-sc__btn-submit">
-                  {isLoading ? "Submitting..." : "SUBMIT"}
+                  {isLoading || isSubmitting ? "Submitting..." : "SUBMIT"}
                 </Button>
               </div>
             </>
@@ -967,19 +1109,6 @@ const COBSStartCheckingDialog = ({
         images={previewState.images}
         initialIndex={previewState.index}
       />
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((p) => ({ ...p, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ fontFamily: "Poppins, sans-serif", fontSize: "0.82rem" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 };
