@@ -13,6 +13,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import PrintIcon from "@mui/icons-material/Print";
 import ImageIcon from "@mui/icons-material/Image";
 import DrawIcon from "@mui/icons-material/Draw";
+import GestureIcon from "@mui/icons-material/Gesture";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
 import { useEvaluateResponseMutation } from "../../features/api/cobs/cobsApi";
@@ -423,27 +424,36 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
       <Dialog
         open={signaturePreviewOpen}
         onClose={() => setSignaturePreviewOpen(false)}
-        maxWidth="sm"
+        maxWidth="xs"
         fullWidth
         PaperProps={{ className: "cobs-sr__sig-preview-paper" }}>
         <div className="cobs-sr__sig-preview-header">
-          <span className="cobs-sr__sig-preview-title">Signature</span>
+          <div className="cobs-sr__sig-preview-header-left">
+            <GestureIcon className="cobs-sr__sig-preview-header-icon" />
+            <span className="cobs-sr__sig-preview-title">Signature</span>
+          </div>
           <IconButton
             size="small"
+            className="cobs-sr__sig-preview-close"
             onClick={() => setSignaturePreviewOpen(false)}>
-            <CloseIcon fontSize="small" style={{ color: "#fff" }} />
+            <CloseIcon fontSize="small" />
           </IconButton>
         </div>
         <div className="cobs-sr__sig-preview-body">
-          {signatureDataUrl && (
-            <img
-              src={signatureDataUrl}
-              alt="signature-preview"
-              className="cobs-sr__sig-preview-img"
-            />
-          )}
+          <div className="cobs-sr__sig-preview-frame">
+            {signatureDataUrl && (
+              <img
+                src={signatureDataUrl}
+                alt="signature-preview"
+                className="cobs-sr__sig-preview-img"
+              />
+            )}
+          </div>
           {signatoryName && (
-            <p className="cobs-sr__sig-preview-name">{signatoryName}</p>
+            <div className="cobs-sr__sig-preview-footer">
+              <span className="cobs-sr__sig-preview-name">{signatoryName}</span>
+              <span className="cobs-sr__sig-preview-role">Acknowledged by</span>
+            </div>
           )}
         </div>
       </Dialog>
