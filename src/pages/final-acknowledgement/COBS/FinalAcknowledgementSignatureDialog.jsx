@@ -13,9 +13,9 @@ import DrawIcon from "@mui/icons-material/Draw";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useGetAssessorsQuery } from "../../../features/api/usermanagement/userApi";
-import "./COBSSignatureDialog.scss";
+import "./FinalAcknowledgementSignatureDialog.scss";
 
-const COBSSignatureDialog = ({
+const FinalAcknowledgementSignature = ({
   open,
   onClose,
   onSubmit,
@@ -260,4 +260,4 @@ const COBSSignatureDialog = ({
   );
 };
 
-export default COBSSignatureDialog;
+export default FinalAcknowledgementSignature;

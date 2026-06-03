@@ -1,13 +1,13 @@
 import { useState } from "react";
-import GppMaybeIcon from "@mui/icons-material/GppMaybe";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import { useGetApprovalsQuery } from "../../../features/api/approval/cobsApproval";
-import COBSApprovalModal from "./COBSApprovalModal";
-import "./COBSApproval.scss";
+import FinalAcknowledgementModal from "./FinalAcknowledgementModal";
+import "./FinalAcknowledgement.scss";
+import { useGetAcknowledgementsQuery } from "../../../features/api/final-acknowledgement/cobsAcknowledgementApi";
 
 const MONTHS = [
   "January",
@@ -33,27 +33,36 @@ const COLUMNS = [
   { key: "user", label: "Submitted By", sortable: true },
 ];
 
-const flattenApprovalsData = (rawData = {}) => {
+const flattenAcknowledgementsData = (rawData = {}) => {
   const rows = [];
-  Object.values(rawData).forEach((unitData) => {
+
+  Object.entries(rawData).forEach(([unitKey, unitData]) => {
     const weeks = unitData.weeks ?? {};
-    Object.values(weeks).forEach((weekEntries) => {
-      if (!Array.isArray(weekEntries)) return;
+    const fallbackUnit = unitKey.replace("Unit: ", "");
+    const fallbackChecklist = unitData.checklists?.[0]?.checklist_name ?? "—";
+
+    Object.entries(weeks).forEach(([weekKey, weekEntries]) => {
+      if (!Array.isArray(weekEntries) || weekEntries.length === 0) return;
+
       weekEntries.forEach((entry) => {
         const startDate = entry.start_at ? new Date(entry.start_at) : null;
         const monthIndex = startDate ? startDate.getMonth() : null;
+
         rows.push({
           ...entry,
+          unit: entry.unit ?? fallbackUnit,
+          checklist_name: entry.checklist_name ?? fallbackChecklist,
           month_display: monthIndex !== null ? MONTHS[monthIndex] : "—",
-          week_display: `Week ${entry.week ?? "—"}`,
+          week_display: entry.week ? `Week ${entry.week}` : weekKey,
         });
       });
     });
   });
+
   return rows;
 };
 
-const COBSApproval = () => {
+const FinalAcknowledgement = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -66,14 +75,14 @@ const COBSApproval = () => {
     severity: "success",
   });
 
-  const { data, isFetching, error } = useGetApprovalsQuery(
+  const { data, isFetching, error } = useGetAcknowledgementsQuery(
     { status: "pending" },
     { refetchOnMountOrArgChange: true },
   );
 
   const is404 = error?.status === 404;
   const rawData = data ?? {};
-  const tableData = flattenApprovalsData(rawData);
+  const tableData = flattenAcknowledgementsData(rawData);
 
   const handleSort = (key, order) => {
     setSortBy(key);
@@ -91,10 +100,10 @@ const COBSApproval = () => {
     setModalOpen(true);
   };
 
-  const handleApprove = (row) => {
+  const handleAssess = (row) => {
     setSnackbar({
       open: true,
-      message: `Batch #${row.batch_no} acknowledged successfully.`,
+      message: `Batch #${row.batch_no} assessed successfully.`,
       severity: "success",
     });
     setModalOpen(false);
@@ -104,8 +113,8 @@ const COBSApproval = () => {
   return (
     <>
       <PageContainer
-        title="COBS Acknowledgements"
-        titleIcon={<GppMaybeIcon />}
+        title="Final Acknowledgements"
+        titleIcon={<FactCheckIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         pagination={
           <TablePagination
@@ -127,14 +136,14 @@ const COBSApproval = () => {
         />
       </PageContainer>
 
-      <COBSApprovalModal
+      <FinalAcknowledgementModal
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
           setSelectedBatch(null);
         }}
         batchEntry={selectedBatch}
-        onApprove={handleApprove}
+        onAssess={handleAssess}
       />
 
       <Snackbar
@@ -153,4 +162,4 @@ const COBSApproval = () => {
   );
 };
 
-export default COBSApproval;
+export default FinalAcknowledgement;

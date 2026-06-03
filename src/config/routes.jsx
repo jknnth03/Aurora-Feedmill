@@ -21,6 +21,7 @@ import StandaloneBirds from "../pages/birds/Birds.jsx";
 import StandaloneCOBS from "../pages/cobs/COBS.jsx";
 import StandalonePest from "../pages/pest/Pest.jsx";
 import COBSApproval from "../pages/approval/COBS/COBSApproval.jsx";
+import FinalAcknowledgement from "../pages/final-acknowledgement/COBS/FinalAcknowledgement.jsx";
 
 export const ROUTES = [
   {

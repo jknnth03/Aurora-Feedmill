@@ -5,14 +5,14 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
-import GppMaybeIcon from "@mui/icons-material/GppMaybe";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useState } from "react";
 import COBSImagePreviewDialog from "../../cobs/COBSImagePreviewDialog";
-import COBSSignatureDialog from "./COBSSignatureDialog";
-import { useApproveApprovalMutation } from "../../../features/api/approval/cobsApproval";
-import "./COBSApprovalModal.scss";
+import FinalAcknowledgementSignatureDialog from "./FinalAcknowledgementSignatureDialog";
+import "./FinalAcknowledgementModal.scss";
+import { useAssessAcknowledgementMutation } from "../../../features/api/final-acknowledgement/cobsAcknowledgementApi";
 
 const SCORE_OPTIONS = [0, 50, 75, 100];
 const TEMPORAL_AUDIT_OPTIONS = [
@@ -56,15 +56,20 @@ const groupResponsesByCategory = (responses = []) => {
   return grouped;
 };
 
-const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
+const FinalAcknowledgementModal = ({
+  open,
+  onClose,
+  batchEntry = null,
+  onAssess,
+}) => {
   const [previewState, setPreviewState] = useState({
     open: false,
     images: [],
     index: 0,
   });
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
-  const [approveApproval, { isLoading: isApproving }] =
-    useApproveApprovalMutation();
+  const [assessAcknowledgement, { isLoading: isAssessing }] =
+    useAssessAcknowledgementMutation();
 
   const openPreview = (imgs, idx) =>
     setPreviewState({ open: true, images: imgs, index: idx });
@@ -74,31 +79,30 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     ? groupResponsesByCategory(batchEntry.responses ?? [])
     : {};
 
-  const handleAcknowledge = ({ blob, assessorId }) => {
+  const handleAssess = ({ blob, assessorId }) => {
     if (!batchEntry || !blob) return;
 
-    const signatureFile = new File([blob], "signature.png", {
+    const assessImageFile = new File([blob], "signature.png", {
       type: "image/png",
     });
 
-    approveApproval({
+    assessAcknowledgement({
       batch_no: batchEntry.batch_no,
-      approver_id: 1,
       assessor_id: assessorId,
-      approvers: [
+      assess: [
         {
-          id: 1,
-          name: batchEntry.approver ?? "",
+          id: batchEntry.id ?? 1,
+          name: batchEntry.assessor ?? "",
         },
       ],
-      signatureFile,
+      assessImageFile,
     })
       .unwrap()
       .then(() => {
-        onApprove?.(batchEntry);
+        onAssess?.(batchEntry);
       })
       .catch((err) => {
-        console.error("Acknowledge failed:", err);
+        console.error("Assess failed:", err);
       });
   };
 
@@ -113,144 +117,146 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
         disableEscapeKeyDown
         maxWidth="md"
         fullWidth
-        PaperProps={{ className: "cobsam__paper" }}>
-        <div className="cobsam__header">
-          <div className="cobsam__header-title">
-            <GppMaybeIcon className="cobsam__header-icon" />
-            <span>Acknowledgement Details</span>
+        PaperProps={{ className: "finackm__paper" }}>
+        <div className="finackm__header">
+          <div className="finackm__header-title">
+            <FactCheckIcon className="finackm__header-icon" />
+            <span>Final Acknowledgement Details</span>
           </div>
           {batchEntry && (
-            <span className="cobsam__batch-label">
+            <span className="finackm__batch-label">
               Batch #{batchEntry.batch_no} — {batchEntry.unit ?? "—"}
             </span>
           )}
-          <IconButton size="small" className="cobsam__close" onClick={onClose}>
+          <IconButton size="small" className="finackm__close" onClick={onClose}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </div>
 
         {batchEntry && (
-          <div className="cobsam__info-strip">
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Submitted by</span>
-              <span className="cobsam__info-value">
+          <div className="finackm__info-strip">
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">Submitted by</span>
+              <span className="finackm__info-value">
                 {batchEntry.user ?? "—"}
               </span>
             </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Approver</span>
-              <span className="cobsam__info-value">
-                {batchEntry.approver ?? "—"}
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">Assessor</span>
+              <span className="finackm__info-value">
+                {batchEntry.assessor ?? "—"}
               </span>
             </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Checklist</span>
-              <span className="cobsam__info-value">
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">Checklist</span>
+              <span className="finackm__info-value">
                 {batchEntry.checklist_name ?? "—"}
               </span>
             </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Week</span>
-              <span className="cobsam__info-value">
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">Week</span>
+              <span className="finackm__info-value">
                 Week {batchEntry.week ?? "—"}
               </span>
             </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Start</span>
-              <span className="cobsam__info-value">
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">Start</span>
+              <span className="finackm__info-value">
                 {formatDateTime(batchEntry.start_at)}
               </span>
             </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">End</span>
-              <span className="cobsam__info-value">
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">End</span>
+              <span className="finackm__info-value">
                 {formatDateTime(batchEntry.end_at)}
               </span>
             </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Progress</span>
-              <span className="cobsam__info-value cobsam__info-value--accent">
+            <div className="finackm__info-item">
+              <span className="finackm__info-label">Progress</span>
+              <span className="finackm__info-value finackm__info-value--accent">
                 {batchEntry.progress ?? "—"}
               </span>
             </div>
           </div>
         )}
 
-        <DialogContent className="cobsam__content">
+        <DialogContent className="finackm__content">
           {!batchEntry ? (
-            <div className="cobsam__skeleton-wrap">
+            <div className="finackm__skeleton-wrap">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="cobsam__skeleton-row" />
+                <div key={i} className="finackm__skeleton-row" />
               ))}
             </div>
           ) : (
             <>
               {Object.entries(groupedResponses).map(([category, items]) => (
-                <div key={category} className="cobsam__section">
-                  <div className="cobsam__section-header">{category}</div>
-                  <div className="cobsam__table-scroll">
-                    <table className="cobsam__table">
+                <div key={category} className="finackm__section">
+                  <div className="finackm__section-header">{category}</div>
+                  <div className="finackm__table-scroll">
+                    <table className="finackm__table">
                       <thead>
-                        <tr className="cobsam__thead-row">
-                          <th className="cobsam__th cobsam__th--item">Item</th>
-                          <th className="cobsam__th cobsam__th--compliance">
+                        <tr className="finackm__thead-row">
+                          <th className="finackm__th finackm__th--item">
+                            Item
+                          </th>
+                          <th className="finackm__th finackm__th--compliance">
                             Compliance
                           </th>
-                          <th className="cobsam__th cobsam__th--remarks">
+                          <th className="finackm__th finackm__th--remarks">
                             Remarks
                           </th>
-                          <th className="cobsam__th cobsam__th--attachment">
+                          <th className="finackm__th finackm__th--attachment">
                             Attachment
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         {items.map(({ response, images }, idx) => (
-                          <tr key={idx} className="cobsam__tr">
-                            <td className="cobsam__td cobsam__td--item">
+                          <tr key={idx} className="finackm__tr">
+                            <td className="finackm__td finackm__td--item">
                               {idx + 1}. {response.sub_item ?? "—"}
                               {response.item && (
-                                <span className="cobsam__item-area">
+                                <span className="finackm__item-area">
                                   {response.item}
                                 </span>
                               )}
                             </td>
-                            <td className="cobsam__td cobsam__td--compliance">
-                              <div className="cobsam__radio-box">
+                            <td className="finackm__td finackm__td--compliance">
+                              <div className="finackm__radio-box">
                                 {SCORE_OPTIONS.map((score) => (
                                   <label
                                     key={score}
-                                    className="cobsam__radio-item cobsam__radio-item--readonly">
+                                    className="finackm__radio-item finackm__radio-item--readonly">
                                     <input
                                       type="radio"
                                       value={score}
                                       checked={response.score === score}
                                       readOnly
                                       disabled
-                                      className="cobsam__radio-input"
+                                      className="finackm__radio-input"
                                     />
                                     <span
-                                      className={`cobsam__radio-circle cobsam__radio-circle--${score}`}
+                                      className={`finackm__radio-circle finackm__radio-circle--${score}`}
                                     />
-                                    <span className="cobsam__radio-text">
+                                    <span className="finackm__radio-text">
                                       {score}
                                     </span>
                                   </label>
                                 ))}
                               </div>
                             </td>
-                            <td className="cobsam__td cobsam__td--remarks">
+                            <td className="finackm__td finackm__td--remarks">
                               <textarea
-                                className="cobsam__textarea cobsam__textarea--readonly"
+                                className="finackm__textarea finackm__textarea--readonly"
                                 value={response.remarks ?? ""}
                                 readOnly
                                 rows={2}
                                 placeholder="—"
                               />
                             </td>
-                            <td className="cobsam__td cobsam__td--attachment">
+                            <td className="finackm__td finackm__td--attachment">
                               {images.length > 0 ? (
-                                <div className="cobsam__attach-file-list">
+                                <div className="finackm__attach-file-list">
                                   {images.map((url, i) => {
                                     const filename =
                                       decodeURIComponent(
@@ -259,11 +265,11 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                                     return (
                                       <div
                                         key={i}
-                                        className="cobsam__attach-file-row">
+                                        className="finackm__attach-file-row">
                                         <Tooltip
                                           title={filename}
                                           placement="top">
-                                          <span className="cobsam__attach-file-name">
+                                          <span className="finackm__attach-file-name">
                                             {filename}
                                           </span>
                                         </Tooltip>
@@ -272,7 +278,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                                           placement="top">
                                           <IconButton
                                             size="small"
-                                            className="cobsam__attach-eye"
+                                            className="finackm__attach-eye"
                                             onClick={() =>
                                               openPreview(images, i)
                                             }>
@@ -286,7 +292,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                                   })}
                                 </div>
                               ) : (
-                                <span className="cobsam__no-attach">—</span>
+                                <span className="finackm__no-attach">—</span>
                               )}
                             </td>
                           </tr>
@@ -297,45 +303,47 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                 </div>
               ))}
 
-              <div className="cobsam__others">
-                <div className="cobsam__others-header">Others</div>
-                <div className="cobsam__others-body">
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Date</span>
-                    <div className="cobsam__others-input-box">
-                      <span className="cobsam__others-time">
+              <div className="finackm__others">
+                <div className="finackm__others-header">Others</div>
+                <div className="finackm__others-body">
+                  <div className="finackm__others-field">
+                    <span className="finackm__others-label">Date</span>
+                    <div className="finackm__others-input-box">
+                      <span className="finackm__others-time">
                         {batchEntry?.start_at
                           ? formatDateDisplay(batchEntry.start_at.split(" ")[0])
                           : "—"}
                       </span>
                     </div>
                   </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Time</span>
-                    <div className="cobsam__time-row">
-                      <div className="cobsam__time-block">
-                        <span className="cobsam__time-block-label">Start</span>
-                        <span className="cobsam__time-block-value">
+                  <div className="finackm__others-field">
+                    <span className="finackm__others-label">Time</span>
+                    <div className="finackm__time-row">
+                      <div className="finackm__time-block">
+                        <span className="finackm__time-block-label">Start</span>
+                        <span className="finackm__time-block-value">
                           {formatDateTime(batchEntry?.start_at)}
                         </span>
                       </div>
-                      <div className="cobsam__time-divider">—</div>
-                      <div className="cobsam__time-block">
-                        <span className="cobsam__time-block-label">End</span>
-                        <span className="cobsam__time-block-value">
+                      <div className="finackm__time-divider">—</div>
+                      <div className="finackm__time-block">
+                        <span className="finackm__time-block-label">End</span>
+                        <span className="finackm__time-block-value">
                           {formatDateTime(batchEntry?.end_at)}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Temporal Audit</span>
-                    <div className="cobsam__others-input-box">
-                      <div className="cobsam__temporal-options">
+                  <div className="finackm__others-field">
+                    <span className="finackm__others-label">
+                      Temporal Audit
+                    </span>
+                    <div className="finackm__others-input-box">
+                      <div className="finackm__temporal-options">
                         {TEMPORAL_AUDIT_OPTIONS.map((opt) => (
                           <label
                             key={opt}
-                            className="cobsam__temporal-item cobsam__temporal-item--readonly">
+                            className="finackm__temporal-item finackm__temporal-item--readonly">
                             <input
                               type="radio"
                               name="view_temporal_audit"
@@ -345,29 +353,31 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                               }
                               readOnly
                               disabled
-                              className="cobsam__radio-input"
+                              className="finackm__radio-input"
                             />
-                            <span className="cobsam__temporal-circle" />
-                            <span className="cobsam__temporal-text">{opt}</span>
+                            <span className="finackm__temporal-circle" />
+                            <span className="finackm__temporal-text">
+                              {opt}
+                            </span>
                           </label>
                         ))}
                       </div>
                     </div>
                   </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Good Points</span>
+                  <div className="finackm__others-field">
+                    <span className="finackm__others-label">Good Points</span>
                     <textarea
-                      className="cobsam__others-textarea cobsam__others-textarea--readonly"
+                      className="finackm__others-textarea finackm__others-textarea--readonly"
                       value={batchEntry.good_points ?? ""}
                       readOnly
                       rows={4}
                       placeholder="—"
                     />
                   </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Remarks</span>
+                  <div className="finackm__others-field">
+                    <span className="finackm__others-label">Remarks</span>
                     <textarea
-                      className="cobsam__others-textarea cobsam__others-textarea--readonly"
+                      className="finackm__others-textarea finackm__others-textarea--readonly"
                       value={batchEntry.remarks ?? ""}
                       readOnly
                       rows={4}
@@ -380,12 +390,12 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
           )}
         </DialogContent>
 
-        <DialogActions className="cobsam__footer">
+        <DialogActions className="finackm__footer">
           <Button
             variant="text"
             onClick={onClose}
-            disabled={isApproving}
-            className="cobsam__btn-close">
+            disabled={isAssessing}
+            className="finackm__btn-close">
             CLOSE
           </Button>
           <div />
@@ -394,23 +404,23 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
               variant="contained"
               startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
               onClick={() => setSignatureDialogOpen(true)}
-              disabled={isApproving}
-              className="cobsam__btn-approve">
-              {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
+              disabled={isAssessing}
+              className="finackm__btn-assess">
+              {isAssessing ? "SUBMITTING…" : "ASSESS"}
             </Button>
           )}
         </DialogActions>
       </Dialog>
 
-      <COBSSignatureDialog
+      <FinalAcknowledgementSignatureDialog
         open={signatureDialogOpen}
         onClose={() => setSignatureDialogOpen(false)}
         onSubmit={({ blob, assessorId }) => {
           setSignatureDialogOpen(false);
-          handleAcknowledge({ blob, assessorId });
+          handleAssess({ blob, assessorId });
         }}
-        signerName={batchEntry?.approver ?? ""}
-        isSubmitting={isApproving}
+        signerName={batchEntry?.assessor ?? ""}
+        isSubmitting={isAssessing}
       />
 
       <COBSImagePreviewDialog
@@ -423,4 +433,4 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
   );
 };
 
-export default COBSApprovalModal;
+export default FinalAcknowledgementModal;

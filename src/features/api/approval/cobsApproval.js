@@ -36,10 +36,19 @@ const cobsApproval = apiSlice.injectEndpoints({
     }),
 
     approveApproval: builder.mutation({
-      query: ({ batch_no, approver_id, approvers = [], signatureFile }) => {
+      query: ({
+        batch_no,
+        approver_id,
+        assessor_id,
+        approvers = [],
+        signatureFile,
+      }) => {
         const formData = new FormData();
         formData.append("batch_no", String(batch_no));
         formData.append("approver_id", String(approver_id));
+        if (assessor_id) {
+          formData.append("assessor_id", String(assessor_id));
+        }
         approvers.forEach((approver, i) => {
           formData.append(`approve[${i}]`, JSON.stringify(approver));
         });

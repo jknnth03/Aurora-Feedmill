@@ -17,6 +17,7 @@ import SquareFootIcon from "@mui/icons-material/SquareFoot";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import StarIcon from "@mui/icons-material/Star";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
+import VerifiedIcon from "@mui/icons-material/Verified";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -200,9 +201,9 @@ export const MODULES = {
   },
 
   APPROVAL: {
-    name: "Approval",
+    name: "Acknowledgement",
     permissionId: "APPROVAL",
-    displayName: "Approval",
+    displayName: "Acknowledgement",
     path: "/approval",
     icon: <GppMaybeIcon sx={iconStyles.main} />,
     children: {

@@ -22,6 +22,11 @@ const buildCrumbs = (pathname) => {
         const fullPath = `${mod.path}/${child.path}`;
         if (pathname === fullPath || pathname.startsWith(fullPath + "/")) {
           crumbs.push({
+            label: mod.displayName,
+            icon: mod.icon,
+            path: null,
+          });
+          crumbs.push({
             label: child.displayName,
             icon: child.icon,
             path: fullPath,
@@ -57,11 +62,12 @@ const Breadcrumbs = () => {
     <nav className="breadcrumbs">
       {crumbs.map((crumb, index) => {
         const isLast = index === crumbs.length - 1;
+        const isClickable = !isLast && crumb.path !== null;
         return (
-          <span key={crumb.path} className="breadcrumbs__item-wrap">
+          <span key={index} className="breadcrumbs__item-wrap">
             <span
-              className={`breadcrumbs__item ${isLast ? "breadcrumbs__item--active" : "breadcrumbs__item--clickable"}`}
-              onClick={() => !isLast && navigate(crumb.path)}>
+              className={`breadcrumbs__item ${isLast ? "breadcrumbs__item--active" : isClickable ? "breadcrumbs__item--clickable" : ""}`}
+              onClick={() => isClickable && navigate(crumb.path)}>
               {crumb.icon && (
                 <span className="breadcrumbs__icon">{crumb.icon}</span>
               )}

@@ -45,7 +45,6 @@ const MONTHS = [
 const STATUS_CHIP_MAP = {
   done: "chip-done",
   "for acknowledgement": "chip-for-approval",
-  "for approval": "chip-for-approval",
   "on going": "chip-on-going",
   pending: "chip-pending",
   rejected: "chip-rejected",
@@ -61,13 +60,13 @@ const getWeekStatus = (entries) => {
   if (raw === "approved" || raw === "done" || raw === "completed")
     return "Done";
   if (raw === "for approval" || raw === "for acknowledgement")
-    return "For Approval";
+    return "For Acknowledgement";
   if (raw === "on going") return "On Going";
   if (raw === "rejected") return "Rejected";
   if (raw === "on progress") {
     if (latest.is_completed === 0 || latest.is_completed === false)
       return "Saved as Draft";
-    return "For Approval";
+    return "For Acknowledgement";
   }
   if (latest.is_completed === 0 || latest.is_completed === false)
     return "Saved as Draft";
@@ -76,11 +75,7 @@ const getWeekStatus = (entries) => {
 
 const isWeekDone = (entries) => {
   const status = getWeekStatus(entries)?.toLowerCase();
-  return (
-    status === "done" ||
-    status === "for approval" ||
-    status === "for acknowledgement"
-  );
+  return status === "done" || status === "for acknowledgement";
 };
 
 const getLatestEntry = (entries) => {
@@ -147,10 +142,8 @@ const RowActionMenu = ({
   const latest = getLatestEntry(entries);
   const status = getWeekStatus(entries);
   const statusLower = status?.toLowerCase();
-  const isForApproval =
-    statusLower === "for approval" ||
-    statusLower === "for acknowledgement" ||
-    statusLower === "done";
+  const isForAcknowledgement =
+    statusLower === "for acknowledgement" || statusLower === "done";
   const isDraft = latest ? isDraftEntry(latest) : false;
 
   const hasEntries = Array.isArray(entries) && entries.length > 0;
@@ -184,7 +177,7 @@ const RowActionMenu = ({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{ className: "cobs-cm__menu-paper" }}>
-        {isForApproval
+        {isForAcknowledgement
           ? [
               <MenuItem
                 key="report"

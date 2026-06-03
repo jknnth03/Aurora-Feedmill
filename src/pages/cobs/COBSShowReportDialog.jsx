@@ -354,10 +354,10 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
               {signatory3 && (
                 <div className="cobs-sr__signatory-item">
                   <span className="cobs-sr__signatory-label">Noted by:</span>
-                  {signatory3.approve_image ? (
+                  {signatory3.assess_image ? (
                     <div className="cobs-sr__signatory-img-box">
                       <img
-                        src={signatory3.approve_image}
+                        src={signatory3.assess_image}
                         alt="noted-by"
                         className="cobs-sr__signatory-img"
                       />
