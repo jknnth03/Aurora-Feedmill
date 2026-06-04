@@ -10,6 +10,7 @@ import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import DownloadIcon from "@mui/icons-material/Download";
+import DownloadingIcon from "@mui/icons-material/Downloading";
 import PrintIcon from "@mui/icons-material/Print";
 import ImageIcon from "@mui/icons-material/Image";
 import DrawIcon from "@mui/icons-material/Draw";
@@ -18,6 +19,36 @@ import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
 import { useEvaluateResponseMutation } from "../../features/api/cobs/cobsApi";
 import "./COBSShowReportDialog.scss";
+
+const downloadImageViaCanvas = (url, filename) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob((blob) => {
+        if (!blob) return reject(new Error("Canvas toBlob failed"));
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(objectUrl);
+          resolve();
+        }, 300);
+      }, "image/png");
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url + (url.includes("?") ? "&" : "?") + "t=" + Date.now();
+  });
 
 const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   const [downloadType, setDownloadType] = useState("PDF");
@@ -28,6 +59,8 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   const [frozenData, setFrozenData] = useState(null);
   const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
   const [localSignatoryName, setLocalSignatoryName] = useState(null);
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
 
   const [evaluateResponse, { isLoading: isSubmitting }] =
     useEvaluateResponseMutation();
@@ -104,6 +137,27 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSaveAll = async () => {
+    if (isSavingAll || allImages.length === 0) return;
+    setIsSavingAll(true);
+    setSaveProgress({ current: 0, total: allImages.length });
+
+    for (let i = 0; i < allImages.length; i++) {
+      setSaveProgress({ current: i + 1, total: allImages.length });
+      try {
+        await downloadImageViaCanvas(allImages[i], `attachment-${i + 1}.png`);
+        if (i < allImages.length - 1) {
+          await new Promise((res) => setTimeout(res, 1200));
+        }
+      } catch {
+        console.error(`Failed to download image ${i + 1}`);
+      }
+    }
+
+    setIsSavingAll(false);
+    setSaveProgress({ current: 0, total: 0 });
   };
 
   const handleSignatureSubmit = async ({
@@ -304,7 +358,35 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
                 </div>
 
                 <div className="cobs-sr__section-card cobs-sr__attach-card">
-                  <p className="cobs-sr__section-label">Attachment</p>
+                  <div className="cobs-sr__attach-header">
+                    <p className="cobs-sr__section-label">Attachment</p>
+                    {allImages.length > 0 && (
+                      <Tooltip
+                        title={
+                          isSavingAll
+                            ? `Downloading ${saveProgress.current} of ${saveProgress.total}...`
+                            : `Download all ${allImages.length} images`
+                        }
+                        placement="top">
+                        <button
+                          className={`cobs-sr__save-all-btn${isSavingAll ? " cobs-sr__save-all-btn--loading" : ""}`}
+                          onClick={handleSaveAll}
+                          disabled={isSavingAll}>
+                          {isSavingAll ? (
+                            <>
+                              <DownloadingIcon style={{ fontSize: 13 }} />
+                              {saveProgress.current}/{saveProgress.total}
+                            </>
+                          ) : (
+                            <>
+                              <DownloadIcon style={{ fontSize: 13 }} />
+                              Save All
+                            </>
+                          )}
+                        </button>
+                      </Tooltip>
+                    )}
+                  </div>
                   <div className="cobs-sr__attach-body">
                     {allImages.length === 0 ? (
                       <div className="cobs-sr__attach-empty">

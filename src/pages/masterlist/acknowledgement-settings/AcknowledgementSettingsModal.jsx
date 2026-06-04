@@ -121,13 +121,13 @@ const AcknowledgementSettingsModal = ({
     });
 
   const { data: evaluatorsData, isFetching: isLoadingEvaluators } =
-    useGetEvaluatorsQuery(undefined, { skip: !open });
+    useGetEvaluatorsQuery(undefined, { skip: !open || isEditMode });
 
   const { data: approversData, isFetching: isLoadingApprovers } =
-    useGetApproversQuery(undefined, { skip: !open });
+    useGetApproversQuery(undefined, { skip: !open || isEditMode });
 
   const { data: assessorsData, isFetching: isLoadingAssessors } =
-    useGetAssessorsQuery(undefined, { skip: !open });
+    useGetAssessorsQuery(undefined, { skip: !open || isEditMode });
 
   const [storeSetting, { isLoading }] =
     useStoreAcknowledgementSettingMutation();

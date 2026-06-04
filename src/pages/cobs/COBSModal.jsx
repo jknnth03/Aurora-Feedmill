@@ -76,11 +76,7 @@ const getWeekStatus = (entries) => {
 
 const isWeekDone = (entries) => {
   const status = getWeekStatus(entries)?.toLowerCase();
-  return (
-    status === "done" ||
-    status === "for acknowledgement" ||
-    status === "for signature"
-  );
+  return status === "done";
 };
 
 const getLatestEntry = (entries) => {

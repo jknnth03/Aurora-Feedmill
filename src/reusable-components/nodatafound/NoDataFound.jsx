@@ -8,7 +8,6 @@ const NoDataFound = () => {
       <div className="no-data__animation">
         <Lottie animationData={NoDataAnimation} loop autoplay />
       </div>
-      <p className="no-data__message">•󠁏 No data found󠁯 •󠁏</p>
     </div>
   );
 };

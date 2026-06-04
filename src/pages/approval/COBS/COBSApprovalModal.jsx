@@ -141,11 +141,9 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             <GppMaybeIcon className="cobsam__header-icon" />
             <span>Acknowledgement Details</span>
           </div>
-          {batchEntry && (
-            <span className="cobsam__batch-label">
-              Batch #{batchEntry.batch_no} — {batchEntry.unit ?? "—"}
-            </span>
-          )}
+          <span className="cobsam__batch-label">
+            Batch #{batchEntry.batch_no} — {batchEntry.unit ?? "—"}
+          </span>
           <IconButton size="small" className="cobsam__close" onClick={onClose}>
             <CloseIcon fontSize="small" />
           </IconButton>
@@ -351,17 +349,14 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             className="cobsam__btn-close">
             CLOSE
           </Button>
-          <div />
-          {batchEntry?.is_completed === 1 && !signatureDataUrl && (
-            <Button
-              variant="contained"
-              startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-              onClick={() => setSignatureDialogOpen(true)}
-              disabled={isApproving}
-              className="cobsam__btn-approve">
-              {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+            onClick={() => setSignatureDialogOpen(true)}
+            disabled={isApproving}
+            className="cobsam__btn-approve">
+            {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
+          </Button>
         </DialogActions>
       </Dialog>
 
