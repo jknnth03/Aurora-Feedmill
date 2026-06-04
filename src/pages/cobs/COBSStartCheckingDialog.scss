@@ -391,6 +391,21 @@
       }
     }
 
+    // Dimmed border when score = 100 (optional)
+    &--optional {
+      border-color: rgba($border-color, 0.6);
+      background: rgba($primary-main, 0.01);
+
+      &::placeholder {
+        opacity: 0.45;
+      }
+
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.06);
+        background: transparent;
+      }
+    }
+
     [data-theme="dark"] & {
       border-color: rgba(255, 255, 255, 0.1);
       color: rgba(255, 255, 255, 0.8);
@@ -400,6 +415,39 @@
       }
     }
   }
+
+  // ── Remarks hint badge (Required / Optional) ──────────────────────────────
+
+  &__remarks-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 0.02em;
+
+    &--required {
+      background: rgba(#e53935, 0.08);
+      color: #e53935;
+      border: 1px solid rgba(#e53935, 0.2);
+
+      .cobs-sc__required {
+        margin-left: 0;
+      }
+    }
+
+    &--optional {
+      background: rgba(#4caf50, 0.08);
+      color: #4caf50;
+      border: 1px solid rgba(#4caf50, 0.2);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   &__attach-list {
     display: flex;

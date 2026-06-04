@@ -1,0 +1,93 @@
+@use "../../../styles/colors" as *;
+
+.acksettings {
+  &__add-btn {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    background-color: $primary-main !important;
+    border-radius: 8px !important;
+    padding: 7px 18px !important;
+    text-transform: none !important;
+    box-shadow: none !important;
+    color: #fff !important;
+
+    &:hover {
+      filter: brightness(0.92);
+      box-shadow: none !important;
+    }
+
+    [data-theme="dark"] & {
+      background-color: $secondary-main !important;
+    }
+  }
+
+  &__status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+
+    &--active {
+      background: rgba($status-success, 0.12);
+      color: $status-success;
+
+      [data-theme="dark"] & {
+        background: rgba($status-success, 0.15);
+      }
+    }
+
+    &--inactive {
+      background: rgba($text-muted, 0.1);
+      color: $text-muted;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+
+  &__toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px !important;
+    transition:
+      color 0.15s,
+      background 0.15s !important;
+
+    &--active {
+      color: $status-success !important;
+
+      &:hover {
+        background: rgba($status-success, 0.08) !important;
+      }
+    }
+
+    &--inactive {
+      color: $text-muted !important;
+
+      &:hover {
+        color: $primary-main !important;
+        background: rgba($primary-main, 0.08) !important;
+      }
+
+      [data-theme="dark"] & {
+        color: rgba(255, 255, 255, 0.35) !important;
+
+        &:hover {
+          color: $secondary-main !important;
+          background: rgba($secondary-main, 0.1) !important;
+        }
+      }
+    }
+  }
+}

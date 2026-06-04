@@ -18,6 +18,7 @@ import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import StarIcon from "@mui/icons-material/Star";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -138,6 +139,13 @@ export const MODULES = {
         displayName: "Scores",
         path: "scores",
         icon: <StarIcon sx={iconStyles.child} />,
+      },
+      ACKNOWLEDGEMENT_SETTINGS: {
+        name: "Acknowledgement Settings",
+        permissionId: "MASTERLIST.ACKNOWLEDGEMENT_SETTINGS",
+        displayName: "Acknowledgement Settings",
+        path: "acknowledgement-settings",
+        icon: <SettingsIcon sx={iconStyles.child} />,
       },
     },
   },

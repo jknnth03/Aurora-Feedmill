@@ -10,11 +10,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import DrawIcon from "@mui/icons-material/Draw";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import {
-  useGetEvaluatorsQuery,
-  useGetApproversQuery,
-  useGetAssessorsQuery,
-} from "../../features/api/usermanagement/userApi";
+import { useGetEvaluatorsQuery } from "../../features/api/usermanagement/userApi";
 import "./COBSSignatureDialog.scss";
 
 const buildOptions = (data) =>
@@ -60,29 +56,17 @@ const COBSSignatureDialog = ({ open, onClose, onSubmit, isSubmitting }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const [selectedEvaluatorId, setSelectedEvaluatorId] = useState("");
-  const [selectedApproverId, setSelectedApproverId] = useState("");
-  const [selectedAssessorId, setSelectedAssessorId] = useState("");
   const lastPos = useRef(null);
 
   const { data: evaluatorsData, isFetching: isLoadingEvaluators } =
     useGetEvaluatorsQuery(undefined, { skip: !open });
 
-  const { data: approversData, isFetching: isLoadingApprovers } =
-    useGetApproversQuery(undefined, { skip: !open });
-
-  const { data: assessorsData, isFetching: isLoadingAssessors } =
-    useGetAssessorsQuery(undefined, { skip: !open });
-
   const evaluators = buildOptions(evaluatorsData?.data ?? evaluatorsData ?? []);
-  const approvers = buildOptions(approversData?.data ?? approversData ?? []);
-  const assessors = buildOptions(assessorsData?.data ?? assessorsData ?? []);
 
   useEffect(() => {
     if (open) {
       setIsEmpty(true);
       setSelectedEvaluatorId("");
-      setSelectedApproverId("");
-      setSelectedAssessorId("");
       lastPos.current = null;
     }
   }, [open]);
@@ -160,39 +144,17 @@ const COBSSignatureDialog = ({ open, onClose, onSubmit, isSubmitting }) => {
   const selectedEvaluator =
     evaluators.find((u) => String(u.id) === String(selectedEvaluatorId)) ??
     null;
-  const selectedApprover =
-    approvers.find((u) => String(u.id) === String(selectedApproverId)) ?? null;
-  const selectedAssessor =
-    assessors.find((u) => String(u.id) === String(selectedAssessorId)) ?? null;
 
   const handleSubmit = () => {
-    if (
-      isEmpty ||
-      isSubmitting ||
-      !selectedEvaluatorId ||
-      !selectedApproverId ||
-      !selectedAssessorId
-    )
-      return;
+    if (isEmpty || isSubmitting || !selectedEvaluatorId) return;
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL("image/png");
     canvas.toBlob((blob) => {
-      onSubmit({
-        dataUrl,
-        blob,
-        selectedEvaluator,
-        selectedApprover,
-        selectedAssessor,
-      });
+      onSubmit({ dataUrl, blob, selectedEvaluator });
     }, "image/png");
   };
 
-  const canSubmit =
-    !isEmpty &&
-    !isSubmitting &&
-    !!selectedEvaluatorId &&
-    !!selectedApproverId &&
-    !!selectedAssessorId;
+  const canSubmit = !isEmpty && !isSubmitting && !!selectedEvaluatorId;
 
   return (
     <Dialog
@@ -223,24 +185,6 @@ const COBSSignatureDialog = ({ open, onClose, onSubmit, isSubmitting }) => {
           onChange={setSelectedEvaluatorId}
           options={evaluators}
           isLoading={isLoadingEvaluators}
-          disabled={isSubmitting}
-        />
-
-        <DropdownField
-          label="Approver"
-          value={selectedApproverId}
-          onChange={setSelectedApproverId}
-          options={approvers}
-          isLoading={isLoadingApprovers}
-          disabled={isSubmitting}
-        />
-
-        <DropdownField
-          label="Assessor"
-          value={selectedAssessorId}
-          onChange={setSelectedAssessorId}
-          options={assessors}
-          isLoading={isLoadingAssessors}
           disabled={isSubmitting}
         />
 

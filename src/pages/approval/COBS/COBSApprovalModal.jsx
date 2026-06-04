@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
@@ -7,53 +8,31 @@ import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import { useState } from "react";
+import ImageIcon from "@mui/icons-material/Image";
 import COBSImagePreviewDialog from "../../cobs/COBSImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
 import { useApproveApprovalMutation } from "../../../features/api/approval/cobsApproval";
 import "./COBSApprovalModal.scss";
 
-const SCORE_OPTIONS = [0, 50, 75, 100];
-const TEMPORAL_AUDIT_OPTIONS = [
-  "Spot/Ongoing",
-  "Pre-operation",
-  "Post-operation",
-];
-
-const formatDateTime = (raw) => {
-  if (!raw) return "—";
-  const date = new Date(raw);
-  if (isNaN(date)) return "—";
-  return date.toLocaleString("en-PH", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
-
-const formatDateDisplay = (iso) => {
-  if (!iso) return "—";
-  const d = new Date(iso + "T00:00:00");
+const formatDate = (dateStr) => {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
   if (isNaN(d)) return "—";
-  return d.toLocaleDateString("en-PH", {
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
     month: "long",
     day: "numeric",
-    year: "numeric",
   });
 };
 
-const groupResponsesByCategory = (responses = []) => {
-  const grouped = {};
-  responses.forEach(({ response, images }) => {
-    const category = response.checklist ?? "Uncategorized";
-    if (!grouped[category]) grouped[category] = [];
-    grouped[category].push({ response, images: images ?? [] });
+const formatTime = (dateStr) => {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "—";
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
-  return grouped;
 };
 
 const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
@@ -63,31 +42,74 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     index: 0,
   });
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
+  const [localSignatoryName, setLocalSignatoryName] = useState(null);
+
   const [approveApproval, { isLoading: isApproving }] =
     useApproveApprovalMutation();
+
+  useEffect(() => {
+    if (open && batchEntry) {
+      setLocalSignatureDataUrl(null);
+      setLocalSignatoryName(null);
+    }
+    if (!open) {
+      setLocalSignatureDataUrl(null);
+      setLocalSignatoryName(null);
+    }
+  }, [open]);
+
+  if (!batchEntry) return null;
+
+  const signatureRecordUrls = batchEntry.responses
+    ? batchEntry.responses
+        .filter((r) => r.response === null || r.response === undefined)
+        .flatMap((r) => r.images || [])
+    : [];
+
+  const signatureFromServer =
+    batchEntry.signatory_1?.evaluate_image ?? signatureRecordUrls[0] ?? null;
+  const signatureDataUrl = localSignatureDataUrl ?? signatureFromServer ?? null;
+  const signatoryName =
+    localSignatoryName ?? batchEntry.signatory_1?.name ?? null;
+
+  const signatory2 = batchEntry.signatory_2 ?? null;
+  const signatory3 = batchEntry.signatory_3 ?? null;
+
+  const allImages = batchEntry.responses
+    ? batchEntry.responses
+        .filter((r) => r.response !== null && r.response !== undefined)
+        .flatMap((r) => r.images || [])
+        .filter((url) => !signatureRecordUrls.includes(url))
+    : [];
+
+  const totalAllocation = batchEntry.score_breakdown
+    ? batchEntry.score_breakdown.reduce(
+        (sum, s) => sum + (s.allocation ?? 0),
+        0,
+      )
+    : 100;
+
+  const scorePercent =
+    totalAllocation > 0
+      ? ((batchEntry.score / totalAllocation) * 100).toFixed(2)
+      : "0.00";
 
   const openPreview = (imgs, idx) =>
     setPreviewState({ open: true, images: imgs, index: idx });
   const closePreview = () => setPreviewState((p) => ({ ...p, open: false }));
 
-  const groupedResponses = batchEntry
-    ? groupResponsesByCategory(batchEntry.responses ?? [])
-    : {};
-
-  const handleAcknowledge = ({ blob, assessorId }) => {
+  const handleAcknowledge = ({ blob }) => {
     if (!batchEntry || !blob) return;
-
     const signatureFile = new File([blob], "signature.png", {
       type: "image/png",
     });
-
     approveApproval({
       batch_no: batchEntry.batch_no,
-      approver_id: 1,
-      assessor_id: assessorId,
+      approver_id: batchEntry.approver_id ?? 1,
       approvers: [
         {
-          id: 1,
+          id: batchEntry.approver_id ?? 1,
           name: batchEntry.approver ?? "",
         },
       ],
@@ -129,254 +151,195 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
           </IconButton>
         </div>
 
-        {batchEntry && (
-          <div className="cobsam__info-strip">
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Submitted by</span>
-              <span className="cobsam__info-value">
-                {batchEntry.user ?? "—"}
-              </span>
-            </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Approver</span>
-              <span className="cobsam__info-value">
-                {batchEntry.approver ?? "—"}
-              </span>
-            </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Checklist</span>
-              <span className="cobsam__info-value">
-                {batchEntry.checklist_name ?? "—"}
-              </span>
-            </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Week</span>
-              <span className="cobsam__info-value">
-                Week {batchEntry.week ?? "—"}
-              </span>
-            </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Start</span>
-              <span className="cobsam__info-value">
-                {formatDateTime(batchEntry.start_at)}
-              </span>
-            </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">End</span>
-              <span className="cobsam__info-value">
-                {formatDateTime(batchEntry.end_at)}
-              </span>
-            </div>
-            <div className="cobsam__info-item">
-              <span className="cobsam__info-label">Progress</span>
-              <span className="cobsam__info-value cobsam__info-value--accent">
-                {batchEntry.progress ?? "—"}
-              </span>
-            </div>
-          </div>
-        )}
-
         <DialogContent className="cobsam__content">
-          {!batchEntry ? (
-            <div className="cobsam__skeleton-wrap">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="cobsam__skeleton-row" />
-              ))}
-            </div>
-          ) : (
-            <>
-              {Object.entries(groupedResponses).map(([category, items]) => (
-                <div key={category} className="cobsam__section">
-                  <div className="cobsam__section-header">{category}</div>
-                  <div className="cobsam__table-scroll">
-                    <table className="cobsam__table">
-                      <thead>
-                        <tr className="cobsam__thead-row">
-                          <th className="cobsam__th cobsam__th--item">Item</th>
-                          <th className="cobsam__th cobsam__th--compliance">
-                            Compliance
-                          </th>
-                          <th className="cobsam__th cobsam__th--remarks">
-                            Remarks
-                          </th>
-                          <th className="cobsam__th cobsam__th--attachment">
-                            Attachment
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map(({ response, images }, idx) => (
-                          <tr key={idx} className="cobsam__tr">
-                            <td className="cobsam__td cobsam__td--item">
-                              {idx + 1}. {response.sub_item ?? "—"}
-                              {response.item && (
-                                <span className="cobsam__item-area">
-                                  {response.item}
-                                </span>
-                              )}
-                            </td>
-                            <td className="cobsam__td cobsam__td--compliance">
-                              <div className="cobsam__radio-box">
-                                {SCORE_OPTIONS.map((score) => (
-                                  <label
-                                    key={score}
-                                    className="cobsam__radio-item cobsam__radio-item--readonly">
-                                    <input
-                                      type="radio"
-                                      value={score}
-                                      checked={response.score === score}
-                                      readOnly
-                                      disabled
-                                      className="cobsam__radio-input"
-                                    />
-                                    <span
-                                      className={`cobsam__radio-circle cobsam__radio-circle--${score}`}
-                                    />
-                                    <span className="cobsam__radio-text">
-                                      {score}
-                                    </span>
-                                  </label>
-                                ))}
-                              </div>
-                            </td>
-                            <td className="cobsam__td cobsam__td--remarks">
-                              <textarea
-                                className="cobsam__textarea cobsam__textarea--readonly"
-                                value={response.remarks ?? ""}
-                                readOnly
-                                rows={2}
-                                placeholder="—"
-                              />
-                            </td>
-                            <td className="cobsam__td cobsam__td--attachment">
-                              {images.length > 0 ? (
-                                <div className="cobsam__attach-file-list">
-                                  {images.map((url, i) => {
-                                    const filename =
-                                      decodeURIComponent(
-                                        url.split("/").pop().split("?")[0],
-                                      ) || `file-${i + 1}`;
-                                    return (
-                                      <div
-                                        key={i}
-                                        className="cobsam__attach-file-row">
-                                        <Tooltip
-                                          title={filename}
-                                          placement="top">
-                                          <span className="cobsam__attach-file-name">
-                                            {filename}
-                                          </span>
-                                        </Tooltip>
-                                        <Tooltip
-                                          title="View image"
-                                          placement="top">
-                                          <IconButton
-                                            size="small"
-                                            className="cobsam__attach-eye"
-                                            onClick={() =>
-                                              openPreview(images, i)
-                                            }>
-                                            <VisibilityIcon
-                                              sx={{ fontSize: 13 }}
-                                            />
-                                          </IconButton>
-                                        </Tooltip>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              ) : (
-                                <span className="cobsam__no-attach">—</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+          <div className="cobsam__body">
+            <div className="cobsam__left">
+              <div className="cobsam__details-card">
+                <p className="cobsam__details-title">Details</p>
+                <div className="cobsam__detail-row">
+                  <span className="cobsam__detail-label">Date:</span>
+                  <span className="cobsam__detail-value cobsam__detail-value--accent">
+                    {formatDate(batchEntry.start_at)}
+                  </span>
                 </div>
-              ))}
+                <div className="cobsam__detail-row">
+                  <span className="cobsam__detail-label">Time in:</span>
+                  <span className="cobsam__detail-value cobsam__detail-value--accent">
+                    {formatTime(batchEntry.start_at)}
+                  </span>
+                </div>
+                <div className="cobsam__detail-row">
+                  <span className="cobsam__detail-label">Time out:</span>
+                  <span className="cobsam__detail-value cobsam__detail-value--accent">
+                    {formatTime(batchEntry.end_at)}
+                  </span>
+                </div>
+                <div className="cobsam__detail-row">
+                  <span className="cobsam__detail-label">Unit:</span>
+                  <span className="cobsam__detail-value cobsam__detail-value--accent">
+                    {batchEntry.unit || "—"}
+                  </span>
+                </div>
+                <div className="cobsam__detail-row">
+                  <span className="cobsam__detail-label">QA Name:</span>
+                  <span className="cobsam__detail-value cobsam__detail-value--accent">
+                    {batchEntry.user || "—"}
+                  </span>
+                </div>
+              </div>
 
-              <div className="cobsam__others">
-                <div className="cobsam__others-header">Others</div>
-                <div className="cobsam__others-body">
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Date</span>
-                    <div className="cobsam__others-input-box">
-                      <span className="cobsam__others-time">
-                        {batchEntry?.start_at
-                          ? formatDateDisplay(batchEntry.start_at.split(" ")[0])
-                          : "—"}
+              <div className="cobsam__signed-card">
+                <p className="cobsam__signed-title">Acknowledge by</p>
+                {signatureDataUrl ? (
+                  <>
+                    <Tooltip title="View signature" placement="top">
+                      <div className="cobsam__signature-box cobsam__signature-box--clickable">
+                        <img
+                          src={signatureDataUrl}
+                          alt="signature"
+                          className="cobsam__signature-img"
+                        />
+                      </div>
+                    </Tooltip>
+                    {signatoryName && (
+                      <p className="cobsam__signee-name">{signatoryName}</p>
+                    )}
+                  </>
+                ) : (
+                  <div className="cobsam__signature-box cobsam__signature-box--empty">
+                    <span className="cobsam__signature-empty-text">
+                      No signature yet
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="cobsam__right">
+              <div className="cobsam__section-card">
+                <p className="cobsam__section-label">Remarks</p>
+                <div className="cobsam__section-body">
+                  {batchEntry.remarks ? (
+                    <p className="cobsam__section-text">{batchEntry.remarks}</p>
+                  ) : (
+                    <span className="cobsam__empty">—</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="cobsam__section-card">
+                <p className="cobsam__section-label">Temporal Audit</p>
+                <div className="cobsam__section-body">
+                  <p className="cobsam__section-text">
+                    {batchEntry.temporal_audit || "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="cobsam__bottom-row">
+                <div className="cobsam__section-card cobsam__score-card">
+                  <p className="cobsam__section-label">Score Summary</p>
+                  <div className="cobsam__section-body">
+                    {batchEntry.score_breakdown &&
+                      batchEntry.score_breakdown.map((s, i) => (
+                        <div key={i} className="cobsam__score-row">
+                          <span className="cobsam__score-category">
+                            {s.category}
+                          </span>
+                          <span className="cobsam__score-value">
+                            {s.score.toFixed(2)} / {s.allocation.toFixed(2)}{" "}
+                            <span className="cobsam__score-pct">
+                              ({s.percentage.toFixed(2)}%)
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    <div className="cobsam__score-divider" />
+                    <div className="cobsam__score-total-row">
+                      <span className="cobsam__score-total-label">Total —</span>
+                      <span className="cobsam__score-total-value">
+                        {batchEntry.score}
+                      </span>
+                      <span className="cobsam__score-total-pct">
+                        {scorePercent}%
                       </span>
                     </div>
                   </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Time</span>
-                    <div className="cobsam__time-row">
-                      <div className="cobsam__time-block">
-                        <span className="cobsam__time-block-label">Start</span>
-                        <span className="cobsam__time-block-value">
-                          {formatDateTime(batchEntry?.start_at)}
-                        </span>
+                </div>
+
+                <div className="cobsam__section-card cobsam__attach-card">
+                  <p className="cobsam__section-label">Attachment</p>
+                  <div className="cobsam__attach-body">
+                    {allImages.length === 0 ? (
+                      <div className="cobsam__attach-empty">
+                        <ImageIcon className="cobsam__attach-icon" />
+                        <span>No Photo Attachments</span>
                       </div>
-                      <div className="cobsam__time-divider">—</div>
-                      <div className="cobsam__time-block">
-                        <span className="cobsam__time-block-label">End</span>
-                        <span className="cobsam__time-block-value">
-                          {formatDateTime(batchEntry?.end_at)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Temporal Audit</span>
-                    <div className="cobsam__others-input-box">
-                      <div className="cobsam__temporal-options">
-                        {TEMPORAL_AUDIT_OPTIONS.map((opt) => (
-                          <label
-                            key={opt}
-                            className="cobsam__temporal-item cobsam__temporal-item--readonly">
-                            <input
-                              type="radio"
-                              name="view_temporal_audit"
-                              value={opt}
-                              checked={
-                                (batchEntry?.temporal_audit ?? "") === opt
-                              }
-                              readOnly
-                              disabled
-                              className="cobsam__radio-input"
+                    ) : (
+                      <div className="cobsam__attach-grid">
+                        {allImages.map((url, i) => (
+                          <Tooltip key={i} title="View image" placement="top">
+                            <img
+                              src={url}
+                              alt={`attachment-${i}`}
+                              className="cobsam__attach-thumb"
+                              onClick={() => openPreview(allImages, i)}
                             />
-                            <span className="cobsam__temporal-circle" />
-                            <span className="cobsam__temporal-text">{opt}</span>
-                          </label>
+                          </Tooltip>
                         ))}
                       </div>
-                    </div>
-                  </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Good Points</span>
-                    <textarea
-                      className="cobsam__others-textarea cobsam__others-textarea--readonly"
-                      value={batchEntry.good_points ?? ""}
-                      readOnly
-                      rows={4}
-                      placeholder="—"
-                    />
-                  </div>
-                  <div className="cobsam__others-field">
-                    <span className="cobsam__others-label">Remarks</span>
-                    <textarea
-                      className="cobsam__others-textarea cobsam__others-textarea--readonly"
-                      value={batchEntry.remarks ?? ""}
-                      readOnly
-                      rows={4}
-                      placeholder="—"
-                    />
+                    )}
                   </div>
                 </div>
               </div>
-            </>
+            </div>
+          </div>
+
+          {(signatory2 || signatory3) && (
+            <div className="cobsam__signatories-row">
+              {signatory2 && (
+                <div className="cobsam__signatory-item">
+                  <span className="cobsam__signatory-label">Reviewed by:</span>
+                  {signatory2.approve_image ? (
+                    <div className="cobsam__signatory-img-box">
+                      <img
+                        src={signatory2.approve_image}
+                        alt="reviewed-by"
+                        className="cobsam__signatory-img"
+                      />
+                    </div>
+                  ) : (
+                    <div className="cobsam__signatory-img-box cobsam__signatory-img-box--empty" />
+                  )}
+                  {signatory2.name && (
+                    <span className="cobsam__signatory-name">
+                      {signatory2.name}
+                    </span>
+                  )}
+                </div>
+              )}
+              {signatory3 && (
+                <div className="cobsam__signatory-item">
+                  <span className="cobsam__signatory-label">Noted by:</span>
+                  {signatory3.assess_image ? (
+                    <div className="cobsam__signatory-img-box">
+                      <img
+                        src={signatory3.assess_image}
+                        alt="noted-by"
+                        className="cobsam__signatory-img"
+                      />
+                    </div>
+                  ) : (
+                    <div className="cobsam__signatory-img-box cobsam__signatory-img-box--empty" />
+                  )}
+                  {signatory3.name && (
+                    <span className="cobsam__signatory-name">
+                      {signatory3.name}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </DialogContent>
 
@@ -389,7 +352,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             CLOSE
           </Button>
           <div />
-          {batchEntry?.is_completed === 1 && (
+          {batchEntry?.is_completed === 1 && !signatureDataUrl && (
             <Button
               variant="contained"
               startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
@@ -405,9 +368,13 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
       <COBSSignatureDialog
         open={signatureDialogOpen}
         onClose={() => setSignatureDialogOpen(false)}
-        onSubmit={({ blob, assessorId }) => {
+        onSubmit={({ blob, dataUrl, selectedEvaluator }) => {
           setSignatureDialogOpen(false);
-          handleAcknowledge({ blob, assessorId });
+          setLocalSignatureDataUrl(dataUrl);
+          setLocalSignatoryName(
+            selectedEvaluator?.full_name ?? batchEntry?.approver ?? "",
+          );
+          handleAcknowledge({ blob });
         }}
         signerName={batchEntry?.approver ?? ""}
         isSubmitting={isApproving}

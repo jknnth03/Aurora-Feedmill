@@ -59,23 +59,28 @@ const getWeekStatus = (entries) => {
 
   if (raw === "approved" || raw === "done" || raw === "completed")
     return "Done";
-  if (raw === "for approval" || raw === "for acknowledgement")
-    return "For Acknowledgement";
-  if (raw === "on going") return "On Going";
   if (raw === "rejected") return "Rejected";
-  if (raw === "on progress") {
-    if (latest.is_completed === 0 || latest.is_completed === false)
-      return "Saved as Draft";
-    return "For Acknowledgement";
+  if (raw === "on going") return "On Going";
+
+  if (latest.is_completed === 1 || latest.is_completed === true) {
+    if (!latest.is_evaluated) return "For Signature";
+    if (!latest.is_approved) return "For Acknowledgement";
+    return "Done";
   }
+
   if (latest.is_completed === 0 || latest.is_completed === false)
     return "Saved as Draft";
+
   return "Pending";
 };
 
 const isWeekDone = (entries) => {
   const status = getWeekStatus(entries)?.toLowerCase();
-  return status === "done" || status === "for acknowledgement";
+  return (
+    status === "done" ||
+    status === "for acknowledgement" ||
+    status === "for signature"
+  );
 };
 
 const getLatestEntry = (entries) => {
@@ -110,6 +115,20 @@ const getDoneOn = (entries) => {
 
 const StatusChip = ({ status }) => {
   useChipColors();
+
+  if (status?.toLowerCase() === "for signature") {
+    return (
+      <span
+        className="cobs-cm__chip"
+        style={{
+          background: "#ede9fe",
+          color: "#6d28d9",
+        }}>
+        {status}
+      </span>
+    );
+  }
+
   const chipId = STATUS_CHIP_MAP[status?.toLowerCase()] ?? null;
   if (!chipId) return <span className="cobs-cm__dash">{status ?? "—"}</span>;
   return (
@@ -143,7 +162,9 @@ const RowActionMenu = ({
   const status = getWeekStatus(entries);
   const statusLower = status?.toLowerCase();
   const isForAcknowledgement =
-    statusLower === "for acknowledgement" || statusLower === "done";
+    statusLower === "for acknowledgement" ||
+    statusLower === "for signature" ||
+    statusLower === "done";
   const isDraft = latest ? isDraftEntry(latest) : false;
 
   const hasEntries = Array.isArray(entries) && entries.length > 0;
@@ -287,6 +308,7 @@ const COBSModal = ({
   year,
   onClose,
   isFetching,
+  onRefetch,
 }) => {
   const [startCheckingData, setStartCheckingData] = useState(null);
   const [continueCheckingData, setContinueCheckingData] = useState(null);
@@ -461,6 +483,7 @@ const COBSModal = ({
         week={showReportData?.week}
         month={month}
         year={year}
+        onRefetch={onRefetch}
       />
 
       <ConfirmDialog

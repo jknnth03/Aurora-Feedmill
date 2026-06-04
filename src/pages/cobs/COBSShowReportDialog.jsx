@@ -19,7 +19,7 @@ import COBSSignatureDialog from "./COBSSignatureDialog";
 import { useEvaluateResponseMutation } from "../../features/api/cobs/cobsApi";
 import "./COBSShowReportDialog.scss";
 
-const COBSShowReportDialog = ({ open, onClose, reportData }) => {
+const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   const [downloadType, setDownloadType] = useState("PDF");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -140,8 +140,11 @@ const COBSShowReportDialog = ({ open, onClose, reportData }) => {
       if (returnedUrl) {
         setLocalSignatureDataUrl(returnedUrl);
       }
+      onRefetch?.();
     } catch (err) {
       console.error("[COBSShowReportDialog] evaluateResponse ERROR", err);
+      setLocalSignatureDataUrl(null);
+      setLocalSignatoryName(null);
     } finally {
       setSignatureOpen(false);
     }

@@ -3,16 +3,11 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DrawIcon from "@mui/icons-material/Draw";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useGetAssessorsQuery } from "../../../features/api/usermanagement/userApi";
 import "./COBSSignatureDialog.scss";
 
 const COBSSignatureDialog = ({
@@ -26,17 +21,10 @@ const COBSSignatureDialog = ({
   const isDrawing = useRef(false);
   const lastPos = useRef(null);
   const [isEmpty, setIsEmpty] = useState(true);
-  const [selectedAssessor, setSelectedAssessor] = useState("");
-
-  const { data: assessorsData, isLoading: assessorsLoading } =
-    useGetAssessorsQuery();
-
-  const assessors = assessorsData?.data || assessorsData || [];
 
   useEffect(() => {
     if (open) {
       setIsEmpty(true);
-      setSelectedAssessor("");
     }
   }, [open]);
 
@@ -109,13 +97,12 @@ const COBSSignatureDialog = ({
     if (isEmpty || !canvasRef.current) return;
     const dataUrl = canvasRef.current.toDataURL("image/png");
     canvasRef.current.toBlob((blob) => {
-      onSubmit?.({ dataUrl, blob, assessorId: selectedAssessor });
+      onSubmit?.({ dataUrl, blob });
     }, "image/png");
   };
 
   const handleClose = () => {
     clearPad();
-    setSelectedAssessor("");
     onClose();
   };
 
@@ -145,57 +132,6 @@ const COBSSignatureDialog = ({
       </div>
 
       <DialogContent className="cobssig__content">
-        <div className="cobssig__field-group">
-          <span className="cobssig__field-label">ASSESSOR</span>
-          <FormControl
-            fullWidth
-            size="small"
-            className="cobssig__select-control">
-            <Select
-              displayEmpty
-              value={selectedAssessor}
-              onChange={(e) => setSelectedAssessor(e.target.value)}
-              disabled={assessorsLoading || isSubmitting}
-              className="cobssig__select"
-              renderValue={(value) => {
-                if (!value) {
-                  return (
-                    <span className="cobssig__select-placeholder">
-                      Select assessor
-                    </span>
-                  );
-                }
-                const found = assessors.find(
-                  (a) => (a.id || a._id || a.value) === value,
-                );
-                return found
-                  ? found.name || found.label || found.full_name
-                  : value;
-              }}>
-              {assessorsLoading && (
-                <MenuItem disabled value="">
-                  Loading...
-                </MenuItem>
-              )}
-              {!assessorsLoading && assessors.length === 0 && (
-                <MenuItem disabled value="">
-                  No assessors available
-                </MenuItem>
-              )}
-              {assessors.map((assessor) => {
-                const id = assessor.id || assessor._id || assessor.value;
-                const label =
-                  assessor.name || assessor.label || assessor.full_name;
-                return (
-                  <MenuItem key={id} value={id} className="cobssig__menu-item">
-                    {label}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-        </div>
-
         <p className="cobssig__instruction">
           Sign inside the box below using your mouse or finger.
         </p>
@@ -233,10 +169,6 @@ const COBSSignatureDialog = ({
             )}
           </div>
         </div>
-
-        {signerName && (
-          <p className="cobssig__signer-name">{signerName.toUpperCase()}</p>
-        )}
       </DialogContent>
 
       <DialogActions className="cobssig__footer">

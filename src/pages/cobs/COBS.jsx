@@ -134,7 +134,7 @@ const COBS = () => {
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, isFetching, error } = useGetCobsQuery(
+  const { data, isFetching, error, refetch } = useGetCobsQuery(
     {
       month: currentMonth.format("MM"),
       year: currentMonth.format("YYYY"),
@@ -235,6 +235,7 @@ const COBS = () => {
         year={Number(currentMonth.format("YYYY"))}
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
+        onRefetch={refetch}
       />
     </>
   );

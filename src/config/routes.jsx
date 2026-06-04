@@ -13,6 +13,7 @@ import InfestationLevels from "../pages/masterlist/infestation-levels/Infestatio
 import Units from "../pages/masterlist/units/Units.jsx";
 import Wastages from "../pages/masterlist/wastages/Wastages.jsx";
 import Scores from "../pages/masterlist/scores/Scores.jsx";
+import AcknowledgementSettings from "../pages/masterlist/acknowledgement-settings/AcknowledgementSettings.jsx";
 import Login from "../pages/login/Login.jsx";
 import COBS from "../pages/checklist-form/COBS/COBSQuestionnaires.jsx";
 import PestSheet from "../pages/checklist-form/PESTS/PestSheet.jsx";
@@ -21,7 +22,6 @@ import StandaloneBirds from "../pages/birds/Birds.jsx";
 import StandaloneCOBS from "../pages/cobs/COBS.jsx";
 import StandalonePest from "../pages/pest/Pest.jsx";
 import COBSApproval from "../pages/approval/COBS/COBSApproval.jsx";
-import FinalAcknowledgement from "../pages/final-acknowledgement/COBS/FinalAcknowledgement.jsx";
 
 export const ROUTES = [
   {
@@ -124,6 +124,15 @@ export const ROUTES = [
         element: <Scores />,
         handle: {
           permission: MODULES.MASTERLIST.children.SCORES.permissionId,
+        },
+      },
+      {
+        id: "MASTERLIST.ACKNOWLEDGEMENT_SETTINGS",
+        path: `${MODULES.MASTERLIST.path}/${MODULES.MASTERLIST.children.ACKNOWLEDGEMENT_SETTINGS.path}`,
+        element: <AcknowledgementSettings />,
+        handle: {
+          permission:
+            MODULES.MASTERLIST.children.ACKNOWLEDGEMENT_SETTINGS.permissionId,
         },
       },
 

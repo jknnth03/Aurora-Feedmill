@@ -8,17 +8,16 @@ import Tooltip from "@mui/material/Tooltip";
 import Skeleton from "@mui/material/Skeleton";
 import CloseIcon from "@mui/icons-material/Close";
 import ChecklistIcon from "@mui/icons-material/Checklist";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import {
   useGetQuestionnaireQuery,
   useCreateCobMutation,
 } from "../../features/api/cobs/cobsApi";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
-import { validateForm } from "./COBSStartCheckingValidation";
 import "./COBSStartCheckingDialog.scss";
 
 const SCORE_OPTIONS = [0, 50, 75, 100];
@@ -133,6 +132,59 @@ const buildDraftAnswers = (questionnaireData, responses = []) => {
   return { answers, remarks, existingImages };
 };
 
+// ─── Inline Validation ────────────────────────────────────────────────────────
+// Rules:
+//   - Score: always required
+//   - Remarks: required ONLY when score is 0, 50, or 75 (NOT when score is 100)
+//   - Draft (isCompleted = 0): only date is required
+// ─────────────────────────────────────────────────────────────────────────────
+const validateForm = async (isCompleted, formState) => {
+  const {
+    answers,
+    remarks,
+    startAt,
+    temporalAudit,
+    goodPoints,
+    othersRemarks,
+    questionnaireData,
+  } = formState;
+
+  const errors = {};
+
+  if (isCompleted) {
+    questionnaireData?.items?.forEach((category) => {
+      category.items?.forEach((item, itemIdx) => {
+        item.sub_items?.forEach((_subItem, subIdx) => {
+          const key = `${category.name}__${item.name}__${itemIdx}__${subIdx}`;
+          const score = answers[key];
+          const remark = (remarks[key] ?? "").trim();
+
+          if (score === undefined || score === null) {
+            errors[`score__${key}`] = "Please select a score.";
+          }
+
+          // Remarks required only when score is NOT 100
+          if (score !== 100 && !remark) {
+            errors[`remarks__${key}`] = "Remarks is required.";
+          }
+        });
+      });
+    });
+
+    if (!startAt) errors.start_at = "Date is required.";
+    if (!temporalAudit)
+      errors.temporal_audit = "Please select a temporal audit type.";
+    if (!goodPoints?.trim()) errors.good_points = "Good points is required.";
+    if (!othersRemarks?.trim()) errors.remarks = "Remarks is required.";
+  } else {
+    // Draft — only date required
+    if (!startAt) errors.start_at = "Date is required.";
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const RequiredStar = () => <span className="cobs-sc__required">*</span>;
 
 const COBSStartCheckingDialog = ({
@@ -169,7 +221,7 @@ const COBSStartCheckingDialog = ({
     index: 0,
   });
 
-  const fileInputRefs = useRef({});
+  const cameraInputRefs = useRef({});
   const intervalRef = useRef(null);
   const firstErrorRef = useRef(null);
 
@@ -261,6 +313,10 @@ const COBSStartCheckingDialog = ({
   const handleScore = (key, score) => {
     setAnswers((prev) => ({ ...prev, [key]: score }));
     clearFieldError(`score__${key}`);
+    // When score becomes 100, clear remarks error since it's now optional
+    if (score === 100) {
+      clearFieldError(`remarks__${key}`);
+    }
   };
 
   const handleRemarks = (key, value) => {
@@ -268,11 +324,22 @@ const COBSStartCheckingDialog = ({
     if (value.trim()) clearFieldError(`remarks__${key}`);
   };
 
-  const handleImageChange = (key, files) =>
+  // Camera capture — opens rear camera directly on mobile
+  const handleCameraCapture = (key, files) => {
+    if (!files || files.length === 0) return;
     setImages((prev) => ({
       ...prev,
       [key]: [...(prev[key] ?? []), ...Array.from(files)],
     }));
+  };
+
+  const triggerCamera = (key) => {
+    // Reset value so re-capturing the same photo is possible
+    if (cameraInputRefs.current[key]) {
+      cameraInputRefs.current[key].value = "";
+    }
+    cameraInputRefs.current[key]?.click();
+  };
 
   const handleRemoveImage = (key, idx) =>
     setImages((prev) => ({
@@ -527,10 +594,10 @@ const COBSStartCheckingDialog = ({
                             Compliance <RequiredStar />
                           </th>
                           <th className="cobs-sc__th cobs-sc__th--remarks">
-                            Remarks <RequiredStar />
+                            Remarks
                           </th>
                           <th className="cobs-sc__th cobs-sc__th--attachment">
-                            Attachment
+                            Photo
                           </th>
                         </tr>
                       </thead>
@@ -558,6 +625,8 @@ const COBSStartCheckingDialog = ({
                             const scoreError = errors[`score__${editKey}`];
                             const remarksError = errors[`remarks__${editKey}`];
                             const rowHasError = !!(scoreError || remarksError);
+                            const currentScore = answers[editKey];
+                            const isScore100 = currentScore === 100;
 
                             return (
                               <tr
@@ -618,7 +687,11 @@ const COBSStartCheckingDialog = ({
                                 <td className="cobs-sc__td cobs-sc__td--remarks">
                                   <textarea
                                     placeholder={
-                                      viewMode ? "—" : "Enter your response"
+                                      viewMode
+                                        ? "—"
+                                        : isScore100
+                                          ? "Optional"
+                                          : "(Required) Enter your response"
                                     }
                                     value={
                                       viewMode
@@ -636,8 +709,22 @@ const COBSStartCheckingDialog = ({
                                     }
                                     readOnly={viewMode}
                                     rows={2}
-                                    className={`cobs-sc__textarea${viewMode ? " cobs-sc__textarea--readonly" : ""}${remarksError ? " cobs-sc__textarea--error" : ""}`}
+                                    className={[
+                                      "cobs-sc__textarea",
+                                      viewMode
+                                        ? "cobs-sc__textarea--readonly"
+                                        : "",
+                                      !viewMode && isScore100
+                                        ? "cobs-sc__textarea--optional"
+                                        : "",
+                                      remarksError
+                                        ? "cobs-sc__textarea--error"
+                                        : "",
+                                    ]
+                                      .filter(Boolean)
+                                      .join(" ")}
                                   />
+
                                   {remarksError && (
                                     <span className="cobs-sc__inline-error">
                                       <ErrorOutlineIcon sx={{ fontSize: 11 }} />
@@ -646,6 +733,7 @@ const COBSStartCheckingDialog = ({
                                   )}
                                 </td>
 
+                                {/* ── CAMERA / PHOTO COLUMN ── */}
                                 <td className="cobs-sc__td cobs-sc__td--attachment">
                                   {viewMode ? (
                                     resp?.images?.length > 0 ? (
@@ -657,7 +745,7 @@ const COBSStartCheckingDialog = ({
                                                 .split("/")
                                                 .pop()
                                                 .split("?")[0],
-                                            ) || `file-${i + 1}`;
+                                            ) || `photo-${i + 1}`;
                                           return (
                                             <div
                                               key={i}
@@ -670,7 +758,7 @@ const COBSStartCheckingDialog = ({
                                                 </span>
                                               </Tooltip>
                                               <Tooltip
-                                                title="View image"
+                                                title="View photo"
                                                 placement="top">
                                                 <IconButton
                                                   size="small"
@@ -694,21 +782,28 @@ const COBSStartCheckingDialog = ({
                                     )
                                   ) : (
                                     <>
+                                      {/*
+                                        Hidden input with capture="environment":
+                                        - Mobile: opens rear camera directly
+                                        - Desktop: opens file chooser as fallback
+                                      */}
                                       <input
                                         type="file"
                                         accept="image/*"
-                                        multiple
+                                        capture="environment"
                                         style={{ display: "none" }}
                                         ref={(el) =>
-                                          (fileInputRefs.current[editKey] = el)
+                                          (cameraInputRefs.current[editKey] =
+                                            el)
                                         }
                                         onChange={(e) =>
-                                          handleImageChange(
+                                          handleCameraCapture(
                                             editKey,
                                             e.target.files,
                                           )
                                         }
                                       />
+
                                       {existingFileList.length > 0 ||
                                       fileList.length > 0 ? (
                                         <div className="cobs-sc__attach-list">
@@ -719,7 +814,7 @@ const COBSStartCheckingDialog = ({
                                                   .split("/")
                                                   .pop()
                                                   .split("?")[0],
-                                              ) || `file-${i + 1}`;
+                                              ) || `photo-${i + 1}`;
                                             return (
                                               <div
                                                 key={`existing-${i}`}
@@ -810,32 +905,28 @@ const COBSStartCheckingDialog = ({
                                             type="button"
                                             className="cobs-sc__attach-btn cobs-sc__attach-btn--more"
                                             onClick={() =>
-                                              fileInputRefs.current[
-                                                editKey
-                                              ]?.click()
+                                              triggerCamera(editKey)
                                             }>
-                                            <AttachFileIcon
+                                            <CameraAltIcon
                                               sx={{ fontSize: 13 }}
                                             />
-                                            Add more
+                                            Add photo
                                           </button>
                                         </div>
                                       ) : (
                                         <Tooltip
-                                          title="Attach file"
+                                          title="Take photo"
                                           placement="top">
                                           <button
                                             type="button"
                                             className="cobs-sc__attach-btn"
                                             onClick={() =>
-                                              fileInputRefs.current[
-                                                editKey
-                                              ]?.click()
+                                              triggerCamera(editKey)
                                             }>
-                                            <AttachFileIcon
+                                            <CameraAltIcon
                                               sx={{ fontSize: 14 }}
                                             />
-                                            <span>No file</span>
+                                            <span>No photo</span>
                                           </button>
                                         </Tooltip>
                                       )}
