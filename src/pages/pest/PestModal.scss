@@ -1,0 +1,230 @@
+@use "../../styles/colors" as *;
+
+.pest-cm {
+  &__paper {
+    border-radius: 12px !important;
+    font-family: "Poppins", sans-serif;
+    overflow: hidden;
+    background: $bg-main !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+    }
+  }
+
+  &__title {
+    background: var(--palette-primary) !important;
+    color: #fff !important;
+    font-family: "Poppins", sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    padding: 18px 24px !important;
+    line-height: 1.4 !important;
+
+    [data-theme="dark"] & {
+      background: var(--palette-primary-dark) !important;
+    }
+  }
+
+  &__content {
+    padding: 0 !important;
+    overflow-x: auto;
+    background: $bg-main;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+    }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+  }
+
+  &__thead-row {
+    border-bottom: 2px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__th {
+    padding: 12px 12px;
+    text-align: left;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--palette-primary);
+    white-space: nowrap;
+    background: $primary-contrast;
+
+    [data-theme="dark"] & {
+      color: var(--palette-primary-light);
+      background: $bg-main;
+    }
+
+    &--actions {
+      text-align: center;
+    }
+  }
+
+  &__tr {
+    border-bottom: 1px solid $border-color;
+    transition: background 0.12s;
+
+    [data-theme="dark"] & {
+      border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:nth-child(odd) {
+      background: var(--palette-row-bg);
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.02);
+      }
+    }
+
+    &:nth-child(even) {
+      background: #fff;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.01);
+      }
+    }
+  }
+
+  &__td {
+    padding: 11px 12px;
+    font-size: 0.82rem;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+    vertical-align: middle;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    &--doneon {
+      font-size: 0.78rem;
+      color: $text-muted;
+
+      [data-theme="dark"] & {
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+
+    &--actions {
+      text-align: center;
+    }
+  }
+
+  &__dash {
+    color: $text-muted;
+    font-size: 0.85rem;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  &__chip {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    white-space: nowrap;
+    line-height: 1.5;
+  }
+
+  &__actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__icon-btn {
+    color: $text-muted !important;
+
+    &:hover {
+      color: var(--palette-primary) !important;
+      background: rgba(0, 0, 0, 0.04) !important;
+
+      [data-theme="dark"] & {
+        color: var(--palette-primary-light) !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+      }
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4) !important;
+    }
+  }
+
+  &__menu-paper {
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+    font-family: "Poppins", sans-serif !important;
+    min-width: 160px !important;
+  }
+
+  &__menu-item {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.8rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 16px !important;
+  }
+
+  &__menu-icon {
+    font-size: 1rem !important;
+    color: var(--palette-primary) !important;
+  }
+
+  &__footer {
+    background: $primary-contrast;
+    padding: 12px 20px !important;
+    border-top: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+    }
+  }
+
+  &__btn-close {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.8rem !important;
+    text-transform: none !important;
+    border-color: $border-color !important;
+    color: $text-muted !important;
+    border-radius: 8px !important;
+    padding: 5px 18px !important;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    &:hover {
+      border-color: var(--palette-primary) !important;
+      color: var(--palette-primary) !important;
+      background: rgba(0, 0, 0, 0.03) !important;
+
+      [data-theme="dark"] & {
+        border-color: var(--palette-primary-light) !important;
+        color: var(--palette-primary-light) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+    }
+  }
+}

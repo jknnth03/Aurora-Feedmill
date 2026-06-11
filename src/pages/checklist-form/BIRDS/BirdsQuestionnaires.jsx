@@ -12,8 +12,8 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetBirdsQuery,
-  useArchiveBirdMutation,
+  useGetBirdsChecklistsQuery,
+  useArchiveBirdChecklistMutation,
 } from "../../../features/api/questionnaires/birdsQuestionnairesApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
@@ -44,15 +44,10 @@ const renderStackedList = (items) => {
 
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
+  { key: "checklist_name", label: "Checklist Name", sortable: true },
   {
-    key: "inspection_areas",
-    label: "Inspection Areas",
-    sortable: false,
-    render: (value) => renderStackedList(value),
-  },
-  {
-    key: "infestation_levels",
-    label: "Infestation Levels",
+    key: "items",
+    label: "Item Groups",
     sortable: false,
     render: (value) => renderStackedList(value),
   },
@@ -66,7 +61,7 @@ const BirdsQuestionnaires = () => {
   const [queryParams, setQueryParams, , resetAfterArchive, resetAfterRestore] =
     useRememberQueryParams();
   const showArchived = queryParams.status === "inactive";
-  const search = queryParams.search ?? "";
+  const search = queryParams.search ?? "birds";
   const debouncedSearch = useDebounce(search, 500);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -77,13 +72,20 @@ const BirdsQuestionnaires = () => {
 
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetBirdsQuery({
-    status: currentStatus,
-    search: debouncedSearch,
-    page,
-    per_page: rowsPerPage,
-  });
-  const [archiveBird, { isLoading: isArchiving }] = useArchiveBirdMutation();
+  const { data, isFetching, error } = useGetBirdsChecklistsQuery(
+    {
+      status: currentStatus,
+      search: debouncedSearch,
+      page,
+      per_page: rowsPerPage,
+    },
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    },
+  );
+  const [archiveBird, { isLoading: isArchiving }] =
+    useArchiveBirdChecklistMutation();
 
   const is404 = error?.status === 404;
   const tableData = data?.data ?? [];

@@ -3,6 +3,7 @@ import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import AddIcon from "@mui/icons-material/Add";
+import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -12,12 +13,16 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetPestsSheetsQuery,
-  useArchivePestsSheetMutation,
+  useGetChecklistsQuery,
+  useArchiveChecklistMutation,
 } from "../../../features/api/questionnaires/pestQuestionnairesApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import PestSheetModal from "./PestSheetModal";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 import "./PestSheet.scss";
 
 const renderStackedList = (items) => {
@@ -42,19 +47,63 @@ const renderStackedList = (items) => {
   );
 };
 
+const ChecklistItemsDialog = ({ open, onClose, row }) => {
+  if (!row) return null;
+
+  const inspectionAreasGroup = row.items?.find(
+    (i) => i.name === "Inspection Areas",
+  );
+  const pestGroup = row.items?.find((i) => i.name === "Pest");
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{ className: "pest-sheet__dialog-paper" }}>
+      <div className="pest-sheet__dialog-header">
+        <div className="pest-sheet__dialog-title">
+          <RemoveRedEyeIcon className="pest-sheet__dialog-icon" />
+          <span>{row.checklist_name}</span>
+        </div>
+        <IconButton onClick={onClose} size="small">
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </div>
+      <DialogContent className="pest-sheet__dialog-content">
+        <div className="pest-sheet__dialog-group">
+          <p className="pest-sheet__dialog-group-label">Inspection Areas</p>
+          {inspectionAreasGroup?.items?.length > 0 ? (
+            renderStackedList(inspectionAreasGroup.items)
+          ) : (
+            <p className="pest-sheet__dialog-empty">No inspection areas.</p>
+          )}
+        </div>
+        <div className="pest-sheet__dialog-group">
+          <p className="pest-sheet__dialog-group-label">Pests</p>
+          {pestGroup?.items?.length > 0 ? (
+            renderStackedList(pestGroup.items)
+          ) : (
+            <p className="pest-sheet__dialog-empty">No pests.</p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
   {
-    key: "inspection_areas",
-    label: "Inspection Areas",
-    sortable: false,
-    render: (value) => renderStackedList(value),
+    key: "checklist_name",
+    label: "Checklist Name",
+    sortable: true,
   },
   {
-    key: "pests",
-    label: "Pests",
+    key: "items",
+    label: "Inspection Areas & Pests Type",
     sortable: false,
-    render: (value) => renderStackedList(value),
   },
 ];
 
@@ -74,17 +123,23 @@ const PestSheet = () => {
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewDialogRow, setViewDialogRow] = useState(null);
 
-  const currentStatus = showArchived ? "inactive" : "active";
+  const currentStatus = showArchived ? 0 : 1;
 
-  const { data, isFetching, error } = useGetPestsSheetsQuery({
-    status: currentStatus,
-    search: debouncedSearch,
-    page,
-    per_page: rowsPerPage,
-  });
-  const [archivePestsSheet, { isLoading: isArchiving }] =
-    useArchivePestsSheetMutation();
+  const { data, isFetching, error } = useGetChecklistsQuery(
+    {
+      status: currentStatus,
+    },
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    },
+  );
+
+  const [archiveChecklist, { isLoading: isArchiving }] =
+    useArchiveChecklistMutation();
 
   const is404 = error?.status === 404;
   const tableData = data?.data ?? [];
@@ -104,13 +159,18 @@ const PestSheet = () => {
     setPage(1);
   };
 
+  const handleViewClick = (row) => {
+    setViewDialogRow(row);
+    setViewDialogOpen(true);
+  };
+
   const handleRestoreClick = (row) => {
     setToRestore(row);
     setRestoreConfirmOpen(true);
   };
   const handleConfirmRestore = async () => {
     try {
-      await archivePestsSheet(toRestore.id).unwrap();
+      await archiveChecklist(toRestore.id).unwrap();
       window.__snackbar__?.enqueueSnackbar(
         "Pest questionnaire restored successfully.",
         { variant: "success" },
@@ -141,7 +201,7 @@ const PestSheet = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archivePestsSheet(toArchive.id).unwrap();
+      await archiveChecklist(toArchive.id).unwrap();
       window.__snackbar__?.enqueueSnackbar(
         "Pest questionnaire archived successfully.",
         { variant: "success" },
@@ -153,6 +213,28 @@ const PestSheet = () => {
       console.error("Archive failed:", err);
     }
   };
+
+  const columnsWithHandler = COLUMNS.map((col) => {
+    if (col.key === "items") {
+      return {
+        ...col,
+        render: (value, row) => (
+          <div className="pest-sheet__eye-cell">
+            <IconButton
+              size="small"
+              className="pest-sheet__eye-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewClick(row);
+              }}>
+              <RemoveRedEyeIcon fontSize="small" />
+            </IconButton>
+          </div>
+        ),
+      };
+    }
+    return col;
+  });
 
   return (
     <>
@@ -197,7 +279,7 @@ const PestSheet = () => {
           />
         }>
         <UniversalTable
-          columns={COLUMNS}
+          columns={columnsWithHandler}
           data={tableData}
           isLoading={isFetching}
           sortBy={sortBy}
@@ -213,6 +295,15 @@ const PestSheet = () => {
           )}
         />
       </PageContainer>
+
+      <ChecklistItemsDialog
+        open={viewDialogOpen}
+        onClose={() => {
+          setViewDialogOpen(false);
+          setViewDialogRow(null);
+        }}
+        row={viewDialogRow}
+      />
 
       <PestSheetModal
         open={modalOpen}

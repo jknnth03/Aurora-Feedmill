@@ -63,6 +63,19 @@ const userApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["Users"],
     }),
+
+    getQa: builder.query({
+      query: () => ({
+        url: "/api/dropdown/qa",
+      }),
+      providesTags: ["Users"],
+    }),
+    getCompanion: builder.query({
+      query: () => ({
+        url: "/api/dropdown/companions",
+      }),
+      providesTags: ["Users"],
+    }),
   }),
 });
 
@@ -75,4 +88,6 @@ export const {
   useGetEvaluatorsQuery,
   useGetApproversQuery,
   useGetAssessorsQuery,
+  useGetQaQuery,
+  useGetCompanionQuery,
 } = userApi;

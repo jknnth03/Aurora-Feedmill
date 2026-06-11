@@ -64,12 +64,18 @@ const COBSQuestionnaires = () => {
 
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetCobsQuestionnairesQuery({
-    status: currentStatus,
-    search: debouncedSearch || "COBS",
-    page,
-    per_page: rowsPerPage,
-  });
+  const { data, isFetching, error } = useGetCobsQuestionnairesQuery(
+    {
+      status: currentStatus,
+      search: debouncedSearch || "COBS",
+      page,
+      per_page: rowsPerPage,
+    },
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+    },
+  );
   const [archiveCobs, { isLoading: isArchiving }] = useArchiveCobsMutation();
 
   const is404 = error?.status === 404;

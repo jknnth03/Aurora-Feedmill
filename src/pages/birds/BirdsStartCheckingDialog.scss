@@ -1,0 +1,828 @@
+@use "../../styles/colors" as *;
+
+.birds-sc {
+  &__paper {
+    border-radius: 14px !important;
+    font-family: "Poppins", sans-serif;
+    background: $bg-main !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:hover {
+      scrollbar-width: thin;
+      scrollbar-color: $primary-main transparent;
+
+      &::-webkit-scrollbar {
+        display: block;
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    }
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 6px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: $bg-main;
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+    }
+  }
+
+  &__header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__header-icon {
+    font-size: 1.1rem !important;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close {
+    color: $text-muted !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__name-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.88);
+    }
+  }
+
+  &__info-strip {
+    display: flex;
+    overflow-x: auto;
+    background: rgba($primary-main, 0.03);
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    &--draft {
+      background: rgba($primary-main, 0.02);
+    }
+  }
+
+  &__info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 16px;
+    border-right: 1px solid $border-color;
+    flex-shrink: 0;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__info-label {
+    font-size: 0.63rem;
+    font-weight: 700;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &__info-value {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__content {
+    padding: 16px 20px 24px !important;
+    overflow-y: visible !important;
+  }
+
+  &__skeleton-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 0;
+  }
+
+  &__skeleton-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1.5px solid rgba(230, 100, 20, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 14px;
+    background: rgba(230, 100, 20, 0.02);
+  }
+
+  &__skeleton-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__skeleton-header-row {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(230, 100, 20, 0.1);
+  }
+
+  &__skeleton-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__skeleton-others-row {
+    display: flex;
+    gap: 14px;
+  }
+
+  &__section {
+    border: 1.5px solid $primary-main;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: visible;
+
+    [data-theme="dark"] & {
+      border-color: $secondary-main;
+    }
+
+    &--others {
+      overflow: hidden;
+    }
+  }
+
+  &__section-header {
+    padding: 8px 12px;
+    background: $primary-main;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 0.4px;
+    border-radius: 8px 8px 0 0;
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__others-body {
+    display: flex;
+    gap: 20px;
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__others-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 200px;
+    max-width: 340px;
+  }
+
+  &__others-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &__table-scroll {
+    width: 100%;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: $primary-main;
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+
+  &__grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+  }
+
+  &__thead-row {
+    border-bottom: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &--sub {
+      .birds-sc__th {
+        border-top: 1px solid $border-color;
+
+        [data-theme="dark"] & {
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+      }
+    }
+  }
+
+  &__th {
+    padding: 9px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: $text-primary;
+    background: rgba($primary-main, 0.03);
+    text-align: center;
+    border-right: 1px solid $border-color;
+    white-space: nowrap;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &--area {
+      text-align: left;
+      min-width: 160px;
+      vertical-align: middle;
+    }
+
+    &--area-placeholder {
+      background: rgba($primary-main, 0.03);
+      border-right: 2px solid $border-color;
+      min-width: 160px;
+
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.02);
+      }
+    }
+
+    &--group {
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: $text-primary;
+      background: rgba($primary-main, 0.06);
+      border-right: 2px solid $border-color;
+      border-bottom: 1px solid $border-color;
+      padding: 8px 12px;
+
+      &:last-child {
+        border-right: none;
+      }
+
+      [data-theme="dark"] & {
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    &--col {
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: $text-primary;
+      background: rgba($primary-main, 0.03);
+      padding: 7px 10px;
+      border-right: 1px solid $border-color;
+      white-space: nowrap;
+      min-width: 70px;
+
+      &:last-child {
+        border-right: none;
+      }
+
+      [data-theme="dark"] & {
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    &--wide {
+      min-width: 180px;
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__tr {
+    border-bottom: 1px solid $border-color;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+
+    &:nth-child(odd) {
+      background: rgba($primary-main, 0.01);
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.01);
+      }
+    }
+  }
+
+  &__td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: $text-primary;
+    border-right: 1px solid $border-color;
+    vertical-align: middle;
+    text-align: center;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &--area-name {
+      text-align: left;
+      font-weight: 500;
+      font-family: "Poppins", sans-serif;
+      white-space: nowrap;
+      min-width: 160px;
+      border-right: 2px solid $border-color;
+
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    &--radio {
+      text-align: center;
+      padding: 6px 8px;
+    }
+
+    &--text {
+      text-align: left;
+      padding: 6px 10px;
+      min-width: 180px;
+    }
+
+    &--error {
+      background: rgba(#e53935, 0.04) !important;
+    }
+
+    &--disabled {
+      background: rgba(0, 0, 0, 0.02) !important;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.01) !important;
+      }
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.8);
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+  }
+
+  &__text-input {
+    width: 100%;
+    border: 1.5px solid $border-color;
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    background: $bg-main;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: $primary-main;
+    }
+
+    &::placeholder {
+      color: $text-muted;
+      opacity: 0.5;
+    }
+
+    &--error {
+      border-color: #e53935 !important;
+    }
+
+    &--date {
+      max-width: 200px;
+      cursor: pointer;
+    }
+
+    &--disabled {
+      background: rgba(0, 0, 0, 0.04) !important;
+      border-color: transparent !important;
+      color: $text-muted !important;
+      cursor: not-allowed;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.03) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
+      }
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+      color: rgba(255, 255, 255, 0.85);
+
+      &:focus {
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__dd-wrap {
+    position: relative;
+    border: 1.5px solid $border-color;
+    border-radius: 6px;
+    background: $bg-main;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    user-select: none;
+
+    &:hover {
+      border-color: $primary-main;
+    }
+
+    &--error {
+      border-color: #e53935 !important;
+    }
+
+    [data-theme="dark"] & {
+      background: $bg-main;
+      border-color: rgba(255, 255, 255, 0.12);
+
+      &:hover {
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__dd-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 6px 5px 8px;
+    min-height: 32px;
+    gap: 4px;
+  }
+
+  &__dd-value {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__dd-placeholder {
+    font-size: 0.78rem;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+    opacity: 0.6;
+  }
+
+  &__dd-arrow {
+    color: $text-muted;
+    font-size: 1.1rem !important;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__dd-dropdown {
+    border: 1.5px solid $border-color;
+    border-radius: 6px;
+    background: $bg-main;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: $bg-main;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  &__dd-option {
+    padding: 8px 10px;
+    font-size: 0.76rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+
+    &:hover {
+      background: rgba($primary-main, 0.06);
+    }
+
+    &--selected {
+      color: $primary-main;
+      font-weight: 600;
+
+      [data-theme="dark"] & {
+        color: $secondary-main;
+      }
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+  }
+
+  &__text-display {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__radio-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &--readonly {
+      cursor: default;
+      pointer-events: none;
+    }
+  }
+
+  &__radio-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+
+    &:checked + .birds-sc__radio-box {
+      background: $primary-main;
+      border-color: $primary-main;
+
+      &::after {
+        opacity: 0;
+      }
+
+      [data-theme="dark"] & {
+        background: $secondary-main;
+        border-color: $secondary-main;
+      }
+    }
+
+    &:disabled:checked + .birds-sc__radio-box {
+      background: #9e9e9e !important;
+      border-color: #9e9e9e !important;
+    }
+  }
+
+  &__radio-box {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    border: 1.5px solid #bdbdbd;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+    flex-shrink: 0;
+    position: relative;
+
+    &::after {
+      content: none;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  &__required {
+    color: #e53935;
+    margin-left: 2px;
+  }
+
+  &__inline-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.68rem;
+    font-family: "Poppins", sans-serif;
+    color: #e53935;
+    margin-top: 3px;
+    font-weight: 500;
+    line-height: 1.3;
+
+    &--block {
+      display: flex;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: rgba(#e53935, 0.06);
+      border: 1px solid rgba(#e53935, 0.2);
+    }
+  }
+
+  &__footer {
+    padding: 12px 20px !important;
+    border-top: 1px solid $border-color;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: $bg-main;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+      background: $bg-main;
+    }
+  }
+
+  &__footer-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  &__footer-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  &__error-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-family: "Poppins", sans-serif;
+    font-weight: 600;
+    color: #e53935;
+  }
+
+  &__btn-close {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    color: $text-muted !important;
+    text-transform: uppercase !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__btn-draft {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-color: $primary-main !important;
+    color: $primary-main !important;
+    border-radius: 8px !important;
+    text-transform: uppercase !important;
+    padding: 7px 20px !important;
+
+    &:hover {
+      background: rgba($primary-main, 0.04) !important;
+    }
+    &:disabled {
+      opacity: 0.5 !important;
+    }
+
+    [data-theme="dark"] & {
+      border-color: $secondary-main !important;
+      color: $secondary-main !important;
+    }
+  }
+
+  &__btn-submit {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    background-color: $primary-main !important;
+    border-radius: 8px !important;
+    padding: 7px 22px !important;
+    text-transform: uppercase !important;
+    box-shadow: none !important;
+    color: #fff !important;
+
+    &:hover {
+      filter: brightness(0.92);
+      box-shadow: none !important;
+    }
+    &:disabled {
+      opacity: 0.5 !important;
+    }
+
+    [data-theme="dark"] & {
+      background-color: $secondary-main !important;
+    }
+  }
+}

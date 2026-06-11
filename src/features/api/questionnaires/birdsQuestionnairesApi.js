@@ -1,54 +1,52 @@
 import { apiSlice } from "../../../app/apiSlice";
 
-const birdsApi = apiSlice.injectEndpoints({
+const birdsQuestionnairesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getBirds: builder.query({
+    getBirdsChecklists: builder.query({
       query: ({ status = 1, search = "", page = 1, per_page = 10 } = {}) => ({
-        url: "/api/surveys",
+        url: "/api/checklists",
         params: { status, search, page, per_page },
       }),
-      providesTags: ["Birds"],
+      providesTags: ["BirdsChecklists"],
     }),
 
-    getBirdById: builder.query({
-      query: (id) => ({
-        url: `/api/surveys/${id}`,
-      }),
-      providesTags: (result, error, id) => [{ type: "Birds", id }],
+    getBirdChecklistById: builder.query({
+      query: (id) => ({ url: `/api/checklists/${id}` }),
+      providesTags: (result, error, id) => [{ type: "BirdsChecklists", id }],
     }),
 
-    createBird: builder.mutation({
+    createBirdChecklist: builder.mutation({
       query: (body) => ({
-        url: "/api/surveys",
+        url: "/api/checklists",
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Birds"],
+      invalidatesTags: ["BirdsChecklists"],
     }),
 
-    updateBird: builder.mutation({
+    updateBirdChecklist: builder.mutation({
       query: ({ id, ...body }) => ({
-        url: `/api/surveys/${id}`,
+        url: `/api/checklists/${id}`,
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Birds"],
+      invalidatesTags: ["BirdsChecklists"],
     }),
 
-    archiveBird: builder.mutation({
+    archiveBirdChecklist: builder.mutation({
       query: (id) => ({
-        url: `/api/surveys/${id}`,
+        url: `/api/checklists/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Birds"],
+      invalidatesTags: ["BirdsChecklists"],
     }),
   }),
 });
 
 export const {
-  useGetBirdsQuery,
-  useGetBirdByIdQuery,
-  useCreateBirdMutation,
-  useUpdateBirdMutation,
-  useArchiveBirdMutation,
-} = birdsApi;
+  useGetBirdsChecklistsQuery,
+  useGetBirdChecklistByIdQuery,
+  useCreateBirdChecklistMutation,
+  useUpdateBirdChecklistMutation,
+  useArchiveBirdChecklistMutation,
+} = birdsQuestionnairesApi;

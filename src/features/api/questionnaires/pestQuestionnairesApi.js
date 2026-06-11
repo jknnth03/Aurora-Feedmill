@@ -42,6 +42,47 @@ const pestsSheetsApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["PestsSheets"],
     }),
+
+    getChecklists: builder.query({
+      query: ({ status = 1 } = {}) => ({
+        url: "/api/checklists",
+        params: { status, search: "pests" },
+      }),
+      providesTags: ["Checklists"],
+    }),
+
+    getChecklistById: builder.query({
+      query: (id) => ({
+        url: `/api/checklists/${id}`,
+      }),
+      providesTags: (result, error, id) => [{ type: "Checklists", id }],
+    }),
+
+    createChecklist: builder.mutation({
+      query: (body) => ({
+        url: "/api/checklists",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Checklists"],
+    }),
+
+    updateChecklist: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/api/checklists/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Checklists"],
+    }),
+
+    archiveChecklist: builder.mutation({
+      query: (id) => ({
+        url: `/api/checklists/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Checklists"],
+    }),
   }),
 });
 
@@ -51,4 +92,9 @@ export const {
   useCreatePestsSheetMutation,
   useUpdatePestsSheetMutation,
   useArchivePestsSheetMutation,
+  useGetChecklistsQuery,
+  useGetChecklistByIdQuery,
+  useCreateChecklistMutation,
+  useUpdateChecklistMutation,
+  useArchiveChecklistMutation,
 } = pestsSheetsApi;

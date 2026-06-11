@@ -5,6 +5,7 @@ import * as yup from "yup";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
 import CloseIcon from "@mui/icons-material/Close";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import EditIcon from "@mui/icons-material/Edit";
@@ -18,23 +19,48 @@ import {
   BackModalButton,
 } from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
-  useGetPestsSheetByIdQuery,
-  useCreatePestsSheetMutation,
-  useUpdatePestsSheetMutation,
+  useGetChecklistByIdQuery,
+  useCreateChecklistMutation,
+  useUpdateChecklistMutation,
 } from "../../../features/api/questionnaires/pestQuestionnairesApi";
 import { useGetInspectionAreasQuery } from "../../../features/api/masterlist/inspectionAreaApi";
 import { useGetPestsQuery } from "../../../features/api/masterlist/pestTypesApi";
 import "./PestSheetModal.scss";
 
+const OTHER_OBSERVATION_ITEMS = [
+  {
+    name: "Cleanliness/Sanitation",
+    sub_items: [
+      { name: "Clean", type: "Checkbox" },
+      { name: "Dirty", type: "Checkbox" },
+    ],
+  },
+  {
+    name: "Structural",
+    sub_items: [
+      { name: "Good", type: "Checkbox" },
+      { name: "Defects", type: "Checkbox" },
+    ],
+  },
+  {
+    name: "Proper Ventilation",
+    sub_items: [
+      { name: "Yes", type: "Checkbox" },
+      { name: "No", type: "Checkbox" },
+    ],
+  },
+];
+
 const schema = yup.object({
-  inspection_area_ids: yup
+  checklist_name: yup.string().required("Checklist name is required"),
+  inspection_area_names: yup
     .array()
-    .of(yup.number())
+    .of(yup.string())
     .min(1, "Select at least one inspection area")
     .required(),
-  pest_ids: yup
+  pest_names: yup
     .array()
-    .of(yup.number())
+    .of(yup.string())
     .min(1, "Select at least one pest")
     .required(),
 });
@@ -65,23 +91,23 @@ const MultiSelectField = ({
   isLoading = false,
   onFirstClick,
 }) => {
-  const toggle = (id) => {
+  const toggle = (name) => {
     if (disabled) return;
-    const next = value.includes(id)
-      ? value.filter((v) => v !== id)
-      : [...value, id];
+    const next = value.includes(name)
+      ? value.filter((v) => v !== name)
+      : [...value, name];
     onChange(next);
   };
 
   const allSelected =
-    options.length > 0 && options.every((o) => value.includes(o.id));
+    options.length > 0 && options.every((o) => value.includes(o.name));
 
   const handleSelectAll = (e) => {
     e.stopPropagation();
     if (allSelected) {
       onChange([]);
     } else {
-      onChange(options.map((o) => o.id));
+      onChange(options.map((o) => o.name));
     }
   };
 
@@ -117,7 +143,7 @@ const MultiSelectField = ({
             <p className="psm__multiselect-empty">Click to load options.</p>
           ) : (
             options.map((opt) => {
-              const selected = value.includes(opt.id);
+              const selected = value.includes(opt.name);
               return (
                 <button
                   key={opt.id}
@@ -126,7 +152,7 @@ const MultiSelectField = ({
                   className={`psm__option${selected ? " psm__option--selected" : ""}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggle(opt.id);
+                    toggle(opt.name);
                   }}>
                   <span className="psm__option-check">
                     {selected && <CheckIcon />}
@@ -156,8 +182,8 @@ const ViewChips = ({ label, items = [] }) => (
         {items.length === 0 ? (
           <p className="psm__multiselect-empty">None assigned.</p>
         ) : (
-          items.map((item) => (
-            <span key={item.id} className="psm__chip">
+          items.map((item, idx) => (
+            <span key={idx} className="psm__chip">
               {item.name}
             </span>
           ))
@@ -173,16 +199,16 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
   const [pestsTouched, setPestsTouched] = useState(false);
 
   const { data: sheetData, isFetching: sheetLoading } =
-    useGetPestsSheetByIdQuery(selectedId, {
+    useGetChecklistByIdQuery(selectedId, {
       skip: !selectedId || !open,
     });
 
   const selectedRow = sheetData?.data ?? null;
 
-  const [createPestsSheet, { isLoading: isCreating }] =
-    useCreatePestsSheetMutation();
-  const [updatePestsSheet, { isLoading: isUpdating }] =
-    useUpdatePestsSheetMutation();
+  const [createChecklist, { isLoading: isCreating }] =
+    useCreateChecklistMutation();
+  const [updateChecklist, { isLoading: isUpdating }] =
+    useUpdateChecklistMutation();
   const isLoading = isCreating || isUpdating;
 
   const { data: areasData, isFetching: areasLoading } =
@@ -205,7 +231,11 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { inspection_area_ids: [], pest_ids: [] },
+    defaultValues: {
+      checklist_name: "",
+      inspection_area_names: [],
+      pest_names: [],
+    },
   });
 
   useEffect(() => {
@@ -214,17 +244,26 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
       setAreasTouched(false);
       setPestsTouched(false);
       if (!selectedId) {
-        reset({ inspection_area_ids: [], pest_ids: [] });
+        reset({
+          checklist_name: "",
+          inspection_area_names: [],
+          pest_names: [],
+        });
       }
     }
   }, [open, selectedId, reset]);
 
   useEffect(() => {
     if (selectedRow) {
+      const inspectionAreasGroup = selectedRow.items?.find(
+        (i) => i.name === "Inspection Areas",
+      );
+      const pestGroup = selectedRow.items?.find((i) => i.name === "Pest");
       reset({
-        inspection_area_ids:
-          selectedRow.inspection_areas?.map((a) => a.id) ?? [],
-        pest_ids: selectedRow.pests?.map((p) => p.id) ?? [],
+        checklist_name: selectedRow.checklist_name ?? "",
+        inspection_area_names:
+          inspectionAreasGroup?.items?.map((i) => i.name) ?? [],
+        pest_names: pestGroup?.items?.map((i) => i.name) ?? [],
       });
     }
   }, [selectedRow, reset]);
@@ -237,18 +276,32 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
 
   const onSubmit = async (form) => {
     const payload = {
-      inspection_area_id: form.inspection_area_ids,
-      pest_id: form.pest_ids,
+      checklist_name: form.checklist_name,
+      section_id: 2,
+      items: [
+        {
+          name: "Inspection Areas",
+          items: form.inspection_area_names.map((name) => ({ name })),
+        },
+        {
+          name: "Pest",
+          items: form.pest_names.map((name) => ({ name })),
+        },
+        {
+          name: "Other Observation",
+          items: OTHER_OBSERVATION_ITEMS,
+        },
+      ],
     };
     try {
       if (mode === "edit") {
-        await updatePestsSheet({ id: selectedId, ...payload }).unwrap();
+        await updateChecklist({ id: selectedId, ...payload }).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Pest questionnaire updated successfully.",
           { variant: "success" },
         );
       } else {
-        await createPestsSheet(payload).unwrap();
+        await createChecklist(payload).unwrap();
         window.__snackbar__?.enqueueSnackbar(
           "Pest questionnaire created successfully.",
           { variant: "success" },
@@ -278,6 +331,11 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
 
   const isView = mode === "view";
 
+  const viewInspectionAreas =
+    selectedRow?.items?.find((i) => i.name === "Inspection Areas")?.items ?? [];
+  const viewPests =
+    selectedRow?.items?.find((i) => i.name === "Pest")?.items ?? [];
+
   return (
     <Dialog
       open={open}
@@ -306,12 +364,22 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
           <>
             <div className="psm__group">
               <p className="psm__group-label">Pest Questionnaire Details</p>
-              <div className="psm__fields-row">
-                <ViewChips
-                  label="Inspection Areas"
-                  items={selectedRow?.inspection_areas ?? []}
-                />
-                <ViewChips label="Pests" items={selectedRow?.pests ?? []} />
+              <div className="psm__fields-col">
+                <div className="psm__field">
+                  <div className="psm__multiselect psm__multiselect--disabled">
+                    <label className="psm__label">Checklist Name</label>
+                    <p className="psm__view-text">
+                      {selectedRow?.checklist_name || "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="psm__fields-row">
+                  <ViewChips
+                    label="Inspection Areas"
+                    items={viewInspectionAreas}
+                  />
+                  <ViewChips label="Pests" items={viewPests} />
+                </div>
               </div>
             </div>
             <div className="psm__footer">
@@ -322,37 +390,54 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="psm__group">
               <p className="psm__group-label">Pest Questionnaire Details</p>
-              <div className="psm__fields-row">
+              <div className="psm__fields-col">
                 <Controller
-                  name="inspection_area_ids"
+                  name="checklist_name"
                   control={control}
                   render={({ field }) => (
-                    <MultiSelectField
-                      label="Inspection Areas"
-                      options={inspectionAreas}
-                      value={field.value}
-                      onChange={field.onChange}
-                      error={errors.inspection_area_ids?.message}
-                      isLoading={areasLoading}
-                      onFirstClick={() => setAreasTouched(true)}
+                    <TextField
+                      {...field}
+                      label="Checklist Name"
+                      fullWidth
+                      size="small"
+                      error={!!errors.checklist_name}
+                      helperText={errors.checklist_name?.message}
+                      className="psm__textfield"
                     />
                   )}
                 />
-                <Controller
-                  name="pest_ids"
-                  control={control}
-                  render={({ field }) => (
-                    <MultiSelectField
-                      label="Pests"
-                      options={pests}
-                      value={field.value}
-                      onChange={field.onChange}
-                      error={errors.pest_ids?.message}
-                      isLoading={pestsLoading}
-                      onFirstClick={() => setPestsTouched(true)}
-                    />
-                  )}
-                />
+                <div className="psm__fields-row">
+                  <Controller
+                    name="inspection_area_names"
+                    control={control}
+                    render={({ field }) => (
+                      <MultiSelectField
+                        label="Inspection Areas"
+                        options={inspectionAreas}
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={errors.inspection_area_names?.message}
+                        isLoading={areasLoading}
+                        onFirstClick={() => setAreasTouched(true)}
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="pest_names"
+                    control={control}
+                    render={({ field }) => (
+                      <MultiSelectField
+                        label="Pests"
+                        options={pests}
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={errors.pest_names?.message}
+                        isLoading={pestsLoading}
+                        onFirstClick={() => setPestsTouched(true)}
+                      />
+                    )}
+                  />
+                </div>
               </div>
             </div>
 

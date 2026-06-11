@@ -16,7 +16,6 @@
     color: $text-primary;
     padding: 2px 0;
 
-    // bullet prefix
     &::before {
       content: "";
       display: inline-block;
@@ -32,5 +31,84 @@
     [data-theme="dark"] & {
       color: rgba(255, 255, 255, 0.8);
     }
+  }
+
+  &__eye-btn {
+    color: $primary-main !important;
+
+    &:hover {
+      background: rgba($primary-main, 0.08) !important;
+    }
+  }
+
+  &__eye-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__dialog-paper {
+    border-radius: 12px !important;
+    overflow: hidden;
+  }
+
+  &__dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: $primary-main;
+    color: #fff;
+
+    .MuiIconButton-root {
+      color: #fff;
+    }
+  }
+
+  &__dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  &__dialog-icon {
+    font-size: 1.2rem !important;
+  }
+
+  &__dialog-content {
+    padding: 20px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__dialog-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__dialog-group-label {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $primary-main;
+    margin: 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba($primary-main, 0.15);
+  }
+
+  &__dialog-empty {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    color: $text-secondary;
+    margin: 0;
+    font-style: italic;
   }
 }
