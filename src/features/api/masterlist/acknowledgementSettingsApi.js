@@ -31,6 +31,18 @@ const acknowledgementSettingsApi = apiSlice.injectEndpoints({
       invalidatesTags: ["AcknowledgementSettings"],
     }),
 
+    updateAcknowledgementSetting: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/api/acknowledgement-settings/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        "AcknowledgementSettings",
+        { type: "AcknowledgementSettings", id },
+      ],
+    }),
+
     changeAcknowledgementSettingStatus: builder.mutation({
       query: (id) => ({
         url: `/api/acknowledgement-settings/${id}`,
@@ -45,5 +57,6 @@ export const {
   useGetAcknowledgementSettingsQuery,
   useGetAcknowledgementSettingQuery,
   useStoreAcknowledgementSettingMutation,
+  useUpdateAcknowledgementSettingMutation,
   useChangeAcknowledgementSettingStatusMutation,
 } = acknowledgementSettingsApi;

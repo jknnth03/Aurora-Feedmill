@@ -29,8 +29,10 @@ import SaveIcon from "@mui/icons-material/Save";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   useStoreAcknowledgementSettingMutation,
+  useUpdateAcknowledgementSettingMutation,
   useGetAcknowledgementSettingQuery,
 } from "../../../features/api/masterlist/acknowledgementSettingsApi";
 import { useGetUsersQuery } from "../../../features/api/usermanagement/userApi";
@@ -113,6 +115,8 @@ const AcknowledgementSettingsModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditMode = !!setting?.id;
+  const isView = mode === "view";
+  const isEdit = mode === "edit";
 
   const { data: settingDetail, isFetching: isFetchingDetail } =
     useGetAcknowledgementSettingQuery(setting?.id, {
@@ -120,15 +124,20 @@ const AcknowledgementSettingsModal = ({
     });
 
   const { data: sectionsData, isFetching: isLoadingSections } =
-    useGetSectionsQuery(undefined, { skip: !open || isEditMode });
+    useGetSectionsQuery(undefined, { skip: !open || (!isEdit && isEditMode) });
 
   const { data: usersData, isFetching: isLoadingUsers } = useGetUsersQuery(
     undefined,
-    { skip: !open || isEditMode },
+    { skip: !open || (!isEdit && isEditMode) },
   );
 
-  const [storeSetting, { isLoading }] =
+  const [storeSetting, { isLoading: isStoring }] =
     useStoreAcknowledgementSettingMutation();
+
+  const [updateSetting, { isLoading: isUpdating }] =
+    useUpdateAcknowledgementSettingMutation();
+
+  const isLoading = isStoring || isUpdating;
 
   const normalizeUsers = (data) =>
     (data?.data ?? data ?? []).map((u) => ({
@@ -149,6 +158,20 @@ const AcknowledgementSettingsModal = ({
   const detailSectionName =
     (settingDetail?.data ?? settingDetail)?.section?.name?.toUpperCase() ?? "";
   const isDetailPests = detailSectionName === "PESTS";
+
+  const populateFormFromDetail = (detail) => {
+    setName(detail?.name ?? "");
+    setSectionId(detail?.section?.id ? String(detail.section.id) : "");
+    setApproverId(detail?.approver?.id ? String(detail.approver.id) : "");
+    setEvaluatorId(detail?.user?.id ? String(detail.user.id) : "");
+    setHierarchy(
+      Array.isArray(detail?.hierarchy)
+        ? detail.hierarchy.map((item) =>
+            typeof item === "object" ? String(item.id) : String(item),
+          )
+        : [],
+    );
+  };
 
   useEffect(() => {
     if (!open) {
@@ -176,7 +199,7 @@ const AcknowledgementSettingsModal = ({
   }, [open, isEditMode]);
 
   useEffect(() => {
-    if (sectionId) {
+    if (sectionId && mode === "add") {
       setApproverId("");
       setEvaluatorId("");
       setHierarchy([]);
@@ -186,21 +209,25 @@ const AcknowledgementSettingsModal = ({
   }, [sectionId]);
 
   useEffect(() => {
-    if (isEditMode && settingDetail) {
+    if (isEditMode && settingDetail && mode === "edit") {
       const detail = settingDetail?.data ?? settingDetail;
-      setName(detail?.name ?? "");
-      setSectionId(detail?.section?.id ? String(detail.section.id) : "");
-      setApproverId(detail?.approver?.id ? String(detail.approver.id) : "");
-      setEvaluatorId(detail?.user?.id ? String(detail.user.id) : "");
-      setHierarchy(
-        Array.isArray(detail?.hierarchy)
-          ? detail.hierarchy.map((item) =>
-              typeof item === "object" ? String(item.id) : String(item),
-            )
-          : [],
-      );
+      populateFormFromDetail(detail);
     }
-  }, [isEditMode, settingDetail]);
+  }, [isEditMode, settingDetail, mode]);
+
+  const handleEnterEdit = () => {
+    const detail = settingDetail?.data ?? settingDetail;
+    populateFormFromDetail(detail);
+    setErrors({});
+    setSelectedApprover("");
+    setMode("edit");
+  };
+
+  const handleCancelEdit = () => {
+    setErrors({});
+    setSelectedApprover("");
+    setMode("view");
+  };
 
   const validate = () => {
     const errs = {};
@@ -269,12 +296,14 @@ const AcknowledgementSettingsModal = ({
         payload.hierarchy = hierarchy.map(Number);
       }
 
-      await storeSetting(payload).unwrap();
-      onSuccess?.(
-        isEditMode
-          ? "Setting updated successfully."
-          : "Setting created successfully.",
-      );
+      if (mode === "edit") {
+        await updateSetting({ id: setting.id, ...payload }).unwrap();
+        onSuccess?.("Setting updated successfully.");
+        setMode("view");
+      } else {
+        await storeSetting(payload).unwrap();
+        onSuccess?.("Setting created successfully.");
+      }
     } catch {
       setErrors({ _submit: "Something went wrong. Please try again." });
     } finally {
@@ -288,13 +317,238 @@ const AcknowledgementSettingsModal = ({
   };
 
   const isBusy = isLoading || isSubmitting || isFetchingDetail;
-  const isView = mode === "view";
 
   const availableAcknowledgers = users.filter(
     (u) => !hierarchy.includes(String(u.id)),
   );
 
   const detail = settingDetail?.data ?? settingDetail;
+
+  const renderFormFields = () => (
+    <div className="acksm__form">
+      <div className="acksm__field">
+        <label className="acksm__label">
+          Name <RequiredStar />
+        </label>
+        <input
+          type="text"
+          className={`acksm__input${errors.name ? " acksm__input--error" : ""}`}
+          placeholder="Enter setting name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (e.target.value.trim()) clearFieldError("name");
+          }}
+          disabled={isBusy}
+        />
+        {errors.name && (
+          <span className="acksm__inline-error">
+            <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+            {errors.name}
+          </span>
+        )}
+      </div>
+
+      <div className="acksm__field">
+        <label className="acksm__label">
+          Section <RequiredStar />
+        </label>
+        <FormControl
+          fullWidth
+          size="small"
+          className={`acksm__select-control${errors.section_id ? " acksm__select-control--error" : ""}`}>
+          <Select
+            value={sectionId}
+            onChange={(e) => {
+              setSectionId(e.target.value);
+              if (e.target.value) clearFieldError("section_id");
+            }}
+            displayEmpty
+            disabled={isBusy || isLoadingSections}
+            className="acksm__select"
+            MenuProps={{
+              PaperProps: { className: "acksm__select-menu" },
+            }}>
+            <MenuItem value="" disabled>
+              {isLoadingSections ? "Loading..." : "Select section"}
+            </MenuItem>
+            {sections.map((s) => (
+              <MenuItem key={s.id} value={String(s.id)}>
+                {s.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {errors.section_id && (
+          <span className="acksm__inline-error">
+            <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+            {errors.section_id}
+          </span>
+        )}
+      </div>
+
+      {sectionId && isPests && (
+        <div className="acksm__field">
+          <label className="acksm__label">
+            Approver <RequiredStar />
+          </label>
+          <FormControl
+            fullWidth
+            size="small"
+            className={`acksm__select-control${errors.approver_id ? " acksm__select-control--error" : ""}`}>
+            <Select
+              value={approverId}
+              onChange={(e) => {
+                setApproverId(e.target.value);
+                if (e.target.value) clearFieldError("approver_id");
+              }}
+              displayEmpty
+              disabled={isBusy || isLoadingUsers}
+              className="acksm__select"
+              MenuProps={{
+                PaperProps: { className: "acksm__select-menu" },
+              }}>
+              <MenuItem value="" disabled>
+                {isLoadingUsers ? "Loading..." : "Select approver"}
+              </MenuItem>
+              {users.map((u) => (
+                <MenuItem key={u.id} value={String(u.id)}>
+                  {u.full_name || `User #${u.id}`}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {errors.approver_id && (
+            <span className="acksm__inline-error">
+              <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+              {errors.approver_id}
+            </span>
+          )}
+        </div>
+      )}
+
+      {sectionId && !isPests && (
+        <>
+          <div className="acksm__field">
+            <label className="acksm__label">
+              Evaluator <RequiredStar />
+            </label>
+            <FormControl
+              fullWidth
+              size="small"
+              className={`acksm__select-control${errors.evaluator_id ? " acksm__select-control--error" : ""}`}>
+              <Select
+                value={evaluatorId}
+                onChange={(e) => {
+                  setEvaluatorId(e.target.value);
+                  if (e.target.value) clearFieldError("evaluator_id");
+                }}
+                displayEmpty
+                disabled={isBusy || isLoadingUsers}
+                className="acksm__select"
+                MenuProps={{
+                  PaperProps: { className: "acksm__select-menu" },
+                }}>
+                <MenuItem value="" disabled>
+                  {isLoadingUsers ? "Loading..." : "Select evaluator"}
+                </MenuItem>
+                {users.map((u) => (
+                  <MenuItem key={u.id} value={String(u.id)}>
+                    {u.full_name || `User #${u.id}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {errors.evaluator_id && (
+              <span className="acksm__inline-error">
+                <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                {errors.evaluator_id}
+              </span>
+            )}
+          </div>
+
+          <div className="acksm__field">
+            <label className="acksm__label">
+              Acknowledger Sequence <RequiredStar />
+            </label>
+            <div className="acksm__approver-row">
+              <FormControl
+                fullWidth
+                size="small"
+                className={`acksm__select-control${errors.hierarchy ? " acksm__select-control--error" : ""}`}>
+                <Select
+                  value={selectedApprover}
+                  onChange={(e) => setSelectedApprover(e.target.value)}
+                  displayEmpty
+                  disabled={isBusy || isLoadingUsers}
+                  className="acksm__select"
+                  MenuProps={{
+                    PaperProps: { className: "acksm__select-menu" },
+                  }}>
+                  <MenuItem value="" disabled>
+                    {isLoadingUsers ? "Loading..." : "Select Acknowledger"}
+                  </MenuItem>
+                  {availableAcknowledgers.map((u) => (
+                    <MenuItem key={u.id} value={String(u.id)}>
+                      {u.full_name || `User #${u.id}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                variant="outlined"
+                className="acksm__add-approver-btn"
+                onClick={handleAddApprover}
+                disabled={!selectedApprover || isBusy}>
+                + ADD
+              </Button>
+            </div>
+            {errors.hierarchy && (
+              <span className="acksm__inline-error">
+                <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                {errors.hierarchy}
+              </span>
+            )}
+
+            {hierarchy.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}>
+                <SortableContext
+                  items={hierarchy}
+                  strategy={verticalListSortingStrategy}>
+                  <div className="acksm__hierarchy-list">
+                    {hierarchy.map((id, index) => {
+                      const user = users.find((u) => String(u.id) === id);
+                      return (
+                        <SortableItem
+                          key={id}
+                          id={id}
+                          index={index}
+                          name={user?.full_name}
+                          position={user?.position}
+                          onRemove={handleRemoveApprover}
+                          disabled={isBusy}
+                        />
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
+        </>
+      )}
+
+      {errors._submit && (
+        <span className="acksm__inline-error acksm__inline-error--block">
+          <ErrorOutlineIcon sx={{ fontSize: 13 }} />
+          {errors._submit}
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <Dialog
@@ -311,18 +565,34 @@ const AcknowledgementSettingsModal = ({
         <div className="acksm__header-title">
           {isView ? (
             <RemoveRedEyeIcon className="acksm__header-icon" />
+          ) : isEdit ? (
+            <EditIcon className="acksm__header-icon" />
           ) : (
             <SettingsIcon className="acksm__header-icon" />
           )}
-          <span>{isView ? "View Setting" : "Add Setting"}</span>
+          <span>
+            {isView ? "View Setting" : isEdit ? "Edit Setting" : "Add Setting"}
+          </span>
         </div>
-        <IconButton
-          size="small"
-          className="acksm__close"
-          onClick={handleClose}
-          disabled={isBusy}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
+        <div className="acksm__header-actions">
+          {isView && (
+            <IconButton
+              size="small"
+              className="acksm__edit-btn"
+              onClick={handleEnterEdit}
+              disabled={isBusy}
+              title="Edit">
+              <EditIcon fontSize="small" />
+            </IconButton>
+          )}
+          <IconButton
+            size="small"
+            className="acksm__close"
+            onClick={handleClose}
+            disabled={isBusy}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
       </div>
 
       <DialogContent className="acksm__content">
@@ -404,231 +674,7 @@ const AcknowledgementSettingsModal = ({
             )}
           </div>
         ) : (
-          <div className="acksm__form">
-            <div className="acksm__field">
-              <label className="acksm__label">
-                Name <RequiredStar />
-              </label>
-              <input
-                type="text"
-                className={`acksm__input${errors.name ? " acksm__input--error" : ""}`}
-                placeholder="Enter setting name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (e.target.value.trim()) clearFieldError("name");
-                }}
-                disabled={isBusy}
-              />
-              {errors.name && (
-                <span className="acksm__inline-error">
-                  <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                  {errors.name}
-                </span>
-              )}
-            </div>
-
-            <div className="acksm__field">
-              <label className="acksm__label">
-                Section <RequiredStar />
-              </label>
-              <FormControl
-                fullWidth
-                size="small"
-                className={`acksm__select-control${errors.section_id ? " acksm__select-control--error" : ""}`}>
-                <Select
-                  value={sectionId}
-                  onChange={(e) => {
-                    setSectionId(e.target.value);
-                    if (e.target.value) clearFieldError("section_id");
-                  }}
-                  displayEmpty
-                  disabled={isBusy || isLoadingSections}
-                  className="acksm__select"
-                  MenuProps={{
-                    PaperProps: { className: "acksm__select-menu" },
-                  }}>
-                  <MenuItem value="" disabled>
-                    {isLoadingSections ? "Loading..." : "Select section"}
-                  </MenuItem>
-                  {sections.map((s) => (
-                    <MenuItem key={s.id} value={String(s.id)}>
-                      {s.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {errors.section_id && (
-                <span className="acksm__inline-error">
-                  <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                  {errors.section_id}
-                </span>
-              )}
-            </div>
-
-            {sectionId && isPests && (
-              <div className="acksm__field">
-                <label className="acksm__label">
-                  Approver <RequiredStar />
-                </label>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  className={`acksm__select-control${errors.approver_id ? " acksm__select-control--error" : ""}`}>
-                  <Select
-                    value={approverId}
-                    onChange={(e) => {
-                      setApproverId(e.target.value);
-                      if (e.target.value) clearFieldError("approver_id");
-                    }}
-                    displayEmpty
-                    disabled={isBusy || isLoadingUsers}
-                    className="acksm__select"
-                    MenuProps={{
-                      PaperProps: { className: "acksm__select-menu" },
-                    }}>
-                    <MenuItem value="" disabled>
-                      {isLoadingUsers ? "Loading..." : "Select approver"}
-                    </MenuItem>
-                    {users.map((u) => (
-                      <MenuItem key={u.id} value={String(u.id)}>
-                        {u.full_name || `User #${u.id}`}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                {errors.approver_id && (
-                  <span className="acksm__inline-error">
-                    <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                    {errors.approver_id}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {sectionId && !isPests && (
-              <>
-                <div className="acksm__field">
-                  <label className="acksm__label">
-                    Evaluator <RequiredStar />
-                  </label>
-                  <FormControl
-                    fullWidth
-                    size="small"
-                    className={`acksm__select-control${errors.evaluator_id ? " acksm__select-control--error" : ""}`}>
-                    <Select
-                      value={evaluatorId}
-                      onChange={(e) => {
-                        setEvaluatorId(e.target.value);
-                        if (e.target.value) clearFieldError("evaluator_id");
-                      }}
-                      displayEmpty
-                      disabled={isBusy || isLoadingUsers}
-                      className="acksm__select"
-                      MenuProps={{
-                        PaperProps: { className: "acksm__select-menu" },
-                      }}>
-                      <MenuItem value="" disabled>
-                        {isLoadingUsers ? "Loading..." : "Select evaluator"}
-                      </MenuItem>
-                      {users.map((u) => (
-                        <MenuItem key={u.id} value={String(u.id)}>
-                          {u.full_name || `User #${u.id}`}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  {errors.evaluator_id && (
-                    <span className="acksm__inline-error">
-                      <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                      {errors.evaluator_id}
-                    </span>
-                  )}
-                </div>
-
-                <div className="acksm__field">
-                  <label className="acksm__label">
-                    Acknowledger Sequence <RequiredStar />
-                  </label>
-                  <div className="acksm__approver-row">
-                    <FormControl
-                      fullWidth
-                      size="small"
-                      className={`acksm__select-control${errors.hierarchy ? " acksm__select-control--error" : ""}`}>
-                      <Select
-                        value={selectedApprover}
-                        onChange={(e) => setSelectedApprover(e.target.value)}
-                        displayEmpty
-                        disabled={isBusy || isLoadingUsers}
-                        className="acksm__select"
-                        MenuProps={{
-                          PaperProps: { className: "acksm__select-menu" },
-                        }}>
-                        <MenuItem value="" disabled>
-                          {isLoadingUsers
-                            ? "Loading..."
-                            : "Select Acknowledger"}
-                        </MenuItem>
-                        {availableAcknowledgers.map((u) => (
-                          <MenuItem key={u.id} value={String(u.id)}>
-                            {u.full_name || `User #${u.id}`}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    <Button
-                      variant="outlined"
-                      className="acksm__add-approver-btn"
-                      onClick={handleAddApprover}
-                      disabled={!selectedApprover || isBusy}>
-                      + ADD
-                    </Button>
-                  </div>
-                  {errors.hierarchy && (
-                    <span className="acksm__inline-error">
-                      <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                      {errors.hierarchy}
-                    </span>
-                  )}
-
-                  {hierarchy.length > 0 && (
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}>
-                      <SortableContext
-                        items={hierarchy}
-                        strategy={verticalListSortingStrategy}>
-                        <div className="acksm__hierarchy-list">
-                          {hierarchy.map((id, index) => {
-                            const user = users.find((u) => String(u.id) === id);
-                            return (
-                              <SortableItem
-                                key={id}
-                                id={id}
-                                index={index}
-                                name={user?.full_name}
-                                position={user?.position}
-                                onRemove={handleRemoveApprover}
-                                disabled={isBusy}
-                              />
-                            );
-                          })}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  )}
-                </div>
-              </>
-            )}
-
-            {errors._submit && (
-              <span className="acksm__inline-error acksm__inline-error--block">
-                <ErrorOutlineIcon sx={{ fontSize: 13 }} />
-                {errors._submit}
-              </span>
-            )}
-          </div>
+          renderFormFields()
         )}
       </DialogContent>
 
@@ -640,6 +686,24 @@ const AcknowledgementSettingsModal = ({
             className="acksm__btn-close">
             CLOSE
           </Button>
+        ) : isEdit ? (
+          <>
+            <Button
+              variant="text"
+              onClick={handleCancelEdit}
+              disabled={isBusy}
+              className="acksm__btn-close">
+              CANCEL
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon sx={{ fontSize: 16 }} />}
+              onClick={handleSubmit}
+              disabled={isBusy}
+              className="acksm__btn-save">
+              {isBusy ? "Saving..." : "UPDATE"}
+            </Button>
+          </>
         ) : (
           <>
             <Button

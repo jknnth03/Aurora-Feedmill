@@ -558,4 +558,32 @@
     color: $text-muted;
     font-style: italic;
   }
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__edit-btn {
+    color: $primary-main !important;
+    transition:
+      color 0.15s,
+      background 0.15s !important;
+
+    &:hover {
+      background: rgba($primary-main, 0.08) !important;
+    }
+
+    &:disabled {
+      opacity: 0.3 !important;
+    }
+
+    [data-theme="dark"] & {
+      color: $secondary-main !important;
+
+      &:hover {
+        background: rgba($secondary-main, 0.08) !important;
+      }
+    }
+  }
 }
