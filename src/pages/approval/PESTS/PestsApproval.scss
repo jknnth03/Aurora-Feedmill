@@ -1,0 +1,33 @@
+@use "../../../styles/colors" as *;
+
+.pestsa {
+  &__approve-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: $text-muted;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      background 0.15s;
+
+    &:hover {
+      color: $status-success;
+      background: rgba($status-success, 0.08);
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.5);
+
+      &:hover {
+        color: $status-success;
+        background: rgba($status-success, 0.1);
+      }
+    }
+  }
+}

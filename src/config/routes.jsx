@@ -22,6 +22,8 @@ import StandaloneBirds from "../pages/birds/Birds.jsx";
 import StandaloneCOBS from "../pages/cobs/COBS.jsx";
 import StandalonePest from "../pages/pest/Pest.jsx";
 import COBSApproval from "../pages/approval/COBS/COBSApproval.jsx";
+import BirdsApproval from "../pages/approval/BIRDS/BirdsApproval.jsx";
+import PestsApproval from "../pages/approval/PESTS/PestsApproval.jsx";
 
 export const ROUTES = [
   {
@@ -185,6 +187,18 @@ export const ROUTES = [
         path: `${MODULES.APPROVAL.path}/${MODULES.APPROVAL.children.COBS.path}`,
         element: <COBSApproval />,
         handle: { permission: MODULES.APPROVAL.children.COBS.permissionId },
+      },
+      {
+        id: "APPROVAL.BIRDS",
+        path: `${MODULES.APPROVAL.path}/${MODULES.APPROVAL.children.BIRDS.path}`,
+        element: <BirdsApproval />,
+        handle: { permission: MODULES.APPROVAL.children.BIRDS.permissionId },
+      },
+      {
+        id: "APPROVAL.PESTS",
+        path: `${MODULES.APPROVAL.path}/${MODULES.APPROVAL.children.PESTS.path}`,
+        element: <PestsApproval />,
+        handle: { permission: MODULES.APPROVAL.children.PESTS.permissionId },
       },
     ],
   },
