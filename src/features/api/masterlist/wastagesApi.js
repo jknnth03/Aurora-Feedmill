@@ -4,7 +4,7 @@ const wastagesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getWastages: builder.query({
       query: ({ status = 1, search = "", page = 1, per_page = 10 } = {}) => ({
-        url: "/api/wastages",
+        url: "/api/dropdown/wastages",
         params: { status, search, page, per_page },
       }),
       providesTags: ["Wastages"],

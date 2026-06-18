@@ -1,42 +1,42 @@
 import { apiSlice } from "../../../app/apiSlice";
 
-const cobsApproval = apiSlice.injectEndpoints({
+const pestsApproval = apiSlice.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
-    getCobs: builder.query({
+    getPests: builder.query({
       query: ({ month, year, search = "" } = {}) => ({
         url: "/api/responses",
-        params: { month, year, search, section: "cobs" },
+        params: { month, year, search, section: "pests" },
       }),
-      providesTags: ["Cobs"],
+      providesTags: ["Pests"],
     }),
 
-    createCob: builder.mutation({
+    createPest: builder.mutation({
       query: (body) => ({
         url: "/api/responses",
         method: "POST",
-        body: { ...body, section: "cobs" },
+        body: { ...body, section: "pests" },
       }),
-      invalidatesTags: ["Cobs"],
+      invalidatesTags: ["Pests"],
     }),
 
-    getQuestionnaire: builder.query({
+    getPestsQuestionnaire: builder.query({
       query: (id = 1) => ({
         url: `/api/questionnaires/${id}`,
-        params: { section: "cobs" },
+        params: { section: "pests" },
       }),
-      providesTags: (result, error, id) => [{ type: "Cobs", id }],
+      providesTags: (result, error, id) => [{ type: "Pests", id }],
     }),
 
-    getApprovals: builder.query({
+    getPestsApprovals: builder.query({
       query: ({ month, year, search = "", status = "" } = {}) => ({
         url: "/api/approvals",
-        params: { month, year, search, status, section: "cobs" },
+        params: { month, year, search, status, section: "pests" },
       }),
-      providesTags: ["Approvals"],
+      providesTags: ["PestsApprovals"],
     }),
 
-    approveApproval: builder.mutation({
+    approvePestsApproval: builder.mutation({
       query: ({
         batch_no,
         approver_id,
@@ -47,7 +47,7 @@ const cobsApproval = apiSlice.injectEndpoints({
         const formData = new FormData();
         formData.append("batch_no", String(batch_no));
         formData.append("approver_id", String(approver_id));
-        formData.append("section", "cobs");
+        formData.append("section", "pests");
         if (assessor_id) {
           formData.append("assessor_id", String(assessor_id));
         }
@@ -67,15 +67,15 @@ const cobsApproval = apiSlice.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: ["Approvals"],
+      invalidatesTags: ["PestsApprovals"],
     }),
   }),
 });
 
 export const {
-  useGetCobsQuery,
-  useCreateCobMutation,
-  useGetQuestionnaireQuery,
-  useGetApprovalsQuery,
-  useApproveApprovalMutation,
-} = cobsApproval;
+  useGetPestsQuery,
+  useCreatePestMutation,
+  useGetPestsQuestionnaireQuery,
+  useGetPestsApprovalsQuery,
+  useApprovePestsApprovalMutation,
+} = pestsApproval;

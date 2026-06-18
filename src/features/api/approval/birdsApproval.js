@@ -1,42 +1,25 @@
 import { apiSlice } from "../../../app/apiSlice";
 
-const cobsApproval = apiSlice.injectEndpoints({
+const birdsApproval = apiSlice.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
-    getCobs: builder.query({
-      query: ({ month, year, search = "" } = {}) => ({
-        url: "/api/responses",
-        params: { month, year, search, section: "cobs" },
-      }),
-      providesTags: ["Cobs"],
-    }),
-
-    createCob: builder.mutation({
-      query: (body) => ({
-        url: "/api/responses",
-        method: "POST",
-        body: { ...body, section: "cobs" },
-      }),
-      invalidatesTags: ["Cobs"],
-    }),
-
-    getQuestionnaire: builder.query({
+    getBirdsQuestionnaire: builder.query({
       query: (id = 1) => ({
         url: `/api/questionnaires/${id}`,
-        params: { section: "cobs" },
+        params: { section: "birds" },
       }),
-      providesTags: (result, error, id) => [{ type: "Cobs", id }],
+      providesTags: (result, error, id) => [{ type: "Birds", id }],
     }),
 
-    getApprovals: builder.query({
+    getBirdsApprovals: builder.query({
       query: ({ month, year, search = "", status = "" } = {}) => ({
         url: "/api/approvals",
-        params: { month, year, search, status, section: "cobs" },
+        params: { month, year, search, status, section: "birds" },
       }),
-      providesTags: ["Approvals"],
+      providesTags: ["BirdsApprovals"],
     }),
 
-    approveApproval: builder.mutation({
+    approveBirdsApproval: builder.mutation({
       query: ({
         batch_no,
         approver_id,
@@ -47,7 +30,7 @@ const cobsApproval = apiSlice.injectEndpoints({
         const formData = new FormData();
         formData.append("batch_no", String(batch_no));
         formData.append("approver_id", String(approver_id));
-        formData.append("section", "cobs");
+        formData.append("section", "birds");
         if (assessor_id) {
           formData.append("assessor_id", String(assessor_id));
         }
@@ -67,15 +50,13 @@ const cobsApproval = apiSlice.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: ["Approvals"],
+      invalidatesTags: ["BirdsApprovals"],
     }),
   }),
 });
 
 export const {
-  useGetCobsQuery,
-  useCreateCobMutation,
-  useGetQuestionnaireQuery,
-  useGetApprovalsQuery,
-  useApproveApprovalMutation,
-} = cobsApproval;
+  useGetBirdsQuestionnaireQuery,
+  useGetBirdsApprovalsQuery,
+  useApproveBirdsApprovalMutation,
+} = birdsApproval;

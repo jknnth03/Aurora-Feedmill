@@ -222,6 +222,20 @@ export const MODULES = {
         path: "cobs",
         icon: <SanitizerIcon sx={iconStyles.child} />,
       },
+      BIRDS: {
+        name: "Birds",
+        permissionId: "APPROVAL.BIRDS",
+        displayName: "Birds",
+        path: "birds",
+        icon: <FlutterDashIcon sx={iconStyles.child} />,
+      },
+      PESTS: {
+        name: "Pest",
+        permissionId: "APPROVAL.PESTS",
+        displayName: "Pest",
+        path: "pests",
+        icon: <BugReportIcon sx={iconStyles.child} />,
+      },
     },
   },
 };
