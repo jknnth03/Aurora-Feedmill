@@ -57,7 +57,7 @@
     font-family: "Poppins", sans-serif;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--palette-primary);
+    color: $text-primary;
     white-space: nowrap;
     background: $primary-contrast;
 
@@ -67,6 +67,10 @@
     }
 
     &--actions {
+      text-align: center;
+    }
+
+    &--timeline {
       text-align: center;
     }
   }
@@ -124,6 +128,10 @@
     &--actions {
       text-align: center;
     }
+
+    &--timeline {
+      text-align: center;
+    }
   }
 
   &__dash {
@@ -153,7 +161,7 @@
   }
 
   &__icon-btn {
-    color: $text-muted !important;
+    color: var(--palette-primary) !important;
 
     &:hover {
       color: var(--palette-primary) !important;

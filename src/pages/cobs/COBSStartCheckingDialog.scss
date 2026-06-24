@@ -75,6 +75,36 @@
     }
   }
 
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  &__history {
+    color: $primary-main !important;
+    transition:
+      color 0.15s,
+      background 0.15s,
+      transform 0.15s !important;
+
+    &:hover {
+      color: $primary-dark !important;
+      background: rgba($primary-main, 0.08) !important;
+      transform: rotate(-18deg);
+    }
+
+    [data-theme="dark"] & {
+      color: $secondary-main !important;
+
+      &:hover {
+        color: $secondary-dark !important;
+        background: rgba($secondary-main, 0.1) !important;
+      }
+    }
+  }
+
   &__close {
     color: $text-muted !important;
     transition: color 0.15s !important;

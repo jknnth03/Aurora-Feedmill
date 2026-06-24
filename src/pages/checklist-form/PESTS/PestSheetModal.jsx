@@ -277,7 +277,7 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
   const onSubmit = async (form) => {
     const payload = {
       checklist_name: form.checklist_name,
-      section_id: 2,
+      section_id: 3,
       items: [
         {
           name: "Inspection Areas",

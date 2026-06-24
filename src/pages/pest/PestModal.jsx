@@ -5,19 +5,24 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Skeleton from "@mui/material/Skeleton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import EditIcon from "@mui/icons-material/Edit";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import {
   getChipBg,
   getChipTextColor,
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import PestStartCheckingDialog from "./PestStartCheckingDialog";
+import PestShowReportDialog from "./PestShowReportDialog";
+import PestAcknowledgementTimelineDialog from "./PestAcknowledgementTimelineDialog";
 import "./PestModal.scss";
 
 const MONTHS = [
@@ -90,6 +95,13 @@ const getDoneOn = (entries) => {
   });
 };
 
+const hasAcknowledgeableTimeline = (entries) => {
+  const hasEntries = Array.isArray(entries) && entries.length > 0;
+  if (!hasEntries) return false;
+  const statusLower = getWeekStatus(entries)?.toLowerCase();
+  return statusLower !== "pending" && statusLower !== "saved as draft";
+};
+
 const StatusChip = ({ status }) => {
   useChipColors();
   const chipId = STATUS_CHIP_MAP[status?.toLowerCase()] ?? null;
@@ -106,6 +118,27 @@ const StatusChip = ({ status }) => {
   );
 };
 
+const TimelineCell = ({ entries, period, onOpenTimeline }) => {
+  const latest = getLatestEntry(entries);
+  const canOpen = hasAcknowledgeableTimeline(entries);
+
+  if (!canOpen) return <span className="pest-cm__dash">—</span>;
+
+  return (
+    <Tooltip title="View acknowledgement timeline" placement="top">
+      <IconButton
+        size="small"
+        className="pest-cm__icon-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenTimeline?.({ period, batchEntry: latest });
+        }}>
+        <TimelineIcon sx={{ fontSize: 18 }} />
+      </IconButton>
+    </Tooltip>
+  );
+};
+
 const RowActionMenu = ({
   period,
   unitName,
@@ -117,6 +150,7 @@ const RowActionMenu = ({
   isPreviousPeriodDone,
   onStartChecking,
   onContinueChecking,
+  onShowReport,
   onShowChecklist,
 }) => {
   const [anchor, setAnchor] = useState(null);
@@ -158,6 +192,22 @@ const RowActionMenu = ({
         PaperProps={{ className: "pest-cm__menu-paper" }}>
         {isForAcknowledgement
           ? [
+              <MenuItem
+                key="report"
+                className="pest-cm__menu-item"
+                onClick={() => {
+                  close();
+                  onShowReport?.({
+                    period,
+                    unitName,
+                    unitId: resolvedUnitId,
+                    checklistId: resolvedChecklistId,
+                    batchEntry: latest,
+                  });
+                }}>
+                <AssessmentIcon className="pest-cm__menu-icon" />
+                Show Report
+              </MenuItem>,
               <MenuItem
                 key="checklist"
                 className="pest-cm__menu-item"
@@ -232,7 +282,9 @@ const PestModal = ({
 }) => {
   const [startCheckingData, setStartCheckingData] = useState(null);
   const [continueCheckingData, setContinueCheckingData] = useState(null);
+  const [showReportData, setShowReportData] = useState(null);
   const [showChecklistData, setShowChecklistData] = useState(null);
+  const [timelineData, setTimelineData] = useState(null);
 
   const monthLabel = MONTHS[(month ?? 1) - 1];
   const periodMap = unitData?.periods ?? {};
@@ -270,6 +322,7 @@ const PestModal = ({
                 <th className="pest-cm__th pest-cm__th--unit">Checklist</th>
                 <th className="pest-cm__th pest-cm__th--week">Period</th>
                 <th className="pest-cm__th pest-cm__th--doneon">Done On</th>
+                <th className="pest-cm__th pest-cm__th--timeline">Timeline</th>
                 <th className="pest-cm__th pest-cm__th--status">Status</th>
                 <th className="pest-cm__th pest-cm__th--actions">Actions</th>
               </tr>
@@ -278,7 +331,7 @@ const PestModal = ({
               {isFetching
                 ? Array.from({ length: 2 }).map((_, idx) => (
                     <tr key={idx} className="pest-cm__tr">
-                      {Array.from({ length: 5 }).map((_, i) => (
+                      {Array.from({ length: 6 }).map((_, i) => (
                         <td key={i} className="pest-cm__td">
                           <Skeleton variant="text" width="70%" height={20} />
                         </td>
@@ -296,6 +349,13 @@ const PestModal = ({
                         <td className="pest-cm__td">{period}</td>
                         <td className="pest-cm__td pest-cm__td--doneon">
                           {getDoneOn(entries)}
+                        </td>
+                        <td className="pest-cm__td pest-cm__td--timeline">
+                          <TimelineCell
+                            entries={entries}
+                            period={period}
+                            onOpenTimeline={setTimelineData}
+                          />
                         </td>
                         <td className="pest-cm__td">
                           <StatusChip status={getWeekStatus(entries)} />
@@ -378,6 +438,13 @@ const PestModal = ({
         year={year}
         viewMode
         batchEntry={showChecklistData?.batchEntry}
+      />
+
+      <PestAcknowledgementTimelineDialog
+        open={Boolean(timelineData)}
+        onClose={() => setTimelineData(null)}
+        batchEntry={timelineData?.batchEntry}
+        period={timelineData?.period}
       />
     </>
   );

@@ -186,7 +186,7 @@ const ViewChips = ({ label, items = [] }) => (
 
 const buildPayload = (form) => ({
   checklist_name: form.checklist_name,
-  section_id: 3,
+  section_id: 2,
   items: [
     {
       name: "Inspection Areas",

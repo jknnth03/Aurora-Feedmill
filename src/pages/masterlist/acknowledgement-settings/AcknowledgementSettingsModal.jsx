@@ -35,7 +35,12 @@ import {
   useUpdateAcknowledgementSettingMutation,
   useGetAcknowledgementSettingQuery,
 } from "../../../features/api/masterlist/acknowledgementSettingsApi";
-import { useGetUsersQuery } from "../../../features/api/usermanagement/userApi";
+import {
+  useGetEvaluatorsQuery,
+  useGetApproversQuery,
+  useGetQaQuery,
+  useGetQaHeadsQuery,
+} from "../../../features/api/usermanagement/userApi";
 import { useGetSectionsQuery } from "../../../features/api/masterlist/sectionsApi";
 import "./AcknowledgementSettingsModal.scss";
 
@@ -98,6 +103,13 @@ const ViewItem = ({ index, name, position }) => (
   </div>
 );
 
+const normalizeList = (data) =>
+  (data?.data ?? data ?? []).map((u) => ({
+    ...u,
+    full_name:
+      u.full_name || `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim(),
+  }));
+
 const AcknowledgementSettingsModal = ({
   open,
   onClose,
@@ -118,18 +130,66 @@ const AcknowledgementSettingsModal = ({
   const isView = mode === "view";
   const isEdit = mode === "edit";
 
+  const isAddOrEdit = mode === "add" || mode === "edit";
+
   const { data: settingDetail, isFetching: isFetchingDetail } =
     useGetAcknowledgementSettingQuery(setting?.id, {
       skip: !open || !isEditMode,
     });
 
   const { data: sectionsData, isFetching: isLoadingSections } =
-    useGetSectionsQuery(undefined, { skip: !open || (!isEdit && isEditMode) });
+    useGetSectionsQuery(undefined, { skip: !open || !isAddOrEdit });
 
-  const { data: usersData, isFetching: isLoadingUsers } = useGetUsersQuery(
-    undefined,
-    { skip: !open || (!isEdit && isEditMode) },
-  );
+  const sections = sectionsData?.data ?? sectionsData ?? [];
+
+  const selectedSection = sections.find((s) => String(s.id) === sectionId);
+  const selectedSectionName = selectedSection?.name?.toUpperCase() ?? "";
+  const isCOBS = selectedSectionName === "COBS";
+  const isBirds = selectedSectionName === "BIRDS";
+  const isPests = selectedSectionName === "PESTS";
+
+  const skipEvaluators = !open || !isAddOrEdit || (!isCOBS && !isBirds);
+  const skipApprovers = !open || !isAddOrEdit || !isCOBS;
+  const skipQa = !open || !isAddOrEdit || (!isBirds && !isPests);
+  const skipQaHeads = !open || !isAddOrEdit || (!isCOBS && !isBirds);
+
+  const { data: evaluatorsData, isFetching: isLoadingEvaluators } =
+    useGetEvaluatorsQuery(undefined, { skip: skipEvaluators });
+
+  const { data: approversData, isFetching: isLoadingApprovers } =
+    useGetApproversQuery(undefined, { skip: skipApprovers });
+
+  const { data: qaData, isFetching: isLoadingQa } = useGetQaQuery(undefined, {
+    skip: skipQa,
+  });
+
+  const { data: qaHeadsData, isFetching: isLoadingQaHeads } =
+    useGetQaHeadsQuery(undefined, { skip: skipQaHeads });
+
+  const evaluators = normalizeList(evaluatorsData);
+  const approvers = normalizeList(approversData);
+  const qa = normalizeList(qaData);
+  const qaHeads = normalizeList(qaHeadsData);
+
+  const dedupeById = (arr) =>
+    arr.filter(
+      (item, idx, self) => self.findIndex((u) => u.id === item.id) === idx,
+    );
+
+  const cobsAcknowledgers = dedupeById([...approvers, ...qaHeads]);
+  const birdsAcknowledgers = dedupeById([...qa, ...qaHeads]);
+  const acknowledgerOptions = isCOBS
+    ? cobsAcknowledgers
+    : isBirds
+      ? birdsAcknowledgers
+      : [];
+
+  const isLoadingAcknowledgers =
+    (isCOBS && (isLoadingApprovers || isLoadingQaHeads)) ||
+    (isBirds && (isLoadingQa || isLoadingQaHeads));
+
+  const isLoadingApproverField = isPests && isLoadingQa;
+  const pestApprovers = isPests ? qa : [];
 
   const [storeSetting, { isLoading: isStoring }] =
     useStoreAcknowledgementSettingMutation();
@@ -139,21 +199,7 @@ const AcknowledgementSettingsModal = ({
 
   const isLoading = isStoring || isUpdating;
 
-  const normalizeUsers = (data) =>
-    (data?.data ?? data ?? []).map((u) => ({
-      ...u,
-      full_name:
-        u.full_name || `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim(),
-    }));
-
-  const sections = sectionsData?.data ?? sectionsData ?? [];
-  const users = normalizeUsers(usersData);
-
   const sensors = useSensors(useSensor(PointerSensor));
-
-  const selectedSection = sections.find((s) => String(s.id) === sectionId);
-  const selectedSectionName = selectedSection?.name?.toUpperCase() ?? "";
-  const isPests = selectedSectionName === "PESTS";
 
   const detail = settingDetail?.data ?? settingDetail;
   const detailSectionName = detail?.sections?.name?.toUpperCase() ?? "";
@@ -317,7 +363,7 @@ const AcknowledgementSettingsModal = ({
 
   const isBusy = isLoading || isSubmitting || isFetchingDetail;
 
-  const availableAcknowledgers = users.filter(
+  const availableAcknowledgers = acknowledgerOptions.filter(
     (u) => !hierarchy.includes(String(u.id)),
   );
 
@@ -400,15 +446,15 @@ const AcknowledgementSettingsModal = ({
                 if (e.target.value) clearFieldError("approver_id");
               }}
               displayEmpty
-              disabled={isBusy || isLoadingUsers}
+              disabled={isBusy || isLoadingApproverField}
               className="acksm__select"
               MenuProps={{
                 PaperProps: { className: "acksm__select-menu" },
               }}>
               <MenuItem value="" disabled>
-                {isLoadingUsers ? "Loading..." : "Select approver"}
+                {isLoadingApproverField ? "Loading..." : "Select approver"}
               </MenuItem>
-              {users.map((u) => (
+              {pestApprovers.map((u) => (
                 <MenuItem key={u.id} value={String(u.id)}>
                   {u.full_name || `User #${u.id}`}
                 </MenuItem>
@@ -424,7 +470,7 @@ const AcknowledgementSettingsModal = ({
         </div>
       )}
 
-      {sectionId && !isPests && (
+      {sectionId && (isCOBS || isBirds) && (
         <>
           <div className="acksm__field">
             <label className="acksm__label">
@@ -441,15 +487,15 @@ const AcknowledgementSettingsModal = ({
                   if (e.target.value) clearFieldError("evaluator_id");
                 }}
                 displayEmpty
-                disabled={isBusy || isLoadingUsers}
+                disabled={isBusy || isLoadingEvaluators}
                 className="acksm__select"
                 MenuProps={{
                   PaperProps: { className: "acksm__select-menu" },
                 }}>
                 <MenuItem value="" disabled>
-                  {isLoadingUsers ? "Loading..." : "Select evaluator"}
+                  {isLoadingEvaluators ? "Loading..." : "Select evaluator"}
                 </MenuItem>
-                {users.map((u) => (
+                {evaluators.map((u) => (
                   <MenuItem key={u.id} value={String(u.id)}>
                     {u.full_name || `User #${u.id}`}
                   </MenuItem>
@@ -477,13 +523,15 @@ const AcknowledgementSettingsModal = ({
                   value={selectedApprover}
                   onChange={(e) => setSelectedApprover(e.target.value)}
                   displayEmpty
-                  disabled={isBusy || isLoadingUsers}
+                  disabled={isBusy || isLoadingAcknowledgers}
                   className="acksm__select"
                   MenuProps={{
                     PaperProps: { className: "acksm__select-menu" },
                   }}>
                   <MenuItem value="" disabled>
-                    {isLoadingUsers ? "Loading..." : "Select Acknowledger"}
+                    {isLoadingAcknowledgers
+                      ? "Loading..."
+                      : "Select Acknowledger"}
                   </MenuItem>
                   {availableAcknowledgers.map((u) => (
                     <MenuItem key={u.id} value={String(u.id)}>
@@ -517,7 +565,9 @@ const AcknowledgementSettingsModal = ({
                   strategy={verticalListSortingStrategy}>
                   <div className="acksm__hierarchy-list">
                     {hierarchy.map((id, index) => {
-                      const user = users.find((u) => String(u.id) === id);
+                      const user = acknowledgerOptions.find(
+                        (u) => String(u.id) === id,
+                      );
                       return (
                         <SortableItem
                           key={id}

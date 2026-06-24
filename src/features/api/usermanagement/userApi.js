@@ -70,9 +70,31 @@ const userApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["Users"],
     }),
+
+    getQaHeads: builder.query({
+      query: () => ({
+        url: "/api/dropdown/qa-head",
+      }),
+      providesTags: ["Users"],
+    }),
+
     getCompanion: builder.query({
       query: () => ({
         url: "/api/dropdown/companions",
+      }),
+      providesTags: ["Users"],
+    }),
+
+    getQualityCheckers: builder.query({
+      query: () => ({
+        url: "/api/dropdown/qc",
+      }),
+      providesTags: ["Users"],
+    }),
+
+    getUnitRepresentatives: builder.query({
+      query: () => ({
+        url: "/api/dropdown/unit-representative",
       }),
       providesTags: ["Users"],
     }),
@@ -89,5 +111,8 @@ export const {
   useGetApproversQuery,
   useGetAssessorsQuery,
   useGetQaQuery,
+  useGetQaHeadsQuery,
   useGetCompanionQuery,
+  useGetQualityCheckersQuery,
+  useGetUnitRepresentativesQuery,
 } = userApi;

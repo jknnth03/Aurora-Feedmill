@@ -1,0 +1,325 @@
+@use "../../styles/colors" as *;
+
+.pest-tl {
+  &__paper {
+    border-radius: 14px !important;
+    font-family: "Poppins", sans-serif;
+    background: $bg-paper !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:hover {
+      scrollbar-width: thin;
+      scrollbar-color: $primary-main transparent;
+
+      &::-webkit-scrollbar {
+        display: block;
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    }
+
+    [data-theme="dark"] & {
+      background: $bg-paper !important;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: $bg-paper;
+    border: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+
+    [data-theme="dark"] & {
+      background: $bg-paper;
+    }
+  }
+
+  &__header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 0.3px;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__header-bar {
+    width: 4px;
+    height: 18px;
+    border-radius: 3px;
+    background: $primary-main;
+    flex-shrink: 0;
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__header-icon {
+    font-size: 1.15rem !important;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close {
+    color: $text-muted !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__info-row {
+    display: flex;
+    gap: 28px;
+    padding: 0 20px 16px;
+    flex-wrap: wrap;
+  }
+
+  &__info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 120px;
+  }
+
+  &__info-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__info-value {
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__content {
+    padding: 20px !important;
+    border: none !important;
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__step {
+    display: flex;
+    gap: 14px;
+    position: relative;
+  }
+
+  &__step-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__step-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 1;
+    color: #fff;
+
+    svg {
+      font-size: 16px !important;
+    }
+
+    &--done {
+      background: $status-success-light;
+    }
+
+    &--pending {
+      background: $status-warning-light;
+    }
+
+    &--upcoming {
+      background: $neutral-400;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+
+  &__step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    margin-top: 2px;
+
+    &--done {
+      background: $status-success-light;
+    }
+
+    &--pending {
+      background: $status-warning-light;
+    }
+
+    &--upcoming {
+      background: $neutral-300;
+
+      [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  &__card {
+    flex: 1;
+    border: 1px solid $border-color;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    background: $bg-paper;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.015);
+    }
+  }
+
+  &__card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__card-status {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    font-family: "Poppins", sans-serif;
+
+    &--done {
+      color: $status-success;
+
+      [data-theme="dark"] & {
+        color: $status-success-light;
+      }
+    }
+
+    &--pending {
+      color: $status-warning;
+
+      [data-theme="dark"] & {
+        color: $status-warning-light;
+      }
+    }
+
+    &--upcoming {
+      color: $text-muted;
+    }
+  }
+
+  &__card-date {
+    font-size: 0.74rem;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+  }
+
+  &__card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    text-align: right;
+  }
+
+  &__card-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.88);
+    }
+  }
+
+  &__card-role {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 0;
+    color: $text-muted;
+    font-size: 0.82rem;
+    font-family: "Poppins", sans-serif;
+    text-align: center;
+  }
+
+  &__skeleton-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 4px 0;
+  }
+}

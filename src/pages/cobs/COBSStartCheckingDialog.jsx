@@ -13,11 +13,13 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import {
   useGetQuestionnaireQuery,
   useCreateCobMutation,
 } from "../../features/api/cobs/cobsApi";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
+import COBSAcknowledgementTimelineDialog from "./COBSAcknowledgementTimelineDialog";
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./COBSStartCheckingDialog.scss";
 
@@ -208,6 +210,7 @@ const COBSStartCheckingDialog = ({
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   const [previewState, setPreviewState] = useState({
     open: false,
     images: [],
@@ -507,12 +510,24 @@ const COBSStartCheckingDialog = ({
           <span className="cobs-sc__name-value">
             {unitName} — {week} ({month}/{year})
           </span>
-          <IconButton
-            size="small"
-            className="cobs-sc__close"
-            onClick={handleClose}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
+          <div className="cobs-sc__header-actions">
+            {(viewMode || continueMode) && batchEntry && (
+              <Tooltip title="View acknowledge timeline" placement="top">
+                <IconButton
+                  size="small"
+                  className="cobs-sc__history"
+                  onClick={() => setTimelineOpen(true)}>
+                  <TimelineIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            <IconButton
+              size="small"
+              className="cobs-sc__close"
+              onClick={handleClose}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </div>
         </div>
 
         {viewMode && batchEntry && !isFetching && (
@@ -1120,9 +1135,7 @@ const COBSStartCheckingDialog = ({
                       className={`cobs-sc__others-textarea${viewMode ? " cobs-sc__others-textarea--readonly" : ""}${errors.remarks ? " cobs-sc__others-textarea--error" : ""}`}
                       placeholder={viewMode ? "—" : "Enter remarks"}
                       value={
-                        viewMode
-                          ? (batchEntry?.other_remarks ?? "")
-                          : othersRemarks
+                        viewMode ? (batchEntry?.remarks ?? "") : othersRemarks
                       }
                       onChange={
                         viewMode
@@ -1208,6 +1221,14 @@ const COBSStartCheckingDialog = ({
         onClose={closePreview}
         images={previewState.images}
         initialIndex={previewState.index}
+      />
+
+      <COBSAcknowledgementTimelineDialog
+        open={timelineOpen}
+        onClose={() => setTimelineOpen(false)}
+        batchEntry={batchEntry}
+        week={week}
+        isFetching={false}
       />
 
       <ConfirmDialog

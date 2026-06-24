@@ -24,6 +24,7 @@ import "./AcknowledgementSettings.scss";
 
 const COLUMNS = [
   { key: "id", label: "ID", sortable: true },
+  { key: "section", label: "Section", sortable: false },
   { key: "name", label: "Name", sortable: true },
   { key: "evaluator", label: "Evaluator", sortable: false },
   {
@@ -164,6 +165,7 @@ const AcknowledgementSettings = () => {
     if (isPests) {
       return {
         ...row,
+        section: row.sections?.name ?? "—",
         evaluator: "—",
         first_to_acknowledge: row.user?.name ?? "—",
         last_to_acknowledge: "—",
@@ -176,6 +178,7 @@ const AcknowledgementSettings = () => {
 
     return {
       ...row,
+      section: row.sections?.name ?? "—",
       evaluator: row.user?.name ?? "—",
       first_to_acknowledge: first?.name ?? "—",
       last_to_acknowledge: isSame ? "—" : (last?.name ?? "—"),
