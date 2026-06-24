@@ -17,7 +17,8 @@ import {
 import { validateForm } from "./BirdsStartCheckingDialogValidation";
 import "./BirdsStartCheckingDialog.scss";
 import { useGetWastagesQuery } from "../../features/api/masterlist/wastagesApi";
-import { useGetCompanionQuery } from "../../features/api/usermanagement/userApi";
+import { useGetEvaluatorsQuery } from "../../features/api/usermanagement/userApi";
+import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 
 const formatDateTime = (raw) => {
   if (!raw) return "—";
@@ -39,6 +40,41 @@ const getTodayString = () => {
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+};
+
+const toDateString = (y, m, d) => {
+  const mm = String(m).padStart(2, "0");
+  const dd = String(d).padStart(2, "0");
+  return `${y}-${mm}-${dd}`;
+};
+
+const getPeriodNumber = (periodLabel) => {
+  if (!periodLabel) return null;
+  const match = String(periodLabel).match(/\d+/);
+  return match ? parseInt(match[0], 10) : null;
+};
+
+const getPeriodDateRange = (periodLabel, month, year) => {
+  const periodNum = getPeriodNumber(periodLabel);
+  if (!periodNum || !month || !year) return { min: null, max: null };
+
+  const lastDayOfMonth = new Date(year, month, 0).getDate();
+  const rangeStart = (periodNum - 1) * 7 + 1;
+  const rangeEnd = Math.min(periodNum * 7, lastDayOfMonth);
+
+  if (rangeStart > lastDayOfMonth) return { min: null, max: null };
+
+  return {
+    min: toDateString(year, month, rangeStart),
+    max: toDateString(year, month, rangeEnd),
+  };
+};
+
+const clampDateToRange = (dateStr, min, max) => {
+  if (!dateStr) return min ?? getTodayString();
+  if (min && dateStr < min) return min;
+  if (max && dateStr > max) return max;
+  return dateStr;
 };
 
 const isLowLevel = (level) =>
@@ -77,6 +113,16 @@ const buildDraftState = (questionnaireData, responses = []) => {
   return { infestationLevel, treatmentDose, entryPoints, wastageSelection };
 };
 
+const getResponseCompanion = (responses = []) => {
+  for (const r of responses) {
+    const raw = r?.response ?? r;
+    if (raw?.others_companion != null && raw.others_companion !== "")
+      return raw.others_companion;
+    if (raw?.companion != null && raw.companion !== "") return raw.companion;
+  }
+  return "";
+};
+
 const skeletonSx = {
   bgcolor: "rgba(230, 100, 20, 0.10)",
   borderRadius: "6px",
@@ -84,6 +130,15 @@ const skeletonSx = {
     background:
       "linear-gradient(90deg, transparent, rgba(230, 100, 20, 0.07), transparent)",
   },
+};
+
+const getLevelColorClass = (levelName) => {
+  if (!levelName) return "";
+  const lower = levelName.toLowerCase();
+  if (lower === "low") return "birds-sc__radio-box--low";
+  if (lower === "average") return "birds-sc__radio-box--average";
+  if (lower === "moderate") return "birds-sc__radio-box--moderate";
+  return "";
 };
 
 const WastageDropdown = ({ value, options, onChange, hasError }) => {
@@ -273,6 +328,7 @@ const BirdsStartCheckingDialog = ({
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const firstErrorRef = useRef(null);
 
@@ -283,7 +339,7 @@ const BirdsStartCheckingDialog = ({
   const { data: wastagesData } = useGetWastagesQuery(undefined, {
     skip: !open,
   });
-  const { data: usersData } = useGetCompanionQuery(undefined, {
+  const { data: usersData } = useGetEvaluatorsQuery(undefined, {
     skip: !open,
   });
   const [createBird, { isLoading }] = useCreateBirdMutation();
@@ -306,6 +362,8 @@ const BirdsStartCheckingDialog = ({
 
   const errorCount = Object.keys(errors).length;
 
+  const periodDateRange = getPeriodDateRange(period, month, year);
+
   useEffect(() => {
     if (viewMode) return;
     if (!open) return;
@@ -324,7 +382,13 @@ const BirdsStartCheckingDialog = ({
       setTreatmentDose(draft.treatmentDose);
       setEntryPoints(draft.entryPoints);
       setWastageSelection(draft.wastageSelection);
-      setOthersDate(batchEntry.start_at ?? getTodayString());
+      setOthersDate(
+        clampDateToRange(
+          batchEntry.start_at ?? getTodayString(),
+          periodDateRange.min,
+          periodDateRange.max,
+        ),
+      );
       setOthersCompanion(batchEntry.others_companion ?? "");
     } else if (!continueMode) {
       const initWastage = {};
@@ -335,7 +399,13 @@ const BirdsStartCheckingDialog = ({
       setTreatmentDose({});
       setEntryPoints({});
       setWastageSelection(initWastage);
-      setOthersDate(getTodayString());
+      setOthersDate(
+        clampDateToRange(
+          getTodayString(),
+          periodDateRange.min,
+          periodDateRange.max,
+        ),
+      );
       setOthersCompanion("");
     }
   }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
@@ -386,6 +456,12 @@ const BirdsStartCheckingDialog = ({
   const handleWastageChange = (areaName, value) => {
     setWastageSelection((prev) => ({ ...prev, [areaName]: value }));
     clearFieldError(`wastage__${areaName}`);
+  };
+
+  const handleOthersDateChange = (value) => {
+    setOthersDate(
+      clampDateToRange(value, periodDateRange.min, periodDateRange.max),
+    );
   };
 
   const getViewInfestation = (areaName) => {
@@ -465,7 +541,7 @@ const BirdsStartCheckingDialog = ({
     return formData;
   };
 
-  const handleSubmit = async (isCompleted) => {
+  const handleSubmitClick = async (isCompleted) => {
     setSubmitAttempted(true);
     const { valid, errors: validationErrors } = await validateForm(
       isCompleted,
@@ -482,6 +558,15 @@ const BirdsStartCheckingDialog = ({
       return;
     }
 
+    if (isCompleted) {
+      setConfirmOpen(true);
+      return;
+    }
+
+    await executeSubmit(isCompleted);
+  };
+
+  const executeSubmit = async (isCompleted) => {
     setIsSubmitting(true);
     try {
       const result = await createBird(buildFormData(isCompleted)).unwrap();
@@ -492,6 +577,11 @@ const BirdsStartCheckingDialog = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleConfirmSubmit = async () => {
+    setConfirmOpen(false);
+    await executeSubmit(1);
   };
 
   const handleClose = () => {
@@ -521,14 +611,6 @@ const BirdsStartCheckingDialog = ({
       return firstErrorRef;
     }
     return null;
-  };
-
-  const getCompanionLabel = (id) => {
-    if (!id) return "—";
-    const found = usersOptions.find(
-      (u) => u.id === id || String(u.id) === String(id),
-    );
-    return found?.label ?? id;
   };
 
   const renderSkeleton = () => (
@@ -598,319 +680,384 @@ const BirdsStartCheckingDialog = ({
     </div>
   );
 
+  const viewCompanionLabel =
+    getResponseCompanion(batchEntry?.responses) ||
+    batchEntry?.evaluator ||
+    batchEntry?.others_companion ||
+    "—";
+
   return (
-    <Dialog
-      open={open}
-      onClose={(_, reason) => {
-        if (!viewMode && reason === "backdropClick") return;
-        handleClose();
-      }}
-      disableEscapeKeyDown={!viewMode}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{ className: "birds-sc__paper" }}>
-      <div className="birds-sc__header">
-        <div className="birds-sc__header-title">
-          <ChecklistIcon className="birds-sc__header-icon" />
-          <span>{getDialogTitle()}</span>
-        </div>
-        <span className="birds-sc__name-value">
-          {unitName} — {period} ({month}/{year})
-        </span>
-        <IconButton
-          size="small"
-          className="birds-sc__close"
-          onClick={handleClose}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </div>
-
-      {continueMode && batchEntry && !isFetching && (
-        <div className="birds-sc__info-strip birds-sc__info-strip--draft">
-          <div className="birds-sc__info-item">
-            <span className="birds-sc__info-label">Draft by</span>
-            <span className="birds-sc__info-value">
-              {batchEntry.user ?? "—"}
-            </span>
+    <>
+      <Dialog
+        open={open}
+        onClose={(_, reason) => {
+          if (!viewMode && reason === "backdropClick") return;
+          handleClose();
+        }}
+        disableEscapeKeyDown={!viewMode}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{ className: "birds-sc__paper" }}>
+        <div className="birds-sc__header">
+          <div className="birds-sc__header-title">
+            <ChecklistIcon className="birds-sc__header-icon" />
+            <span>{getDialogTitle()}</span>
           </div>
-          <div className="birds-sc__info-item">
-            <span className="birds-sc__info-label">Started</span>
-            <span className="birds-sc__info-value">
-              {formatDateTime(batchEntry.start_at)}
-            </span>
-          </div>
+          <span className="birds-sc__name-value">
+            {unitName} — {period} ({month}/{year})
+          </span>
+          <IconButton
+            size="small"
+            className="birds-sc__close"
+            onClick={handleClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         </div>
-      )}
 
-      <DialogContent className="birds-sc__content">
-        {isFetching ? (
-          renderSkeleton()
-        ) : (
-          <>
-            <div className="birds-sc__section">
-              <div className="birds-sc__section-header">Bird Inspection</div>
-              <div className="birds-sc__table-scroll">
-                <table className="birds-sc__grid-table">
-                  <thead>
-                    <tr className="birds-sc__thead-row">
-                      <th className="birds-sc__th birds-sc__th--area">
-                        Inspection Areas
-                      </th>
-                      <th
-                        className="birds-sc__th birds-sc__th--group"
-                        colSpan={infestationLevelItems.length}>
-                        Infestation Level
-                      </th>
-                      <th className="birds-sc__th birds-sc__th--group">
-                        Treatment / Action Dose
-                      </th>
-                      <th className="birds-sc__th birds-sc__th--group">
-                        Presence of Feed/RM Wastage
-                      </th>
-                      <th className="birds-sc__th birds-sc__th--group">
-                        Identify Entry Points
-                      </th>
-                    </tr>
-                    <tr className="birds-sc__thead-row birds-sc__thead-row--sub">
-                      <th className="birds-sc__th birds-sc__th--area-placeholder" />
-                      {infestationLevelItems.map((lvl) => (
-                        <th
-                          key={lvl.name}
-                          className="birds-sc__th birds-sc__th--col">
-                          {lvl.name}
-                        </th>
-                      ))}
-                      <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
-                      <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
-                      <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inspectionAreas.map((area) => {
-                      const infestError = !!errors[`infestation__${area.name}`];
-                      const treatError = !!errors[`treatment__${area.name}`];
-                      const entryError = !!errors[`entry__${area.name}`];
-                      const currentInfestation = viewMode
-                        ? getViewInfestation(area.name)
-                        : (infestationLevel[area.name] ?? null);
-                      const currentTreatment = viewMode
-                        ? getViewTreatment(area.name)
-                        : (treatmentDose[area.name] ?? "");
-                      const currentEntry = viewMode
-                        ? getViewEntryPoints(area.name)
-                        : (entryPoints[area.name] ?? "");
-                      const currentWastage = viewMode
-                        ? getViewWastage(area.name)
-                        : (wastageSelection[area.name] ?? "");
-                      const isDisabled =
-                        !viewMode && isLowLevel(currentInfestation);
-
-                      return (
-                        <tr key={area.name} className="birds-sc__tr">
-                          <td className="birds-sc__td birds-sc__td--area-name">
-                            {area.name}
-                          </td>
-                          {infestationLevelItems.map((lvl, i) => {
-                            const checked = currentInfestation === lvl.name;
-                            return (
-                              <td
-                                key={lvl.name}
-                                ref={
-                                  i === 0 ? getFirstErrorRef(infestError) : null
-                                }
-                                className={`birds-sc__td birds-sc__td--radio${infestError ? " birds-sc__td--error" : ""}`}>
-                                <label
-                                  className={`birds-sc__radio-label${viewMode ? " birds-sc__radio-label--readonly" : ""}`}>
-                                  <input
-                                    type="radio"
-                                    name={`infestation__${area.name}`}
-                                    checked={checked}
-                                    onChange={
-                                      viewMode
-                                        ? undefined
-                                        : () =>
-                                            handleInfestationChange(
-                                              area.name,
-                                              lvl.name,
-                                            )
-                                    }
-                                    readOnly={viewMode}
-                                    disabled={viewMode}
-                                    className="birds-sc__radio-input"
-                                  />
-                                  <span className="birds-sc__radio-box" />
-                                </label>
-                              </td>
-                            );
-                          })}
-                          <td
-                            ref={getFirstErrorRef(treatError)}
-                            className={`birds-sc__td birds-sc__td--text${treatError ? " birds-sc__td--error" : ""}${isDisabled ? " birds-sc__td--disabled" : ""}`}>
-                            {viewMode ? (
-                              <span className="birds-sc__text-display">
-                                {currentTreatment || "—"}
-                              </span>
-                            ) : (
-                              <input
-                                type="text"
-                                className={`birds-sc__text-input${treatError ? " birds-sc__text-input--error" : ""}${isDisabled ? " birds-sc__text-input--disabled" : ""}`}
-                                value={currentTreatment}
-                                onChange={(e) =>
-                                  handleTreatmentChange(
-                                    area.name,
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder={isDisabled ? "N/A" : "Enter dose"}
-                                disabled={isDisabled}
-                              />
-                            )}
-                          </td>
-                          <td className="birds-sc__td birds-sc__td--text">
-                            {viewMode ? (
-                              <span className="birds-sc__text-display">
-                                {currentWastage || "—"}
-                              </span>
-                            ) : (
-                              <WastageDropdown
-                                value={currentWastage}
-                                options={wastageOptions}
-                                onChange={(val) =>
-                                  handleWastageChange(area.name, val)
-                                }
-                                hasError={false}
-                              />
-                            )}
-                          </td>
-                          <td
-                            ref={getFirstErrorRef(entryError)}
-                            className={`birds-sc__td birds-sc__td--text${entryError ? " birds-sc__td--error" : ""}${isDisabled ? " birds-sc__td--disabled" : ""}`}>
-                            {viewMode ? (
-                              <span className="birds-sc__text-display">
-                                {currentEntry || "—"}
-                              </span>
-                            ) : (
-                              <input
-                                type="text"
-                                className={`birds-sc__text-input${entryError ? " birds-sc__text-input--error" : ""}${isDisabled ? " birds-sc__text-input--disabled" : ""}`}
-                                value={currentEntry}
-                                onChange={(e) =>
-                                  handleEntryPointsChange(
-                                    area.name,
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder={
-                                  isDisabled
-                                    ? "N/A"
-                                    : "e.g. North gate, Roof gap"
-                                }
-                                disabled={isDisabled}
-                              />
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+        {continueMode && batchEntry && !isFetching && (
+          <div className="birds-sc__info-strip birds-sc__info-strip--draft">
+            <div className="birds-sc__info-item">
+              <span className="birds-sc__info-label">Draft by</span>
+              <span className="birds-sc__info-value">
+                {batchEntry.user ?? "—"}
+              </span>
             </div>
-
-            <div className="birds-sc__section birds-sc__section--others">
-              <div className="birds-sc__section-header">Others</div>
-              <div className="birds-sc__others-body">
-                <div className="birds-sc__others-field">
-                  <label className="birds-sc__others-label">Date</label>
-                  {viewMode ? (
-                    <span className="birds-sc__text-display">
-                      {batchEntry?.start_at
-                        ? new Date(batchEntry.start_at).toLocaleDateString(
-                            "en-PH",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            },
-                          )
-                        : "—"}
-                    </span>
-                  ) : (
-                    <input
-                      type="date"
-                      className="birds-sc__text-input birds-sc__text-input--date"
-                      value={othersDate}
-                      onChange={(e) => setOthersDate(e.target.value)}
-                    />
-                  )}
-                </div>
-                <div className="birds-sc__others-field">
-                  <label className="birds-sc__others-label">Companion</label>
-                  {viewMode ? (
-                    <span className="birds-sc__text-display">
-                      {getCompanionLabel(batchEntry?.others_companion)}
-                    </span>
-                  ) : (
-                    <GenericDropdown
-                      value={othersCompanion}
-                      options={usersOptions}
-                      onChange={setOthersCompanion}
-                      placeholder="Select companion..."
-                    />
-                  )}
-                </div>
-              </div>
+            <div className="birds-sc__info-item">
+              <span className="birds-sc__info-label">Started</span>
+              <span className="birds-sc__info-value">
+                {formatDateTime(batchEntry.start_at)}
+              </span>
             </div>
-          </>
+          </div>
         )}
-      </DialogContent>
 
-      <DialogActions className="birds-sc__footer">
-        {viewMode ? (
-          <Button
-            variant="text"
-            onClick={handleClose}
-            className="birds-sc__btn-close">
-            CLOSE
-          </Button>
-        ) : (
-          <>
-            <div className="birds-sc__footer-left">
-              {errorCount > 0 && (
-                <span className="birds-sc__error-summary">
+        <DialogContent className="birds-sc__content">
+          {isFetching ? (
+            renderSkeleton()
+          ) : (
+            <>
+              <div className="birds-sc__section">
+                <div className="birds-sc__section-header">Bird Inspection</div>
+                <div className="birds-sc__table-scroll">
+                  <table className="birds-sc__grid-table">
+                    <thead>
+                      <tr className="birds-sc__thead-row">
+                        <th className="birds-sc__th birds-sc__th--area">
+                          Inspection Areas
+                        </th>
+                        <th
+                          className="birds-sc__th birds-sc__th--group"
+                          colSpan={infestationLevelItems.length}>
+                          Infestation Level{" "}
+                          {!viewMode && (
+                            <span className="birds-sc__required">*</span>
+                          )}
+                        </th>
+                        <th className="birds-sc__th birds-sc__th--group">
+                          Treatment / Action Dose
+                        </th>
+                        <th className="birds-sc__th birds-sc__th--group">
+                          Presence of Feed/RM Wastage
+                        </th>
+                        <th className="birds-sc__th birds-sc__th--group">
+                          Identify Entry Points
+                        </th>
+                      </tr>
+                      <tr className="birds-sc__thead-row birds-sc__thead-row--sub">
+                        <th className="birds-sc__th birds-sc__th--area-placeholder" />
+                        {infestationLevelItems.map((lvl) => (
+                          <th
+                            key={lvl.name}
+                            className="birds-sc__th birds-sc__th--col">
+                            {lvl.name}
+                          </th>
+                        ))}
+                        <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
+                        <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
+                        <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {inspectionAreas.map((area) => {
+                        const infestErrorKey = `infestation__${area.name}`;
+                        const treatErrorKey = `treatment__${area.name}`;
+                        const entryErrorKey = `entry__${area.name}`;
+                        const infestError = !!errors[infestErrorKey];
+                        const treatError = !!errors[treatErrorKey];
+                        const entryError = !!errors[entryErrorKey];
+                        const currentInfestation = viewMode
+                          ? getViewInfestation(area.name)
+                          : (infestationLevel[area.name] ?? null);
+                        const currentTreatment = viewMode
+                          ? getViewTreatment(area.name)
+                          : (treatmentDose[area.name] ?? "");
+                        const currentEntry = viewMode
+                          ? getViewEntryPoints(area.name)
+                          : (entryPoints[area.name] ?? "");
+                        const currentWastage = viewMode
+                          ? getViewWastage(area.name)
+                          : (wastageSelection[area.name] ?? "");
+                        const isDisabled =
+                          !viewMode && isLowLevel(currentInfestation);
+
+                        return (
+                          <tr key={area.name} className="birds-sc__tr">
+                            <td className="birds-sc__td birds-sc__td--area-name">
+                              {area.name}
+                            </td>
+                            {infestationLevelItems.map((lvl, i) => {
+                              const checked = currentInfestation === lvl.name;
+                              const colorClass = getLevelColorClass(lvl.name);
+                              const isFirstCol = i === 0;
+                              return (
+                                <td
+                                  key={lvl.name}
+                                  ref={
+                                    isFirstCol
+                                      ? getFirstErrorRef(infestError)
+                                      : null
+                                  }
+                                  className={`birds-sc__td birds-sc__td--radio${infestError ? " birds-sc__td--error" : ""}`}>
+                                  <label
+                                    className={`birds-sc__radio-label${viewMode ? " birds-sc__radio-label--readonly" : ""}`}>
+                                    <input
+                                      type="radio"
+                                      name={`infestation__${area.name}`}
+                                      checked={checked}
+                                      onChange={
+                                        viewMode
+                                          ? undefined
+                                          : () =>
+                                              handleInfestationChange(
+                                                area.name,
+                                                lvl.name,
+                                              )
+                                      }
+                                      readOnly={viewMode}
+                                      disabled={viewMode}
+                                      className="birds-sc__radio-input"
+                                    />
+                                    <span
+                                      className={`birds-sc__radio-box ${checked ? colorClass : ""}`}
+                                    />
+                                  </label>
+                                  {infestError && isFirstCol && (
+                                    <span className="birds-sc__inline-error birds-sc__inline-error--cell">
+                                      <ErrorOutlineIcon sx={{ fontSize: 10 }} />
+                                      {errors[infestErrorKey]}
+                                    </span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td
+                              ref={getFirstErrorRef(treatError)}
+                              className={`birds-sc__td birds-sc__td--text${treatError ? " birds-sc__td--error" : ""}${isDisabled ? " birds-sc__td--disabled" : ""}`}>
+                              {viewMode ? (
+                                <span className="birds-sc__text-display">
+                                  {currentTreatment || "—"}
+                                </span>
+                              ) : (
+                                <>
+                                  <input
+                                    type="text"
+                                    className={`birds-sc__text-input${treatError ? " birds-sc__text-input--error" : ""}${isDisabled ? " birds-sc__text-input--disabled" : ""}`}
+                                    value={currentTreatment}
+                                    onChange={(e) =>
+                                      handleTreatmentChange(
+                                        area.name,
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder={
+                                      isDisabled ? "N/A" : "Enter dose"
+                                    }
+                                    disabled={isDisabled}
+                                  />
+                                  {treatError && (
+                                    <span className="birds-sc__inline-error">
+                                      <ErrorOutlineIcon sx={{ fontSize: 10 }} />
+                                      {errors[treatErrorKey]}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </td>
+                            <td className="birds-sc__td birds-sc__td--text">
+                              {viewMode ? (
+                                <span className="birds-sc__text-display">
+                                  {currentWastage || "—"}
+                                </span>
+                              ) : (
+                                <WastageDropdown
+                                  value={currentWastage}
+                                  options={wastageOptions}
+                                  onChange={(val) =>
+                                    handleWastageChange(area.name, val)
+                                  }
+                                  hasError={false}
+                                />
+                              )}
+                            </td>
+                            <td
+                              ref={getFirstErrorRef(entryError)}
+                              className={`birds-sc__td birds-sc__td--text${entryError ? " birds-sc__td--error" : ""}${isDisabled ? " birds-sc__td--disabled" : ""}`}>
+                              {viewMode ? (
+                                <span className="birds-sc__text-display">
+                                  {currentEntry || "—"}
+                                </span>
+                              ) : (
+                                <>
+                                  <input
+                                    type="text"
+                                    className={`birds-sc__text-input${entryError ? " birds-sc__text-input--error" : ""}${isDisabled ? " birds-sc__text-input--disabled" : ""}`}
+                                    value={currentEntry}
+                                    onChange={(e) =>
+                                      handleEntryPointsChange(
+                                        area.name,
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder={
+                                      isDisabled
+                                        ? "N/A"
+                                        : "e.g. North gate, Roof gap"
+                                    }
+                                    disabled={isDisabled}
+                                  />
+                                  {entryError && (
+                                    <span className="birds-sc__inline-error">
+                                      <ErrorOutlineIcon sx={{ fontSize: 10 }} />
+                                      {errors[entryErrorKey]}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="birds-sc__section birds-sc__section--others">
+                <div className="birds-sc__section-header">Others</div>
+                <div className="birds-sc__others-body">
+                  <div className="birds-sc__others-field">
+                    <label className="birds-sc__others-label">Date</label>
+                    {viewMode ? (
+                      <span className="birds-sc__text-display">
+                        {batchEntry?.start_at
+                          ? new Date(batchEntry.start_at).toLocaleDateString(
+                              "en-PH",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )
+                          : "—"}
+                      </span>
+                    ) : (
+                      <input
+                        type="date"
+                        className="birds-sc__text-input birds-sc__text-input--date"
+                        value={othersDate}
+                        min={periodDateRange.min ?? undefined}
+                        max={periodDateRange.max ?? undefined}
+                        onChange={(e) => handleOthersDateChange(e.target.value)}
+                      />
+                    )}
+                  </div>
+                  <div className="birds-sc__others-field">
+                    <label className="birds-sc__others-label">Companion</label>
+                    {viewMode ? (
+                      <span className="birds-sc__text-display">
+                        {viewCompanionLabel}
+                      </span>
+                    ) : (
+                      <GenericDropdown
+                        value={othersCompanion}
+                        options={usersOptions}
+                        onChange={setOthersCompanion}
+                        placeholder="Select companion..."
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {errors._submit && (
+                <span className="birds-sc__inline-error birds-sc__inline-error--block">
                   <ErrorOutlineIcon sx={{ fontSize: 13 }} />
-                  {errorCount} field{errorCount > 1 ? "s" : ""} need
-                  {errorCount === 1 ? "s" : ""} attention
+                  {errors._submit}
                 </span>
               )}
-            </div>
-            <div className="birds-sc__footer-right">
-              <Button
-                variant="text"
-                onClick={handleClose}
-                disabled={isLoading || isSubmitting}
-                className="birds-sc__btn-close">
-                CLOSE
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => handleSubmit(0)}
-                disabled={isLoading || isSubmitting}
-                className="birds-sc__btn-draft">
-                {isLoading || isSubmitting ? "Saving..." : "SAVE AS DRAFT"}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => handleSubmit(1)}
-                disabled={isLoading || isSubmitting}
-                className="birds-sc__btn-submit">
-                {isLoading || isSubmitting ? "Submitting..." : "SUBMIT"}
-              </Button>
-            </div>
-          </>
-        )}
-      </DialogActions>
-    </Dialog>
+            </>
+          )}
+        </DialogContent>
+
+        <DialogActions className="birds-sc__footer">
+          {viewMode ? (
+            <Button
+              variant="text"
+              onClick={handleClose}
+              className="birds-sc__btn-close">
+              CLOSE
+            </Button>
+          ) : (
+            <>
+              <div className="birds-sc__footer-left">
+                {errorCount > 0 && (
+                  <span className="birds-sc__error-summary">
+                    <ErrorOutlineIcon sx={{ fontSize: 13 }} />
+                    {errorCount} field{errorCount > 1 ? "s" : ""} need
+                    {errorCount === 1 ? "s" : ""} attention
+                  </span>
+                )}
+              </div>
+              <div className="birds-sc__footer-right">
+                <Button
+                  variant="text"
+                  onClick={handleClose}
+                  disabled={isLoading || isSubmitting}
+                  className="birds-sc__btn-close">
+                  CLOSE
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleSubmitClick(0)}
+                  disabled={isLoading || isSubmitting}
+                  className="birds-sc__btn-draft">
+                  {isLoading || isSubmitting ? "Saving..." : "SAVE AS DRAFT"}
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleSubmitClick(1)}
+                  disabled={isLoading || isSubmitting}
+                  className="birds-sc__btn-submit">
+                  {isLoading || isSubmitting ? "Submitting..." : "SUBMIT"}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSubmit}
+        title="Submit Checklist?"
+        message="Are you sure you want to submit this bird inspection checklist? This action cannot be undone."
+        confirmLabel="Submit"
+        cancelLabel="Cancel"
+        isLoading={isSubmitting}
+        confirmVariant="primary"
+      />
+    </>
   );
 };
 

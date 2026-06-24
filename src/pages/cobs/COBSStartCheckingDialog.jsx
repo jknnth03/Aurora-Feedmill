@@ -18,6 +18,7 @@ import {
   useCreateCobMutation,
 } from "../../features/api/cobs/cobsApi";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
+import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./COBSStartCheckingDialog.scss";
 
 const SCORE_OPTIONS = [0, 50, 75, 100];
@@ -132,12 +133,6 @@ const buildDraftAnswers = (questionnaireData, responses = []) => {
   return { answers, remarks, existingImages };
 };
 
-// ─── Inline Validation ────────────────────────────────────────────────────────
-// Rules:
-//   - Score: always required
-//   - Remarks: required ONLY when score is 0, 50, or 75 (NOT when score is 100)
-//   - Draft (isCompleted = 0): only date is required
-// ─────────────────────────────────────────────────────────────────────────────
 const validateForm = async (isCompleted, formState) => {
   const {
     answers,
@@ -163,7 +158,6 @@ const validateForm = async (isCompleted, formState) => {
             errors[`score__${key}`] = "Please select a score.";
           }
 
-          // Remarks required only when score is NOT 100
           if (score !== 100 && !remark) {
             errors[`remarks__${key}`] = "Remarks is required.";
           }
@@ -177,13 +171,11 @@ const validateForm = async (isCompleted, formState) => {
     if (!goodPoints?.trim()) errors.good_points = "Good points is required.";
     if (!othersRemarks?.trim()) errors.remarks = "Remarks is required.";
   } else {
-    // Draft — only date required
     if (!startAt) errors.start_at = "Date is required.";
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
-// ─────────────────────────────────────────────────────────────────────────────
 
 const RequiredStar = () => <span className="cobs-sc__required">*</span>;
 
@@ -215,6 +207,7 @@ const COBSStartCheckingDialog = ({
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [previewState, setPreviewState] = useState({
     open: false,
     images: [],
@@ -313,7 +306,6 @@ const COBSStartCheckingDialog = ({
   const handleScore = (key, score) => {
     setAnswers((prev) => ({ ...prev, [key]: score }));
     clearFieldError(`score__${key}`);
-    // When score becomes 100, clear remarks error since it's now optional
     if (score === 100) {
       clearFieldError(`remarks__${key}`);
     }
@@ -324,7 +316,6 @@ const COBSStartCheckingDialog = ({
     if (value.trim()) clearFieldError(`remarks__${key}`);
   };
 
-  // Camera capture — opens rear camera directly on mobile
   const handleCameraCapture = (key, files) => {
     if (!files || files.length === 0) return;
     setImages((prev) => ({
@@ -334,7 +325,6 @@ const COBSStartCheckingDialog = ({
   };
 
   const triggerCamera = (key) => {
-    // Reset value so re-capturing the same photo is possible
     if (cameraInputRefs.current[key]) {
       cameraInputRefs.current[key].value = "";
     }
@@ -406,6 +396,31 @@ const COBSStartCheckingDialog = ({
     return formData;
   };
 
+  const performSubmit = async (isCompleted) => {
+    setIsSubmitting(true);
+    try {
+      const result = await createCob(buildFormData(isCompleted)).unwrap();
+      onSuccess?.(result);
+      setConfirmOpen(false);
+      window.__snackbar__?.enqueueSnackbar(
+        isCompleted
+          ? "You successfully submitted the checklist!"
+          : "You successfully saved your draft!",
+        { variant: "success" },
+      );
+      handleClose();
+    } catch {
+      setErrors({ _submit: "Something went wrong. Please try again." });
+      setConfirmOpen(false);
+      window.__snackbar__?.enqueueSnackbar(
+        "Something went wrong. Please try again.",
+        { variant: "error" },
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (isCompleted) => {
     setSubmitAttempted(true);
     const { valid, errors: validationErrors } = await validateForm(
@@ -426,16 +441,16 @@ const COBSStartCheckingDialog = ({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const result = await createCob(buildFormData(isCompleted)).unwrap();
-      onSuccess?.(result);
-      handleClose();
-    } catch {
-      setErrors({ _submit: "Something went wrong. Please try again." });
-    } finally {
-      setIsSubmitting(false);
+    if (isCompleted) {
+      setConfirmOpen(true);
+      return;
     }
+
+    await performSubmit(isCompleted);
+  };
+
+  const handleConfirmSubmit = () => {
+    performSubmit(1);
   };
 
   const handleClose = () => {
@@ -733,7 +748,6 @@ const COBSStartCheckingDialog = ({
                                   )}
                                 </td>
 
-                                {/* ── CAMERA / PHOTO COLUMN ── */}
                                 <td className="cobs-sc__td cobs-sc__td--attachment">
                                   {viewMode ? (
                                     resp?.images?.length > 0 ? (
@@ -782,11 +796,6 @@ const COBSStartCheckingDialog = ({
                                     )
                                   ) : (
                                     <>
-                                      {/*
-                                        Hidden input with capture="environment":
-                                        - Mobile: opens rear camera directly
-                                        - Desktop: opens file chooser as fallback
-                                      */}
                                       <input
                                         type="file"
                                         accept="image/*"
@@ -1199,6 +1208,18 @@ const COBSStartCheckingDialog = ({
         onClose={closePreview}
         images={previewState.images}
         initialIndex={previewState.index}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSubmit}
+        title="Submit Checklist?"
+        message="Once submitted, this checklist will be marked as completed and can no longer be edited."
+        confirmLabel="Submit"
+        cancelLabel="Cancel"
+        isLoading={isSubmitting}
+        confirmVariant="primary"
       />
     </>
   );

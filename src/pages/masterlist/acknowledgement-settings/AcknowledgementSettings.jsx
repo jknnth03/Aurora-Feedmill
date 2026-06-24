@@ -159,6 +159,17 @@ const AcknowledgementSettings = () => {
 
   const enrichedData = tableData.map((row) => {
     const hierarchy = Array.isArray(row.hierarchy) ? row.hierarchy : [];
+    const isPests = row.sections?.name?.toUpperCase() === "PESTS";
+
+    if (isPests) {
+      return {
+        ...row,
+        evaluator: "—",
+        first_to_acknowledge: row.user?.name ?? "—",
+        last_to_acknowledge: "—",
+      };
+    }
+
     const first = hierarchy[0];
     const last = hierarchy[hierarchy.length - 1];
     const isSame = hierarchy.length <= 1;

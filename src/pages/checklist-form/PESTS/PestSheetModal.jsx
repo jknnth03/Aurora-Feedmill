@@ -24,7 +24,7 @@ import {
   useUpdateChecklistMutation,
 } from "../../../features/api/questionnaires/pestQuestionnairesApi";
 import { useGetInspectionAreasQuery } from "../../../features/api/masterlist/inspectionAreaApi";
-import { useGetPestsQuery } from "../../../features/api/masterlist/pestTypesApi";
+import { useGetPestTypesQuery } from "../../../features/api/masterlist/pestTypesApi";
 import "./PestSheetModal.scss";
 
 const OTHER_OBSERVATION_ITEMS = [
@@ -216,7 +216,7 @@ const PestSheetModal = ({ open, onClose, selectedId = null }) => {
       { status: "active", per_page: 100 },
       { skip: !areasTouched },
     );
-  const { data: pestsData, isFetching: pestsLoading } = useGetPestsQuery(
+  const { data: pestsData, isFetching: pestsLoading } = useGetPestTypesQuery(
     { status: 1, per_page: 100 },
     { skip: !pestsTouched },
   );

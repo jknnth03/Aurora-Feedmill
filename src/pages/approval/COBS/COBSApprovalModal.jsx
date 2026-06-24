@@ -9,9 +9,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ImageIcon from "@mui/icons-material/Image";
-import COBSImagePreviewDialog from "../../cobs/COBSImagePreviewDialog";
+import COBSApprovalImagePreviewDialog from "./COBSApprovalImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
-import { useApproveApprovalMutation } from "../../../features/api/approval/cobsApproval";
+import { useApproveCobApprovalMutation } from "../../../features/api/approval/cobsApproval";
 import "./COBSApprovalModal.scss";
 
 const formatDate = (dateStr) => {
@@ -45,8 +45,8 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
   const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
   const [localSignatoryName, setLocalSignatoryName] = useState(null);
 
-  const [approveApproval, { isLoading: isApproving }] =
-    useApproveApprovalMutation();
+  const [approveCobApproval, { isLoading: isApproving }] =
+    useApproveCobApprovalMutation();
 
   useEffect(() => {
     if (open && batchEntry) {
@@ -104,7 +104,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     const signatureFile = new File([blob], "signature.png", {
       type: "image/png",
     });
-    approveApproval({
+    approveCobApproval({
       batch_no: batchEntry.batch_no,
       approver_id: batchEntry.approver_id ?? 1,
       approvers: [
@@ -375,7 +375,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
         isSubmitting={isApproving}
       />
 
-      <COBSImagePreviewDialog
+      <COBSApprovalImagePreviewDialog
         open={previewState.open}
         onClose={closePreview}
         images={previewState.images}

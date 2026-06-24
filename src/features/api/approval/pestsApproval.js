@@ -37,16 +37,9 @@ const pestsApproval = apiSlice.injectEndpoints({
     }),
 
     approvePestsApproval: builder.mutation({
-      query: ({
-        batch_no,
-        approver_id,
-        assessor_id,
-        approvers = [],
-        signatureFile,
-      }) => {
+      query: ({ batch_no, assessor_id, approvers = [], signatureFile }) => {
         const formData = new FormData();
         formData.append("batch_no", String(batch_no));
-        formData.append("approver_id", String(approver_id));
         formData.append("section", "pests");
         if (assessor_id) {
           formData.append("assessor_id", String(assessor_id));
@@ -67,7 +60,7 @@ const pestsApproval = apiSlice.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: ["PestsApprovals"],
+      invalidatesTags: ["PestsApprovals", "ApprovalsStatusCount"],
     }),
   }),
 });

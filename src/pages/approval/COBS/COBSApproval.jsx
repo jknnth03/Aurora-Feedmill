@@ -5,7 +5,7 @@ import UniversalTable from "../../../reusable-components/universal-table/Univers
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import { useGetApprovalsQuery } from "../../../features/api/approval/cobsApproval";
+import { useGetCobApprovalsQuery } from "../../../features/api/approval/cobsApproval";
 import COBSApprovalModal from "./COBSApprovalModal";
 import "./COBSApproval.scss";
 
@@ -66,7 +66,7 @@ const COBSApproval = () => {
     severity: "success",
   });
 
-  const { data, isFetching, error } = useGetApprovalsQuery(
+  const { data, isFetching, error } = useGetCobApprovalsQuery(
     { status: "pending" },
     { refetchOnMountOrArgChange: true },
   );

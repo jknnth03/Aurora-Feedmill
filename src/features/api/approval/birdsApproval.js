@@ -50,7 +50,7 @@ const birdsApproval = apiSlice.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: ["BirdsApprovals"],
+      invalidatesTags: ["BirdsApprovals", "ApprovalsStatusCount"],
     }),
   }),
 });

@@ -194,11 +194,19 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
       if (returnedUrl) {
         setLocalSignatureDataUrl(returnedUrl);
       }
+      window.__snackbar__?.enqueueSnackbar(
+        "You successfully submitted your signature!",
+        { variant: "success" },
+      );
       onRefetch?.();
     } catch (err) {
       console.error("[COBSShowReportDialog] evaluateResponse ERROR", err);
       setLocalSignatureDataUrl(null);
       setLocalSignatoryName(null);
+      window.__snackbar__?.enqueueSnackbar(
+        "Something went wrong. Please try again.",
+        { variant: "error" },
+      );
     } finally {
       setSignatureOpen(false);
     }
@@ -304,6 +312,17 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
             </div>
 
             <div className="cobs-sr__right">
+              <div className="cobs-sr__section-card">
+                <p className="cobs-sr__section-label">Good Points</p>
+                <div className="cobs-sr__section-body">
+                  {data.good_points ? (
+                    <p className="cobs-sr__section-text">{data.good_points}</p>
+                  ) : (
+                    <span className="cobs-sr__empty">—</span>
+                  )}
+                </div>
+              </div>
+
               <div className="cobs-sr__section-card">
                 <p className="cobs-sr__section-label">Remarks</p>
                 <div className="cobs-sr__section-body">

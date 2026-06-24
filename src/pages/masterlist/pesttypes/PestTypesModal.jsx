@@ -17,9 +17,9 @@ import {
   BackModalButton,
 } from "../../../reusable-components/universalbuttons/UniversalButtons";
 import {
-  useGetPestByIdQuery,
-  useCreatePestMutation,
-  useUpdatePestMutation,
+  useGetPestTypeByIdQuery,
+  useCreatePestTypeMutation,
+  useUpdatePestTypeMutation,
 } from "../../../features/api/masterlist/pestTypesApi";
 import "./PestTypesModal.scss";
 
@@ -28,26 +28,28 @@ const schema = yup.object({
 });
 
 const SkeletonLoader = () => (
-  <div className="pm__skeleton-wrap">
-    <div className="pm__skeleton-group">
-      <span className="ut__skeleton pm__skeleton-label" />
-      <span className="ut__skeleton pm__skeleton-field" />
+  <div className="ptm__skeleton-wrap">
+    <div className="ptm__skeleton-group">
+      <span className="ut__skeleton ptm__skeleton-label" />
+      <span className="ut__skeleton ptm__skeleton-field" />
     </div>
-    <div className="pm__skeleton-footer">
-      <span className="ut__skeleton pm__skeleton-btn" />
+    <div className="ptm__skeleton-footer">
+      <span className="ut__skeleton ptm__skeleton-btn" />
     </div>
   </div>
 );
 
-const PestsModal = ({ open, onClose, selectedId = null }) => {
+const PestTypesModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const [createPest, { isLoading: isCreating }] = useCreatePestMutation();
-  const [updatePest, { isLoading: isUpdating }] = useUpdatePestMutation();
+  const [createPestType, { isLoading: isCreating }] =
+    useCreatePestTypeMutation();
+  const [updatePestType, { isLoading: isUpdating }] =
+    useUpdatePestTypeMutation();
   const isLoading = isCreating || isUpdating;
 
-  const { data: pestData, isFetching: pestLoading } = useGetPestByIdQuery(
+  const { data: pestData, isFetching: pestLoading } = useGetPestTypeByIdQuery(
     selectedId,
     { skip: !selectedId || !open },
   );
@@ -83,15 +85,21 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        await updatePest({ id: selectedId, ...form }).unwrap();
-        window.__snackbar__?.enqueueSnackbar("Pest updated successfully.", {
-          variant: "success",
-        });
+        await updatePestType({ id: selectedId, ...form }).unwrap();
+        window.__snackbar__?.enqueueSnackbar(
+          "Pest type updated successfully.",
+          {
+            variant: "success",
+          },
+        );
       } else {
-        await createPest(form).unwrap();
-        window.__snackbar__?.enqueueSnackbar("Pest created successfully.", {
-          variant: "success",
-        });
+        await createPestType(form).unwrap();
+        window.__snackbar__?.enqueueSnackbar(
+          "Pest type created successfully.",
+          {
+            variant: "success",
+          },
+        );
       }
       onClose();
     } catch (err) {
@@ -104,15 +112,15 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
   };
 
   const headerIcon = {
-    add: <BugReportIcon className="pm__header-icon" />,
-    view: <RemoveRedEyeIcon className="pm__header-icon" />,
-    edit: <EditIcon className="pm__header-icon" />,
+    add: <BugReportIcon className="ptm__header-icon" />,
+    view: <RemoveRedEyeIcon className="ptm__header-icon" />,
+    edit: <EditIcon className="ptm__header-icon" />,
   };
 
   const headerTitle = {
-    add: "Add Pest",
-    view: "View Pest",
-    edit: "Edit Pest",
+    add: "Add Pest Type",
+    view: "View Pest Type",
+    edit: "Edit Pest Type",
   };
 
   const isView = mode === "view";
@@ -127,27 +135,27 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
       disableEscapeKeyDown
       maxWidth="xs"
       fullWidth
-      PaperProps={{ className: "pm__paper" }}>
-      <div className="pm__header">
-        <div className="pm__header-title">
+      PaperProps={{ className: "ptm__paper" }}>
+      <div className="ptm__header">
+        <div className="ptm__header-title">
           {headerIcon[mode]}
           <span>{headerTitle[mode]}</span>
         </div>
-        <IconButton className="pm__close" onClick={onClose} size="small">
+        <IconButton className="ptm__close" onClick={onClose} size="small">
           <CloseIcon fontSize="small" />
         </IconButton>
       </div>
 
-      <DialogContent className="pm__content">
+      <DialogContent className="ptm__content">
         {pestLoading ? (
           <SkeletonLoader />
         ) : isView ? (
           <>
-            <div className="pm__group">
-              <p className="pm__group-label">Pest Details</p>
-              <div className="pm__field">
-                <div className="pm__input-wrap pm__input-wrap--disabled">
-                  <label className="pm__label">Name</label>
+            <div className="ptm__group">
+              <p className="ptm__group-label">Pest Type Details</p>
+              <div className="ptm__field">
+                <div className="ptm__input-wrap ptm__input-wrap--disabled">
+                  <label className="ptm__label">Name</label>
                   <input
                     type="text"
                     value={selectedRow?.name ?? ""}
@@ -157,27 +165,27 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
                 </div>
               </div>
             </div>
-            <div className="pm__footer">
+            <div className="ptm__footer">
               <EditButton onClick={() => setMode("edit")} />
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="pm__group">
-              <p className="pm__group-label">Pest Details</p>
-              <div className="pm__field">
+            <div className="ptm__group">
+              <p className="ptm__group-label">Pest Type Details</p>
+              <div className="ptm__field">
                 <div
-                  className={`pm__input-wrap${errors.name ? " pm__input-wrap--error" : ""}`}>
-                  <label className="pm__label">
+                  className={`ptm__input-wrap${errors.name ? " ptm__input-wrap--error" : ""}`}>
+                  <label className="ptm__label">
                     Name
-                    <span className="pm__required">
+                    <span className="ptm__required">
                       <PushPinIcon />
                     </span>
                   </label>
                   <input type="text" {...register("name")} autoComplete="off" />
                 </div>
                 {errors.name && (
-                  <p className="pm__error">
+                  <p className="ptm__error">
                     <ReportProblemIcon />
                     {errors.name?.message}
                   </p>
@@ -185,7 +193,7 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
               </div>
             </div>
 
-            <div className="pm__footer">
+            <div className="ptm__footer">
               {selectedId && (
                 <BackModalButton onClick={() => setMode("view")} />
               )}
@@ -195,7 +203,7 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
                     ? "Saving..."
                     : mode === "edit"
                       ? "Save Changes"
-                      : "Add Pest"
+                      : "Add Pest Type"
                 }
                 onClick={handleSubmit(onSubmit)}
                 disabled={isLoading}
@@ -208,4 +216,4 @@ const PestsModal = ({ open, onClose, selectedId = null }) => {
   );
 };
 
-export default PestsModal;
+export default PestTypesModal;

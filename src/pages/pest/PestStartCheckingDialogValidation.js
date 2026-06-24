@@ -20,7 +20,8 @@ export const validateForm = async (
     otherObsSection.forEach((item) => {
       const key = `${area.name}__${item.name}`;
       if (!otherObservations[key]) {
-        errors[`obs__${area.name}__${item.name}`] = "Required.";
+        errors[`obs__${area.name}__${item.name}`] =
+          `${area.name} — ${item.name} is required.`;
       }
     });
   });

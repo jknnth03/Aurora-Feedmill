@@ -12,12 +12,12 @@ import {
   ArchivedButton,
 } from "../../../reusable-components/table-search/TableSearch";
 import {
-  useGetPestsQuery,
-  useArchivePestMutation,
+  useGetPestTypesQuery,
+  useArchivePestTypeMutation,
 } from "../../../features/api/masterlist/pestTypesApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
-import PestsModal from "./PestTypesModal";
+import PestTypesModal from "./PestTypesModal";
 import "./PestTypes.scss";
 
 const COLUMNS = [
@@ -25,7 +25,7 @@ const COLUMNS = [
   { key: "name", label: "Name", sortable: true },
 ];
 
-const Pests = () => {
+const PestTypes = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -44,13 +44,14 @@ const Pests = () => {
 
   const currentStatus = showArchived ? "inactive" : "active";
 
-  const { data, isFetching, error } = useGetPestsQuery({
+  const { data, isFetching, error } = useGetPestTypesQuery({
     status: currentStatus,
     search: debouncedSearch,
     page,
     per_page: rowsPerPage,
   });
-  const [archivePest, { isLoading: isArchiving }] = useArchivePestMutation();
+  const [archivePestType, { isLoading: isArchiving }] =
+    useArchivePestTypeMutation();
 
   const is404 = error?.status === 404;
   const tableData = data?.data ?? [];
@@ -76,7 +77,7 @@ const Pests = () => {
   };
   const handleConfirmRestore = async () => {
     try {
-      await archivePest(toRestore.id).unwrap();
+      await archivePestType(toRestore.id).unwrap();
       window.__snackbar__?.enqueueSnackbar("Pest restored successfully.", {
         variant: "success",
       });
@@ -106,7 +107,7 @@ const Pests = () => {
   };
   const handleConfirmArchive = async () => {
     try {
-      await archivePest(toArchive.id).unwrap();
+      await archivePestType(toArchive.id).unwrap();
       window.__snackbar__?.enqueueSnackbar("Pest archived successfully.", {
         variant: "success",
       });
@@ -178,7 +179,7 @@ const Pests = () => {
         />
       </PageContainer>
 
-      <PestsModal
+      <PestTypesModal
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
@@ -211,4 +212,4 @@ const Pests = () => {
   );
 };
 
-export default Pests;
+export default PestTypes;

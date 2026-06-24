@@ -30,6 +30,7 @@ const NavItem = ({
   sidebarOpen,
   onExpandSidebar,
   onCloseSidebar,
+  approvalsStatusCount,
   level = 0,
 }) => {
   const location = useLocation();
@@ -85,6 +86,26 @@ const NavItem = ({
     }
   };
 
+  const isApproval = item.permissionId === "APPROVAL";
+  const isApprovalCobs = item.permissionId === "APPROVAL.COBS";
+  const isApprovalBirds = item.permissionId === "APPROVAL.BIRDS";
+  const isApprovalPests = item.permissionId === "APPROVAL.PESTS";
+
+  const totalBadge = approvalsStatusCount?.pending?.TOTAL ?? 0;
+  const cobsBadge = approvalsStatusCount?.pending?.COBS ?? 0;
+  const birdsBadge = approvalsStatusCount?.pending?.BIRDS ?? 0;
+  const pestsBadge = approvalsStatusCount?.pending?.PESTS ?? 0;
+
+  const getBadgeCount = () => {
+    if (isApproval) return totalBadge;
+    if (isApprovalCobs) return cobsBadge;
+    if (isApprovalBirds) return birdsBadge;
+    if (isApprovalPests) return pestsBadge;
+    return 0;
+  };
+
+  const badgeCount = getBadgeCount();
+
   const itemEl = (
     <div
       className={`nav-item
@@ -94,13 +115,23 @@ const NavItem = ({
       `}
       style={{ paddingLeft }}
       onClick={handleClick}>
-      <span className="nav-item__icon">{item.icon}</span>
+      <span className="nav-item__icon">
+        {item.icon}
+        {badgeCount > 0 && !sidebarOpen && (
+          <span className="nav-item__badge nav-item__badge--dot" />
+        )}
+      </span>
       {sidebarOpen && (
         <>
           <span className="nav-item__label">{item.displayName}</span>
           {level > 0 && isActive && (
             <span className="nav-item__check">
               <DoneAllIcon className="nav-item__check-icon" />
+            </span>
+          )}
+          {badgeCount > 0 && (
+            <span className="nav-item__badge">
+              {badgeCount > 99 ? "99+" : badgeCount}
             </span>
           )}
           {hasChildren && (
@@ -141,6 +172,7 @@ const NavItem = ({
                 sidebarOpen={sidebarOpen}
                 onExpandSidebar={onExpandSidebar}
                 onCloseSidebar={onCloseSidebar}
+                approvalsStatusCount={approvalsStatusCount}
                 level={level + 1}
               />
             ))}
@@ -160,6 +192,7 @@ const SidebarInner = ({
   navItems,
   user,
   initials,
+  approvalsStatusCount,
 }) => (
   <div
     className={`sidebar ${open || isMobile ? "sidebar--open" : "sidebar--closed"}`}>
@@ -187,6 +220,7 @@ const SidebarInner = ({
           sidebarOpen={open || isMobile}
           onExpandSidebar={onExpandSidebar}
           onCloseSidebar={isMobile ? onCloseMobile : onCloseSidebar}
+          approvalsStatusCount={approvalsStatusCount}
         />
       ))}
     </nav>
@@ -207,6 +241,7 @@ const Sidebar = ({
   onCloseMobile = () => {},
   onToggleSidebar = () => {},
   onCloseSidebar = () => {},
+  approvalsStatusCount,
 }) => {
   const rawUser = JSON.parse(localStorage.getItem("user")) || {};
   const sidebarRef = useRef(null);
@@ -256,6 +291,7 @@ const Sidebar = ({
           navItems={navItems}
           user={user}
           initials={initials}
+          approvalsStatusCount={approvalsStatusCount}
         />
       </div>
 
@@ -272,6 +308,7 @@ const Sidebar = ({
               navItems={navItems}
               user={user}
               initials={initials}
+              approvalsStatusCount={approvalsStatusCount}
             />
           </div>
         </>

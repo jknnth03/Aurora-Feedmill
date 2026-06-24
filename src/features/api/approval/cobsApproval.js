@@ -3,7 +3,7 @@ import { apiSlice } from "../../../app/apiSlice";
 const cobsApproval = apiSlice.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
-    getCobs: builder.query({
+    getCobApproval: builder.query({
       query: ({ month, year, search = "" } = {}) => ({
         url: "/api/responses",
         params: { month, year, search, section: "cobs" },
@@ -11,7 +11,7 @@ const cobsApproval = apiSlice.injectEndpoints({
       providesTags: ["Cobs"],
     }),
 
-    createCob: builder.mutation({
+    createCobApproval: builder.mutation({
       query: (body) => ({
         url: "/api/responses",
         method: "POST",
@@ -20,7 +20,7 @@ const cobsApproval = apiSlice.injectEndpoints({
       invalidatesTags: ["Cobs"],
     }),
 
-    getQuestionnaire: builder.query({
+    getCobApprovalQuestionnaire: builder.query({
       query: (id = 1) => ({
         url: `/api/questionnaires/${id}`,
         params: { section: "cobs" },
@@ -28,7 +28,7 @@ const cobsApproval = apiSlice.injectEndpoints({
       providesTags: (result, error, id) => [{ type: "Cobs", id }],
     }),
 
-    getApprovals: builder.query({
+    getCobApprovals: builder.query({
       query: ({ month, year, search = "", status = "" } = {}) => ({
         url: "/api/approvals",
         params: { month, year, search, status, section: "cobs" },
@@ -36,7 +36,7 @@ const cobsApproval = apiSlice.injectEndpoints({
       providesTags: ["Approvals"],
     }),
 
-    approveApproval: builder.mutation({
+    approveCobApproval: builder.mutation({
       query: ({
         batch_no,
         approver_id,
@@ -67,15 +67,15 @@ const cobsApproval = apiSlice.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: ["Approvals"],
+      invalidatesTags: ["Approvals", "ApprovalsStatusCount"],
     }),
   }),
 });
 
 export const {
-  useGetCobsQuery,
-  useCreateCobMutation,
-  useGetQuestionnaireQuery,
-  useGetApprovalsQuery,
-  useApproveApprovalMutation,
+  useGetCobApprovalQuery,
+  useCreateCobApprovalMutation,
+  useGetCobApprovalQuestionnaireQuery,
+  useGetCobApprovalsQuery,
+  useApproveCobApprovalMutation,
 } = cobsApproval;

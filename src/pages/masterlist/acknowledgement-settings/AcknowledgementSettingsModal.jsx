@@ -155,18 +155,18 @@ const AcknowledgementSettingsModal = ({
   const selectedSectionName = selectedSection?.name?.toUpperCase() ?? "";
   const isPests = selectedSectionName === "PESTS";
 
-  const detailSectionName =
-    (settingDetail?.data ?? settingDetail)?.section?.name?.toUpperCase() ?? "";
+  const detail = settingDetail?.data ?? settingDetail;
+  const detailSectionName = detail?.sections?.name?.toUpperCase() ?? "";
   const isDetailPests = detailSectionName === "PESTS";
 
-  const populateFormFromDetail = (detail) => {
-    setName(detail?.name ?? "");
-    setSectionId(detail?.section?.id ? String(detail.section.id) : "");
-    setApproverId(detail?.approver?.id ? String(detail.approver.id) : "");
-    setEvaluatorId(detail?.user?.id ? String(detail.user.id) : "");
+  const populateFormFromDetail = (d) => {
+    setName(d?.name ?? "");
+    setSectionId(d?.sections?.id ? String(d.sections.id) : "");
+    setApproverId(d?.approver?.id ? String(d.approver.id) : "");
+    setEvaluatorId(d?.user?.id ? String(d.user.id) : "");
     setHierarchy(
-      Array.isArray(detail?.hierarchy)
-        ? detail.hierarchy.map((item) =>
+      Array.isArray(d?.hierarchy)
+        ? d.hierarchy.map((item) =>
             typeof item === "object" ? String(item.id) : String(item),
           )
         : [],
@@ -210,13 +210,11 @@ const AcknowledgementSettingsModal = ({
 
   useEffect(() => {
     if (isEditMode && settingDetail && mode === "edit") {
-      const detail = settingDetail?.data ?? settingDetail;
       populateFormFromDetail(detail);
     }
   }, [isEditMode, settingDetail, mode]);
 
   const handleEnterEdit = () => {
-    const detail = settingDetail?.data ?? settingDetail;
     populateFormFromDetail(detail);
     setErrors({});
     setSelectedApprover("");
@@ -290,7 +288,8 @@ const AcknowledgementSettingsModal = ({
       };
 
       if (isPests) {
-        payload.approver_id = Number(approverId);
+        payload.user_id = Number(approverId);
+        payload.hierarchy = [];
       } else {
         payload.user_id = Number(evaluatorId);
         payload.hierarchy = hierarchy.map(Number);
@@ -321,8 +320,6 @@ const AcknowledgementSettingsModal = ({
   const availableAcknowledgers = users.filter(
     (u) => !hierarchy.includes(String(u.id)),
   );
-
-  const detail = settingDetail?.data ?? settingDetail;
 
   const renderFormFields = () => (
     <div className="acksm__form">
@@ -620,7 +617,7 @@ const AcknowledgementSettingsModal = ({
               <input
                 type="text"
                 className="acksm__input"
-                value={detail?.section?.name ?? "—"}
+                value={detail?.sections?.name ?? "—"}
                 disabled
                 readOnly
               />

@@ -12,7 +12,6 @@ import { useGetCobsQuery } from "../../features/api/cobs/cobsApi";
 import {
   getChipBg,
   getChipTextColor,
-  getChipName,
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import COBSModal from "./COBSModal";
@@ -34,6 +33,8 @@ const STATUS_CHIP_MAP = {
   "on going": "chip-processing",
   pending: "chip-pending",
   rejected: "chip-rejected",
+  "checklist not yet created": "chip-pending",
+  "previous month incomplete": "chip-rejected",
 };
 
 const getCompletedWeeksCount = (weekMap) => {
@@ -67,7 +68,30 @@ const getDerivedTableStatus = (weekMap) => {
   return "On Going";
 };
 
-const flattenCobsData = (rawData) => {
+const isChecklistNotYetCreated = (checklists, currentMonth) => {
+  if (!checklists || checklists.length === 0) return false;
+  const createdAt = checklists[0]?.created_at;
+  if (!createdAt) return false;
+  const createdMonth = dayjs(createdAt);
+  if (!createdMonth.isValid()) return false;
+  return createdMonth.startOf("month").isAfter(currentMonth.startOf("month"));
+};
+
+const checklistExistedLastMonth = (checklists, currentMonth) => {
+  if (!checklists || checklists.length === 0) return false;
+  const createdAt = checklists[0]?.created_at;
+  if (!createdAt) return false;
+  const createdMonth = dayjs(createdAt).startOf("month");
+  const previousMonth = currentMonth.subtract(1, "month").startOf("month");
+  return !createdMonth.isAfter(previousMonth);
+};
+
+const getPreviousMonthCompleted = (unitData) => {
+  if (unitData?.previous_month_completed === undefined) return true;
+  return Boolean(unitData.previous_month_completed);
+};
+
+const flattenCobsData = (rawData, currentMonth) => {
   if (!rawData) return [];
 
   const rows = [];
@@ -79,7 +103,7 @@ const flattenCobsData = (rawData) => {
     const totalWeeks = Object.keys(weekMap).length;
 
     const completedWeeks = getCompletedWeeksCount(weekMap);
-    const derivedStatus = getDerivedTableStatus(weekMap);
+    const checklistName = checklists[0]?.checklist_name ?? "—";
 
     const allBatches = Object.values(weekMap).flat();
     const latestBatch =
@@ -87,7 +111,23 @@ const flattenCobsData = (rawData) => {
         ? allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a))
         : null;
 
-    const checklistName = checklists[0]?.checklist_name ?? "—";
+    const notYetCreated = isChecklistNotYetCreated(checklists, currentMonth);
+    const existedLastMonth = checklistExistedLastMonth(
+      checklists,
+      currentMonth,
+    );
+    const previousMonthCompleted = getPreviousMonthCompleted(unitData);
+
+    let derivedStatus = getDerivedTableStatus(weekMap);
+    let isLocked = false;
+
+    if (notYetCreated) {
+      derivedStatus = "Checklist Not Yet Created";
+      isLocked = true;
+    } else if (existedLastMonth && !previousMonthCompleted) {
+      derivedStatus = "Previous Month Incomplete";
+      isLocked = true;
+    }
 
     rows.push({
       unit: unitName,
@@ -97,6 +137,7 @@ const flattenCobsData = (rawData) => {
       _raw: latestBatch,
       _unitKey: unitKey,
       _unitData: unitData,
+      _isLocked: isLocked,
     });
   });
 
@@ -118,7 +159,7 @@ const StatusChip = ({ value }) => {
         background: getChipBg(chipId),
         color: getChipTextColor(chipId),
       }}>
-      {getChipName(chipId)}
+      {value}
     </span>
   );
 };
@@ -146,7 +187,7 @@ const COBS = () => {
   );
 
   const is404 = error?.status === 404;
-  const tableData = flattenCobsData(data);
+  const tableData = flattenCobsData(data, currentMonth);
   const total = tableData.length;
 
   const paginatedData = tableData.slice(
@@ -171,6 +212,11 @@ const COBS = () => {
 
   const handlePrevMonth = () => setCurrentMonth((m) => m.subtract(1, "month"));
   const handleNextMonth = () => setCurrentMonth((m) => m.add(1, "month"));
+
+  const handleRowClick = (row) => {
+    if (row._isLocked) return;
+    setSelectedUnitKey(row._unitKey);
+  };
 
   const columnsWithRender = COLUMNS.map((col) =>
     col.key === "status"
@@ -223,7 +269,7 @@ const COBS = () => {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          onRowClick={(row) => setSelectedUnitKey(row._unitKey)}
+          onRowClick={handleRowClick}
         />
       </PageContainer>
 

@@ -323,7 +323,7 @@
     text-overflow: ellipsis;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   &__arrow {
@@ -336,14 +336,42 @@
   }
 
   &__check {
-    position: absolute;
-    right: 12px;
     display: flex;
     align-items: center;
     color: $secondary-main;
+    flex-shrink: 0;
 
     &-icon {
       font-size: 13px !important;
+    }
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #e53935;
+    color: #ffffff !important;
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1;
+    font-family: "Poppins", sans-serif;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+
+    &--dot {
+      position: absolute;
+      top: 2px;
+      right: 1px;
+      min-width: 9px;
+      width: 9px;
+      height: 9px;
+      padding: 0;
+      border: 1.5px solid $bg-main;
     }
   }
 }

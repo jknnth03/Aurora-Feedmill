@@ -2,7 +2,6 @@ export const validateForm = async (
   isCompleted,
   { infestationLevel, treatmentDose, entryPoints, questionnaireData },
 ) => {
-  // Draft save — no validation needed
   if (isCompleted === 0) {
     return { valid: true, errors: {} };
   }
@@ -15,21 +14,22 @@ export const validateForm = async (
   inspectionAreas.forEach((area) => {
     const level = infestationLevel[area.name];
 
-    // Infestation level is always required
     if (!level) {
-      errors[`infestation__${area.name}`] = "Required.";
-      return; // skip further checks if no level selected
+      errors[`infestation__${area.name}`] =
+        `${area.name} — Infestation Level is required.`;
+      return;
     }
 
     const isLow = level.toLowerCase() === "low";
 
-    // Treatment dose and entry points are only required for average/moderate
     if (!isLow) {
       if (!treatmentDose[area.name]?.trim()) {
-        errors[`treatment__${area.name}`] = "Required.";
+        errors[`treatment__${area.name}`] =
+          `${area.name} — Treatment / Action Dose is required.`;
       }
       if (!entryPoints[area.name]?.trim()) {
-        errors[`entry__${area.name}`] = "Required.";
+        errors[`entry__${area.name}`] =
+          `${area.name} — Identify Entry Points is required.`;
       }
     }
   });

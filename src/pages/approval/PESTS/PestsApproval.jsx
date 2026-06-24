@@ -26,26 +26,25 @@ const MONTHS = [
 
 const COLUMNS = [
   { key: "batch_no", label: "Batch No.", sortable: true },
-  { key: "unit", label: "Unit", sortable: true },
   { key: "checklist_name", label: "Checklist", sortable: true },
   { key: "month_display", label: "Month", sortable: false },
-  { key: "week_display", label: "Week", sortable: false },
+  { key: "period_display", label: "Period", sortable: false },
   { key: "user", label: "Submitted By", sortable: true },
 ];
 
 const flattenApprovalsData = (rawData = {}) => {
   const rows = [];
-  Object.values(rawData).forEach((unitData) => {
-    const weeks = unitData.weeks ?? {};
-    Object.values(weeks).forEach((weekEntries) => {
-      if (!Array.isArray(weekEntries)) return;
-      weekEntries.forEach((entry) => {
+  Object.values(rawData).forEach((checklistData) => {
+    const periods = checklistData.periods ?? {};
+    Object.entries(periods).forEach(([periodKey, periodEntries]) => {
+      if (!Array.isArray(periodEntries)) return;
+      periodEntries.forEach((entry) => {
         const startDate = entry.start_at ? new Date(entry.start_at) : null;
         const monthIndex = startDate ? startDate.getMonth() : null;
         rows.push({
           ...entry,
           month_display: monthIndex !== null ? MONTHS[monthIndex] : "—",
-          week_display: `Week ${entry.week ?? "—"}`,
+          period_display: periodKey,
         });
       });
     });

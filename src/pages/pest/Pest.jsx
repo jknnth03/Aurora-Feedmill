@@ -31,8 +31,11 @@ const STATUS_CHIP_MAP = {
   "for acknowledgement": "chip-for-approval",
   "for approval": "chip-for-approval",
   "on going": "chip-processing",
+  "on progress": "chip-processing",
   pending: "chip-pending",
   rejected: "chip-rejected",
+  "checklist not yet created": "chip-pending",
+  "previous month incomplete": "chip-rejected",
 };
 
 const getCompletedPeriodsCount = (periodMap) => {
@@ -69,18 +72,57 @@ const getDerivedPestTableStatus = (periodMap) => {
   return "On Going";
 };
 
-const flattenPestData = (rawData) => {
+const isChecklistNotYetCreated = (checklistData, currentMonth) => {
+  const createdAt = checklistData?.created_at;
+  if (!createdAt) return false;
+  const createdMonth = dayjs(createdAt);
+  if (!createdMonth.isValid()) return false;
+  return createdMonth.startOf("month").isAfter(currentMonth.startOf("month"));
+};
+
+const checklistExistedLastMonth = (checklistData, currentMonth) => {
+  const createdAt = checklistData?.created_at;
+  if (!createdAt) return false;
+  const createdMonth = dayjs(createdAt).startOf("month");
+  const previousMonth = currentMonth.subtract(1, "month").startOf("month");
+  return !createdMonth.isAfter(previousMonth);
+};
+
+const getPreviousMonthCompleted = (checklistData) => {
+  if (checklistData?.previous_month_completed === undefined) return true;
+  return Boolean(checklistData.previous_month_completed);
+};
+
+const flattenPestData = (rawData, currentMonth) => {
   if (!rawData) return [];
   const rows = [];
   Object.entries(rawData).forEach(([checklistKey, checklistData]) => {
     const periodMap = checklistData?.periods ?? {};
     const completedPeriods = getCompletedPeriodsCount(periodMap);
-    const derivedStatus = getDerivedPestTableStatus(periodMap);
     const allBatches = Object.values(periodMap).flat();
     const latestBatch =
       allBatches.length > 0
         ? allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a))
         : null;
+
+    const notYetCreated = isChecklistNotYetCreated(checklistData, currentMonth);
+    const existedLastMonth = checklistExistedLastMonth(
+      checklistData,
+      currentMonth,
+    );
+    const previousMonthCompleted = getPreviousMonthCompleted(checklistData);
+
+    let derivedStatus = getDerivedPestTableStatus(periodMap);
+    let isLocked = false;
+
+    if (notYetCreated) {
+      derivedStatus = "Checklist Not Yet Created";
+      isLocked = true;
+    } else if (existedLastMonth && !previousMonthCompleted) {
+      derivedStatus = "Previous Month Incomplete";
+      isLocked = true;
+    }
+
     rows.push({
       checklist_name: checklistData?.checklist_name ?? "—",
       week: `${completedPeriods}/2`,
@@ -88,6 +130,7 @@ const flattenPestData = (rawData) => {
       _raw: latestBatch,
       _unitKey: checklistKey,
       _unitData: checklistData,
+      _isLocked: isLocked,
     });
   });
   return rows;
@@ -95,17 +138,17 @@ const flattenPestData = (rawData) => {
 
 const StatusChip = ({ value }) => {
   useChipColors();
-  if (!value || value === "—") return <span className="pest__dash">—</span>;
+  if (!value || value === "—") return <span className="cobs__dash">—</span>;
   const chipId = STATUS_CHIP_MAP[value.toLowerCase()] ?? null;
-  if (!chipId) return <span className="pest__dash">{value}</span>;
+  if (!chipId) return <span className="cobs__dash">{value}</span>;
   return (
     <span
-      className="pest__chip"
+      className="cobs__chip"
       style={{
         background: getChipBg(chipId),
         color: getChipTextColor(chipId),
       }}>
-      {getChipName(chipId)}
+      {value}
     </span>
   );
 };
@@ -132,7 +175,7 @@ const PestPage = () => {
   );
 
   const is404 = error?.status === 404;
-  const tableData = flattenPestData(data);
+  const tableData = flattenPestData(data, currentMonth);
   const total = tableData.length;
   const paginatedData = tableData.slice(
     (page - 1) * rowsPerPage,
@@ -153,6 +196,11 @@ const PestPage = () => {
   };
   const handlePrevMonth = () => setCurrentMonth((m) => m.subtract(1, "month"));
   const handleNextMonth = () => setCurrentMonth((m) => m.add(1, "month"));
+
+  const handleRowClick = (row) => {
+    if (row._isLocked) return;
+    setSelectedUnitKey(row._unitKey);
+  };
 
   const columnsWithRender = COLUMNS.map((col) =>
     col.key === "status"
@@ -205,7 +253,7 @@ const PestPage = () => {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          onRowClick={(row) => setSelectedUnitKey(row._unitKey)}
+          onRowClick={handleRowClick}
         />
       </PageContainer>
 

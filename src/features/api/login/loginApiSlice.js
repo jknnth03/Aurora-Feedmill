@@ -15,7 +15,18 @@ const extendedApi = apiSlice.injectEndpoints({
         method: "POST",
       }),
     }),
+    getApprovalsStatusCount: builder.query({
+      query: () => ({
+        url: "/api/approvals/status-count",
+        method: "GET",
+      }),
+      providesTags: ["ApprovalsStatusCount"],
+    }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation } = extendedApi;
+export const {
+  useLoginMutation,
+  useLogoutMutation,
+  useGetApprovalsStatusCountQuery,
+} = extendedApi;

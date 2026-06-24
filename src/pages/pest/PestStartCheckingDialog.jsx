@@ -13,6 +13,7 @@ import {
   useStorePestResponseMutation,
 } from "../../features/api/pests/pestApi";
 import { validateForm } from "./PestStartCheckingDialogValidation";
+import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./PestStartCheckingDialog.scss";
 
 const PEST_CHECKLIST_ID = 6;
@@ -37,6 +38,14 @@ const getTodayString = () => {
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+};
+
+const getPeriodStartDate = (period, month, year) => {
+  if (!month || !year) return getTodayString();
+  const mm = String(month).padStart(2, "0");
+  const periodNum = parseInt(String(period).match(/\d+/)?.[0] ?? "1", 10);
+  const day = periodNum === 1 ? "01" : "16";
+  return `${year}-${mm}-${day}`;
 };
 
 const getGrade = (percent) => {
@@ -122,6 +131,7 @@ const PestStartCheckingDialog = ({
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const firstErrorRef = useRef(null);
 
@@ -140,7 +150,13 @@ const PestStartCheckingDialog = ({
     questionnaireData?.items?.find((s) => s.name === "Other Observation")
       ?.items ?? [];
 
-  const errorCount = Object.keys(errors).length;
+  const obsFieldErrors = Object.keys(errors).filter((key) =>
+    key.startsWith("obs__"),
+  );
+  const otherFieldErrorCount = Object.keys(errors).filter(
+    (key) => !key.startsWith("obs__") && key !== "_submit",
+  ).length;
+  const errorCount = obsFieldErrors.length + otherFieldErrorCount;
 
   const getPestTotalScore = (pestName) => {
     return inspectionAreas.reduce((sum, area) => {
@@ -276,7 +292,7 @@ const PestStartCheckingDialog = ({
     formData.append("evaluator_id", evaluatorId ?? "");
     formData.append("approver_id", approverId ?? "");
     formData.append("is_completed", isCompleted);
-    formData.append("start_at", getTodayString());
+    formData.append("start_at", getPeriodStartDate(period, month, year));
     formData.append(
       "batch_no",
       continueMode ? (batchEntry?.batch_no ?? "") : "",
@@ -314,6 +330,23 @@ const PestStartCheckingDialog = ({
     return formData;
   };
 
+  const performSubmit = async (isCompleted) => {
+    setIsSubmitting(true);
+    try {
+      const result = await storePestResponse(
+        buildFormData(isCompleted),
+      ).unwrap();
+      onSuccess?.(result);
+      setConfirmOpen(false);
+      handleClose();
+    } catch {
+      setErrors({ _submit: "Something went wrong. Please try again." });
+      setConfirmOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (isCompleted) => {
     setSubmitAttempted(true);
     const { valid, errors: validationErrors } = await validateForm(
@@ -330,18 +363,16 @@ const PestStartCheckingDialog = ({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const result = await storePestResponse(
-        buildFormData(isCompleted),
-      ).unwrap();
-      onSuccess?.(result);
-      handleClose();
-    } catch {
-      setErrors({ _submit: "Something went wrong. Please try again." });
-    } finally {
-      setIsSubmitting(false);
+    if (isCompleted) {
+      setConfirmOpen(true);
+      return;
     }
+
+    await performSubmit(isCompleted);
+  };
+
+  const handleConfirmSubmit = () => {
+    performSubmit(1);
   };
 
   const handleClose = () => {
@@ -470,374 +501,415 @@ const PestStartCheckingDialog = ({
   );
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_, reason) => {
-        if (!viewMode && reason === "backdropClick") return;
-        handleClose();
-      }}
-      disableEscapeKeyDown={!viewMode}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{ className: "pest-sc__paper" }}>
-      <div className="pest-sc__header">
-        <div className="pest-sc__header-title">
-          <ChecklistIcon className="pest-sc__header-icon" />
-          <span>{getDialogTitle()}</span>
+    <>
+      <Dialog
+        open={open}
+        onClose={(_, reason) => {
+          if (!viewMode && reason === "backdropClick") return;
+          handleClose();
+        }}
+        disableEscapeKeyDown={!viewMode}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{ className: "pest-sc__paper" }}>
+        <div className="pest-sc__header">
+          <div className="pest-sc__header-title">
+            <ChecklistIcon className="pest-sc__header-icon" />
+            <span>{getDialogTitle()}</span>
+          </div>
+          <span className="pest-sc__name-value">
+            {unitName} — {period} ({month}/{year})
+          </span>
+          <IconButton
+            size="small"
+            className="pest-sc__close"
+            onClick={handleClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         </div>
-        <span className="pest-sc__name-value">
-          {unitName} — {period} ({month}/{year})
-        </span>
-        <IconButton
-          size="small"
-          className="pest-sc__close"
-          onClick={handleClose}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </div>
 
-      {viewMode && batchEntry && !isFetching && (
-        <div className="pest-sc__info-strip">
-          <div className="pest-sc__info-item">
-            <span className="pest-sc__info-label">Submitted by</span>
-            <span className="pest-sc__info-value">
-              {batchEntry.user ?? "—"}
-            </span>
+        {viewMode && batchEntry && !isFetching && (
+          <div className="pest-sc__info-strip">
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Submitted by</span>
+              <span className="pest-sc__info-value">
+                {batchEntry.user ?? "—"}
+              </span>
+            </div>
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Approver</span>
+              <span className="pest-sc__info-value">
+                {batchEntry.approver ?? "—"}
+              </span>
+            </div>
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Start</span>
+              <span className="pest-sc__info-value">
+                {formatDateTime(batchEntry.start_at)}
+              </span>
+            </div>
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">End</span>
+              <span className="pest-sc__info-value">
+                {formatDateTime(batchEntry.end_at)}
+              </span>
+            </div>
           </div>
-          <div className="pest-sc__info-item">
-            <span className="pest-sc__info-label">Approver</span>
-            <span className="pest-sc__info-value">
-              {batchEntry.approver ?? "—"}
-            </span>
-          </div>
-          <div className="pest-sc__info-item">
-            <span className="pest-sc__info-label">Start</span>
-            <span className="pest-sc__info-value">
-              {formatDateTime(batchEntry.start_at)}
-            </span>
-          </div>
-          <div className="pest-sc__info-item">
-            <span className="pest-sc__info-label">End</span>
-            <span className="pest-sc__info-value">
-              {formatDateTime(batchEntry.end_at)}
-            </span>
-          </div>
-        </div>
-      )}
+        )}
 
-      {continueMode && batchEntry && !isFetching && (
-        <div className="pest-sc__info-strip pest-sc__info-strip--draft">
-          <div className="pest-sc__info-item">
-            <span className="pest-sc__info-label">Draft by</span>
-            <span className="pest-sc__info-value">
-              {batchEntry.user ?? "—"}
-            </span>
+        {continueMode && batchEntry && !isFetching && (
+          <div className="pest-sc__info-strip pest-sc__info-strip--draft">
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Draft by</span>
+              <span className="pest-sc__info-value">
+                {batchEntry.user ?? "—"}
+              </span>
+            </div>
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Started</span>
+              <span className="pest-sc__info-value">
+                {formatDateTime(batchEntry.start_at)}
+              </span>
+            </div>
           </div>
-          <div className="pest-sc__info-item">
-            <span className="pest-sc__info-label">Started</span>
-            <span className="pest-sc__info-value">
-              {formatDateTime(batchEntry.start_at)}
-            </span>
-          </div>
-        </div>
-      )}
+        )}
 
-      <DialogContent className="pest-sc__content">
-        {isFetching ? (
-          renderSkeleton()
-        ) : (
-          <>
-            <div className="pest-sc__section">
-              <div className="pest-sc__section-header">Pest Inspection</div>
-              <div className="pest-sc__table-scroll">
-                <table className="pest-sc__grid-table">
-                  <thead>
-                    <tr className="pest-sc__thead-row">
-                      <th className="pest-sc__th pest-sc__th--area" rowSpan={2}>
-                        Inspection Areas
-                      </th>
-                      <th
-                        className="pest-sc__th pest-sc__th--group"
-                        colSpan={pests.length}>
-                        Pest
-                      </th>
-                      <th
-                        className="pest-sc__th pest-sc__th--group"
-                        colSpan={otherObsItems.reduce(
-                          (acc, item) => acc + (item.sub_items?.length ?? 0),
-                          0,
-                        )}>
-                        Other Observation
-                      </th>
-                    </tr>
-                    <tr className="pest-sc__thead-row pest-sc__thead-row--sub">
-                      {pests.map((pest) => (
+        <DialogContent className="pest-sc__content">
+          {isFetching ? (
+            renderSkeleton()
+          ) : (
+            <>
+              <div className="pest-sc__section">
+                <div className="pest-sc__section-header">Pest Inspection</div>
+                <div className="pest-sc__table-scroll">
+                  <table className="pest-sc__grid-table">
+                    <thead>
+                      <tr className="pest-sc__thead-row">
                         <th
-                          key={pest.name}
-                          className="pest-sc__th pest-sc__th--col">
-                          {pest.name}
+                          className="pest-sc__th pest-sc__th--area"
+                          rowSpan={2}>
+                          Inspection Areas
                         </th>
-                      ))}
-                      {otherObsItems.map((item) =>
-                        item.sub_items?.map((sub) => (
-                          <th
-                            key={`${item.name}__${sub.name}`}
-                            className="pest-sc__th pest-sc__th--col pest-sc__th--obs-sub">
-                            <div className="pest-sc__th-obs-group">
-                              {item.name}
-                            </div>
-                            <div className="pest-sc__th-obs-sub">
-                              {sub.name}
-                            </div>
-                          </th>
-                        )),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inspectionAreas.map((area) => (
-                      <tr key={area.name} className="pest-sc__tr">
-                        <td className="pest-sc__td pest-sc__td--area-name">
-                          {area.name}
-                        </td>
-                        {pests.map((pest) => {
-                          const key = `${area.name}__${pest.name}`;
-                          const hasError = !!errors[`grid__${key}`];
-                          const val = viewMode
-                            ? getViewGridValue(area.name, pest.name)
-                            : (pestGrid[key] ?? "");
+                        <th
+                          className="pest-sc__th pest-sc__th--group pest-sc__th--divider"
+                          colSpan={pests.length}>
+                          Pest
+                        </th>
+                        <th
+                          className="pest-sc__th pest-sc__th--group"
+                          colSpan={otherObsItems.reduce(
+                            (acc, item) => acc + (item.sub_items?.length ?? 0),
+                            0,
+                          )}>
+                          Other Observation {!viewMode && <RequiredStar />}
+                        </th>
+                      </tr>
+                      <tr className="pest-sc__thead-row pest-sc__thead-row--sub">
+                        {pests.map((pest, idx) => {
+                          const isLastPest = idx === pests.length - 1;
                           return (
-                            <td
+                            <th
                               key={pest.name}
-                              ref={getFirstErrorRef(hasError)}
-                              className={`pest-sc__td pest-sc__td--input${hasError ? " pest-sc__td--error" : ""}`}>
-                              {viewMode ? (
-                                <span className="pest-sc__score-display">
-                                  {val !== "" ? val : "—"}
-                                </span>
-                              ) : (
-                                <input
-                                  type="number"
-                                  min={0}
-                                  className={`pest-sc__score-input${hasError ? " pest-sc__score-input--error" : ""}`}
-                                  value={val}
-                                  onChange={(e) =>
-                                    handlePestScoreChange(
-                                      area.name,
-                                      pest.name,
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="0"
-                                />
-                              )}
-                            </td>
+                              className={`pest-sc__th pest-sc__th--col${isLastPest ? " pest-sc__th--divider" : ""}`}>
+                              {pest.name}
+                            </th>
                           );
                         })}
-                        {otherObsItems.map((item) =>
-                          item.sub_items?.map((sub) => {
-                            const obsKey = `${area.name}__${item.name}`;
-                            const errorKey = `obs__${area.name}__${item.name}`;
-                            const hasError = !!errors[errorKey];
-                            const currentVal = viewMode
-                              ? getViewObsValue(area.name, item.name)
-                              : (otherObservations[obsKey] ?? null);
-                            const checked = currentVal === sub.name;
+                        {otherObsItems.map((item, itemIdx) =>
+                          item.sub_items?.map((sub, subIdx) => {
+                            const isLastSub =
+                              subIdx === item.sub_items.length - 1;
+                            const isLastItem =
+                              itemIdx === otherObsItems.length - 1;
+                            const addDivider = isLastSub && !isLastItem;
                             return (
-                              <td
+                              <th
                                 key={`${item.name}__${sub.name}`}
-                                ref={getFirstErrorRef(
-                                  hasError && sub === item.sub_items[0],
-                                )}
-                                className={`pest-sc__td pest-sc__td--checkbox${hasError ? " pest-sc__td--error" : ""}`}>
-                                <label
-                                  className={`pest-sc__checkbox-label${viewMode ? " pest-sc__checkbox-label--readonly" : ""}`}>
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={
-                                      viewMode
-                                        ? undefined
-                                        : () =>
-                                            handleObsToggle(
-                                              area.name,
-                                              item.name,
-                                              sub.name,
-                                            )
-                                    }
-                                    readOnly={viewMode}
-                                    disabled={viewMode}
-                                    className="pest-sc__checkbox-input"
-                                  />
-                                  <span className="pest-sc__checkbox-box" />
-                                </label>
-                              </td>
+                                className={`pest-sc__th pest-sc__th--col pest-sc__th--obs-sub${addDivider ? " pest-sc__th--divider" : ""}`}>
+                                <div className="pest-sc__th-obs-group">
+                                  {item.name}
+                                </div>
+                                <div className="pest-sc__th-obs-sub">
+                                  {sub.name}
+                                </div>
+                              </th>
                             );
                           }),
                         )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="pest-sc__section">
-              <div className="pest-sc__section-header">Grading Summary</div>
-              <div className="pest-sc__graph-body">
-                {graphPests.map(({ name, total }) => {
-                  const percent = getBarPercent(total);
-                  const grade = getGrade(percent);
-                  return (
-                    <div key={name} className="pest-sc__graph-row">
-                      <span className="pest-sc__graph-label">{name}</span>
-                      <div className="pest-sc__graph-bar-track">
-                        <div
-                          className="pest-sc__graph-bar-fill"
-                          style={{
-                            width: `${percent}%`,
-                            background: grade.color,
-                          }}
-                        />
-                      </div>
-                      <span className="pest-sc__graph-percent">{percent}%</span>
-                    </div>
-                  );
-                })}
-                <div className="pest-sc__graph-legend">
-                  <span className="pest-sc__legend-item">
-                    <span
-                      className="pest-sc__legend-dot"
-                      style={{ background: "#7bc67e" }}
-                    />
-                    Low (0–30%)
-                  </span>
-                  <span className="pest-sc__legend-item">
-                    <span
-                      className="pest-sc__legend-dot"
-                      style={{ background: "#4db6ac" }}
-                    />
-                    Moderate (31–60%)
-                  </span>
-                  <span className="pest-sc__legend-item">
-                    <span
-                      className="pest-sc__legend-dot"
-                      style={{ background: "#1a237e" }}
-                    />
-                    Critical (61%+)
-                  </span>
+                    </thead>
+                    <tbody>
+                      {inspectionAreas.map((area) => (
+                        <tr key={area.name} className="pest-sc__tr">
+                          <td className="pest-sc__td pest-sc__td--area-name">
+                            {area.name}
+                          </td>
+                          {pests.map((pest, idx) => {
+                            const key = `${area.name}__${pest.name}`;
+                            const hasError = !!errors[`grid__${key}`];
+                            const val = viewMode
+                              ? getViewGridValue(area.name, pest.name)
+                              : (pestGrid[key] ?? "");
+                            const isLastPest = idx === pests.length - 1;
+                            return (
+                              <td
+                                key={pest.name}
+                                ref={getFirstErrorRef(hasError)}
+                                className={`pest-sc__td pest-sc__td--input${hasError ? " pest-sc__td--error" : ""}${isLastPest ? " pest-sc__td--divider" : ""}`}>
+                                {viewMode ? (
+                                  <span className="pest-sc__score-display">
+                                    {val !== "" ? val : "—"}
+                                  </span>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    className={`pest-sc__score-input${hasError ? " pest-sc__score-input--error" : ""}`}
+                                    value={val}
+                                    onChange={(e) =>
+                                      handlePestScoreChange(
+                                        area.name,
+                                        pest.name,
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="0"
+                                  />
+                                )}
+                              </td>
+                            );
+                          })}
+                          {otherObsItems.map((item, itemIdx) =>
+                            item.sub_items?.map((sub, subIdx) => {
+                              const obsKey = `${area.name}__${item.name}`;
+                              const errorKey = `obs__${area.name}__${item.name}`;
+                              const hasError = !!errors[errorKey];
+                              const currentVal = viewMode
+                                ? getViewObsValue(area.name, item.name)
+                                : (otherObservations[obsKey] ?? null);
+                              const checked = currentVal === sub.name;
+                              const isLastSub =
+                                subIdx === item.sub_items.length - 1;
+                              const isLastItem =
+                                itemIdx === otherObsItems.length - 1;
+                              const addDivider = isLastSub && !isLastItem;
+                              const isFirstSub = subIdx === 0;
+                              return (
+                                <td
+                                  key={`${item.name}__${sub.name}`}
+                                  ref={getFirstErrorRef(
+                                    hasError && sub === item.sub_items[0],
+                                  )}
+                                  className={`pest-sc__td pest-sc__td--checkbox${hasError ? " pest-sc__td--error" : ""}${addDivider ? " pest-sc__td--divider" : ""}`}>
+                                  <label
+                                    className={`pest-sc__checkbox-label${viewMode ? " pest-sc__checkbox-label--readonly" : ""}`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={
+                                        viewMode
+                                          ? undefined
+                                          : () =>
+                                              handleObsToggle(
+                                                area.name,
+                                                item.name,
+                                                sub.name,
+                                              )
+                                      }
+                                      readOnly={viewMode}
+                                      disabled={viewMode}
+                                      className="pest-sc__checkbox-input"
+                                    />
+                                    <span className="pest-sc__checkbox-box" />
+                                  </label>
+                                  {hasError && isFirstSub && (
+                                    <span className="pest-sc__inline-error pest-sc__inline-error--cell">
+                                      <ErrorOutlineIcon sx={{ fontSize: 10 }} />
+                                      {errors[errorKey]}
+                                    </span>
+                                  )}
+                                </td>
+                              );
+                            }),
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </div>
 
-            <div className="pest-sc__section">
-              <div className="pest-sc__section-header">Others</div>
-              <div className="pest-sc__others-body">
-                <div className="pest-sc__others-field">
-                  <span className="pest-sc__others-label">
-                    Remarks for Observation {!viewMode && <RequiredStar />}
-                  </span>
-                  <div className="pest-sc__others-textarea-wrap">
-                    <textarea
-                      className="pest-sc__others-textarea"
-                      placeholder="Type here*"
-                      value={viewMode ? (batchEntry?.remarks ?? "") : remarks}
-                      onChange={
-                        viewMode
-                          ? undefined
-                          : (e) => {
-                              setRemarks(e.target.value);
-                              clearFieldError("remarks");
-                            }
-                      }
-                      readOnly={viewMode}
-                      disabled={viewMode}
-                      rows={4}
-                    />
+              <div className="pest-sc__section">
+                <div className="pest-sc__section-header">Grading Summary</div>
+                <div className="pest-sc__graph-body">
+                  {graphPests.map(({ name, total }) => {
+                    const percent = getBarPercent(total);
+                    const grade = getGrade(percent);
+                    return (
+                      <div key={name} className="pest-sc__graph-row">
+                        <span className="pest-sc__graph-label">{name}</span>
+                        <div className="pest-sc__graph-bar-track">
+                          <div
+                            className="pest-sc__graph-bar-fill"
+                            style={{
+                              width: `${percent}%`,
+                              background: grade.color,
+                            }}
+                          />
+                        </div>
+                        <span className="pest-sc__graph-percent">
+                          {percent}%
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="pest-sc__graph-legend">
+                    <span className="pest-sc__legend-item">
+                      <span
+                        className="pest-sc__legend-dot"
+                        style={{ background: "#7bc67e" }}
+                      />
+                      Low (0–30%)
+                    </span>
+                    <span className="pest-sc__legend-item">
+                      <span
+                        className="pest-sc__legend-dot"
+                        style={{ background: "#4db6ac" }}
+                      />
+                      Moderate (31–60%)
+                    </span>
+                    <span className="pest-sc__legend-item">
+                      <span
+                        className="pest-sc__legend-dot"
+                        style={{ background: "#1a237e" }}
+                      />
+                      Critical (61%+)
+                    </span>
                   </div>
-                  {errors.remarks && (
-                    <span className="pest-sc__inline-error">
-                      <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                      {errors.remarks}
+                </div>
+              </div>
+
+              <div className="pest-sc__section">
+                <div className="pest-sc__section-header">Others</div>
+                <div className="pest-sc__others-body">
+                  <div className="pest-sc__others-field">
+                    <span className="pest-sc__others-label">
+                      Remarks for Observation
+                    </span>
+                    <div className="pest-sc__others-textarea-wrap">
+                      <textarea
+                        className="pest-sc__others-textarea"
+                        placeholder="Type here*"
+                        value={viewMode ? (batchEntry?.remarks ?? "") : remarks}
+                        onChange={
+                          viewMode
+                            ? undefined
+                            : (e) => {
+                                setRemarks(e.target.value);
+                                clearFieldError("remarks");
+                              }
+                        }
+                        readOnly={viewMode}
+                        disabled={viewMode}
+                        rows={4}
+                      />
+                    </div>
+                    {errors.remarks && (
+                      <span className="pest-sc__inline-error">
+                        <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                        {errors.remarks}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pest-sc__others-field">
+                    <span className="pest-sc__others-label">Notes</span>
+                    <div className="pest-sc__others-textarea-wrap">
+                      <textarea
+                        className="pest-sc__others-textarea"
+                        placeholder="Type here"
+                        value={viewMode ? (batchEntry?.notes ?? "") : notes}
+                        onChange={
+                          viewMode ? undefined : (e) => setNotes(e.target.value)
+                        }
+                        readOnly={viewMode}
+                        disabled={viewMode}
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+
+                  {errors._submit && (
+                    <span className="pest-sc__inline-error pest-sc__inline-error--block">
+                      <ErrorOutlineIcon sx={{ fontSize: 13 }} />
+                      {errors._submit}
                     </span>
                   )}
                 </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
 
-                <div className="pest-sc__others-field">
-                  <span className="pest-sc__others-label">Notes</span>
-                  <div className="pest-sc__others-textarea-wrap">
-                    <textarea
-                      className="pest-sc__others-textarea"
-                      placeholder="Type here"
-                      value={viewMode ? (batchEntry?.notes ?? "") : notes}
-                      onChange={
-                        viewMode ? undefined : (e) => setNotes(e.target.value)
-                      }
-                      readOnly={viewMode}
-                      disabled={viewMode}
-                      rows={4}
-                    />
-                  </div>
-                </div>
-
-                {errors._submit && (
-                  <span className="pest-sc__inline-error pest-sc__inline-error--block">
+        <DialogActions className="pest-sc__footer">
+          {viewMode ? (
+            <Button
+              variant="text"
+              onClick={handleClose}
+              className="pest-sc__btn-close">
+              CLOSE
+            </Button>
+          ) : (
+            <>
+              <div className="pest-sc__footer-left">
+                {errorCount > 0 && (
+                  <span className="pest-sc__error-summary">
                     <ErrorOutlineIcon sx={{ fontSize: 13 }} />
-                    {errors._submit}
+                    {errorCount} field{errorCount > 1 ? "s" : ""} need
+                    {errorCount === 1 ? "s" : ""} attention
                   </span>
                 )}
               </div>
-            </div>
-          </>
-        )}
-      </DialogContent>
+              <div className="pest-sc__footer-right">
+                <Button
+                  variant="text"
+                  onClick={handleClose}
+                  disabled={isLoading || isSubmitting}
+                  className="pest-sc__btn-close">
+                  CLOSE
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleSubmit(0)}
+                  disabled={isLoading || isSubmitting}
+                  className="pest-sc__btn-draft">
+                  {isLoading || isSubmitting ? "Saving..." : "SAVE AS DRAFT"}
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleSubmit(1)}
+                  disabled={isLoading || isSubmitting}
+                  className="pest-sc__btn-submit">
+                  {isLoading || isSubmitting ? "Submitting..." : "SUBMIT"}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
 
-      <DialogActions className="pest-sc__footer">
-        {viewMode ? (
-          <Button
-            variant="text"
-            onClick={handleClose}
-            className="pest-sc__btn-close">
-            CLOSE
-          </Button>
-        ) : (
-          <>
-            <div className="pest-sc__footer-left">
-              {errorCount > 0 && (
-                <span className="pest-sc__error-summary">
-                  <ErrorOutlineIcon sx={{ fontSize: 13 }} />
-                  {errorCount} field{errorCount > 1 ? "s" : ""} need
-                  {errorCount === 1 ? "s" : ""} attention
-                </span>
-              )}
-            </div>
-            <div className="pest-sc__footer-right">
-              <Button
-                variant="text"
-                onClick={handleClose}
-                disabled={isLoading || isSubmitting}
-                className="pest-sc__btn-close">
-                CLOSE
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => handleSubmit(0)}
-                disabled={isLoading || isSubmitting}
-                className="pest-sc__btn-draft">
-                {isLoading || isSubmitting ? "Saving..." : "SAVE AS DRAFT"}
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => handleSubmit(1)}
-                disabled={isLoading || isSubmitting}
-                className="pest-sc__btn-submit">
-                {isLoading || isSubmitting ? "Submitting..." : "SUBMIT"}
-              </Button>
-            </div>
-          </>
-        )}
-      </DialogActions>
-    </Dialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmSubmit}
+        title="Submit Pest Inspection?"
+        message="Once submitted, this checklist will be marked as completed and can no longer be edited."
+        confirmLabel="Submit"
+        cancelLabel="Cancel"
+        isLoading={isSubmitting}
+        confirmVariant="primary"
+      />
+    </>
   );
 };
 

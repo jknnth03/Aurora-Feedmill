@@ -4,261 +4,366 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ImageIcon from "@mui/icons-material/Image";
-import COBSImagePreviewDialog from "../../cobs/COBSImagePreviewDialog";
 import { useApprovePestsApprovalMutation } from "../../../features/api/approval/pestsApproval";
+import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./PestsApprovalModal.scss";
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "—";
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+const OTHER_OBSERVATIONS = [
+  { name: "Cleanliness/Sanitation", subs: ["Clean", "Dirty"] },
+  { name: "Structural", subs: ["Good", "Defects"] },
+  { name: "Proper Ventilation", subs: ["Yes", "No"] },
+];
+
+const TOTAL_OBS_COLUMNS = OTHER_OBSERVATIONS.reduce(
+  (acc, item) => acc + item.subs.length,
+  0,
+);
+
+const getGrade = (percent) => {
+  if (percent <= 30) return { label: "Low", color: "#7bc67e" };
+  if (percent <= 60) return { label: "Moderate", color: "#4db6ac" };
+  return { label: "Critical", color: "#1a237e" };
 };
 
-const formatTime = (dateStr) => {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "—";
-  return d.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const getViewObsValue = (responses, areaName, itemName) => {
+  if (!responses) return null;
+  for (const r of responses) {
+    const raw = r?.response ?? r;
+    if (raw?.inspection_area === areaName) {
+      const obs = raw?.other_obervation ?? raw?.other_observations ?? {};
+      if (Array.isArray(obs)) {
+        const found = obs.find((o) => o.name === itemName);
+        return found?.score ?? null;
+      }
+      return obs[itemName] ?? null;
+    }
+  }
+  return null;
 };
 
-const PestsApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
-  const [previewState, setPreviewState] = useState({
-    open: false,
-    images: [],
-    index: 0,
-  });
+const getViewGridValue = (responses, areaName, pestName) => {
+  if (!responses) return "";
+  for (const r of responses) {
+    const raw = r?.response ?? r;
+    if (raw?.inspection_area === areaName) {
+      const pestList = raw?.pests ?? [];
+      const found = pestList.find((p) =>
+        typeof p === "string" ? p === pestName : p.name === pestName,
+      );
+      if (found != null) {
+        return typeof found === "object" ? String(found.score ?? "") : "";
+      }
+    }
+  }
+  return "";
+};
 
+const PestsApprovalModal = ({
+  open,
+  onClose,
+  batchEntry = null,
+  onApprove,
+  currentUser = null,
+}) => {
   const [approvePestsApproval, { isLoading: isApproving }] =
     useApprovePestsApprovalMutation();
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   if (!batchEntry) return null;
 
-  const allImages = batchEntry.responses
-    ? batchEntry.responses
-        .filter((r) => r.response !== null && r.response !== undefined)
-        .flatMap((r) => r.images || [])
-    : [];
+  const responses = batchEntry.responses ?? [];
 
-  const totalAllocation = batchEntry.score_breakdown
-    ? batchEntry.score_breakdown.reduce(
-        (sum, s) => sum + (s.allocation ?? 0),
-        0,
-      )
-    : 100;
+  const inspectionAreas = [
+    ...new Set(
+      responses
+        .map((r) => r?.response?.inspection_area ?? null)
+        .filter(Boolean),
+    ),
+  ];
 
-  const scorePercent =
-    totalAllocation > 0
-      ? ((batchEntry.score / totalAllocation) * 100).toFixed(2)
-      : "0.00";
+  const pests =
+    responses.length > 0
+      ? (responses[0]?.response?.pests ?? []).map((p) =>
+          typeof p === "string" ? { name: p } : { name: p.name },
+        )
+      : [];
 
-  const openPreview = (imgs, idx) =>
-    setPreviewState({ open: true, images: imgs, index: idx });
-  const closePreview = () => setPreviewState((p) => ({ ...p, open: false }));
+  const getBarPercent = (pestName) => {
+    const max = inspectionAreas.length * 10;
+    if (max === 0) return 0;
+    const total = responses.reduce((sum, r) => {
+      const raw = r?.response ?? r;
+      const pestList = raw?.pests ?? [];
+      const found = pestList.find((p) =>
+        typeof p === "string" ? p === pestName : p.name === pestName,
+      );
+      return (
+        sum +
+        (found && typeof found === "object" ? Number(found.score ?? 0) : 0)
+      );
+    }, 0);
+    return Math.min(Math.round((total / max) * 100), 100);
+  };
 
-  const handleAcknowledge = () => {
+  const handleAcknowledgeClick = () => {
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmAcknowledge = () => {
     if (!batchEntry) return;
+
+    const approverId = currentUser?.id ?? batchEntry.user_id;
+    const approverName = currentUser?.name ?? batchEntry.user ?? "";
+
     approvePestsApproval({
       batch_no: batchEntry.batch_no,
-      approver_id: batchEntry.approver_id ?? 1,
-      approvers: [
+      section: "pests",
+      approve: [
         {
-          id: batchEntry.approver_id ?? 1,
-          name: batchEntry.approver ?? "",
+          id: approverId,
+          name: approverName,
         },
       ],
     })
       .unwrap()
       .then(() => {
+        setConfirmOpen(false);
         onApprove?.(batchEntry);
       })
-      .catch((err) => {
-        console.error("Acknowledge failed:", err);
-      });
+      .catch((err) => console.error("Acknowledge failed:", err));
   };
 
   return (
-    <>
-      <Dialog
-        open={open}
-        onClose={(_, reason) => {
-          if (reason === "backdropClick") return;
-          onClose();
-        }}
-        disableEscapeKeyDown
-        maxWidth="md"
-        fullWidth
-        PaperProps={{ className: "pestsam__paper" }}>
-        <div className="pestsam__header">
-          <div className="pestsam__header-title">
-            <GppMaybeIcon className="pestsam__header-icon" />
-            <span>Acknowledgement Details</span>
+    <Dialog
+      open={open}
+      onClose={(_, reason) => {
+        if (reason === "backdropClick") return;
+        onClose();
+      }}
+      disableEscapeKeyDown
+      maxWidth="lg"
+      fullWidth
+      PaperProps={{ className: "pestsam__paper" }}>
+      <div className="pestsam__header">
+        <div className="pestsam__header-title">
+          <GppMaybeIcon className="pestsam__header-icon" />
+          <span>Acknowledgement Details</span>
+        </div>
+        <span className="pestsam__batch-label">
+          {batchEntry.checklist_name ?? "—"} —{" "}
+          {batchEntry.period_display ?? "—"} ({batchEntry.month_display ?? "—"}/
+          {new Date(batchEntry.start_at).getFullYear()})
+        </span>
+        <IconButton size="small" className="pestsam__close" onClick={onClose}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </div>
+
+      <DialogContent className="pestsam__content">
+        <div className="pestsam__section">
+          <div className="pestsam__section-header">Pest Inspection</div>
+          <div className="pestsam__table-scroll">
+            <table className="pestsam__grid-table">
+              <thead>
+                <tr className="pestsam__thead-row">
+                  <th className="pestsam__th pestsam__th--area" rowSpan={2}>
+                    Inspection Areas
+                  </th>
+                  <th
+                    className="pestsam__th pestsam__th--group"
+                    colSpan={pests.length}>
+                    Pest
+                  </th>
+                  <th
+                    className="pestsam__th pestsam__th--group"
+                    colSpan={TOTAL_OBS_COLUMNS}>
+                    Other Observation
+                  </th>
+                </tr>
+                <tr className="pestsam__thead-row pestsam__thead-row--sub">
+                  {pests.map((pest) => (
+                    <th
+                      key={pest.name}
+                      className="pestsam__th pestsam__th--col">
+                      {pest.name}
+                    </th>
+                  ))}
+                  {OTHER_OBSERVATIONS.map((item) =>
+                    item.subs.map((sub) => (
+                      <th
+                        key={`${item.name}__${sub}`}
+                        className="pestsam__th pestsam__th--col pestsam__th--obs-sub">
+                        <div className="pestsam__th-obs-group">{item.name}</div>
+                        <div className="pestsam__th-obs-sub">{sub}</div>
+                      </th>
+                    )),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {inspectionAreas.map((areaName) => (
+                  <tr key={areaName} className="pestsam__tr">
+                    <td className="pestsam__td pestsam__td--area-name">
+                      {areaName}
+                    </td>
+                    {pests.map((pest) => {
+                      const val = getViewGridValue(
+                        responses,
+                        areaName,
+                        pest.name,
+                      );
+                      return (
+                        <td
+                          key={pest.name}
+                          className="pestsam__td pestsam__td--input">
+                          <span className="pestsam__score-display">
+                            {val !== "" ? val : "—"}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    {OTHER_OBSERVATIONS.map((item) => {
+                      const currentVal = getViewObsValue(
+                        responses,
+                        areaName,
+                        item.name,
+                      );
+                      return item.subs.map((sub) => (
+                        <td
+                          key={`${item.name}__${sub}`}
+                          className="pestsam__td pestsam__td--checkbox">
+                          <label className="pestsam__checkbox-label pestsam__checkbox-label--readonly">
+                            <input
+                              type="checkbox"
+                              checked={currentVal === sub}
+                              readOnly
+                              disabled
+                              className="pestsam__checkbox-input"
+                            />
+                            <span className="pestsam__checkbox-box" />
+                          </label>
+                        </td>
+                      ));
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <span className="pestsam__batch-label">
-            Batch #{batchEntry.batch_no} — {batchEntry.unit ?? "—"}
-          </span>
-          <IconButton size="small" className="pestsam__close" onClick={onClose}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
         </div>
 
-        <DialogContent className="pestsam__content">
-          <div className="pestsam__body">
-            <div className="pestsam__left">
-              <div className="pestsam__details-card">
-                <p className="pestsam__details-title">Details</p>
-                <div className="pestsam__detail-row">
-                  <span className="pestsam__detail-label">Date:</span>
-                  <span className="pestsam__detail-value pestsam__detail-value--accent">
-                    {formatDate(batchEntry.start_at)}
-                  </span>
+        <div className="pestsam__section">
+          <div className="pestsam__section-header">Grading Summary</div>
+          <div className="pestsam__graph-body">
+            {pests.map(({ name }) => {
+              const percent = getBarPercent(name);
+              const grade = getGrade(percent);
+              return (
+                <div key={name} className="pestsam__graph-row">
+                  <span className="pestsam__graph-label">{name}</span>
+                  <div className="pestsam__graph-bar-track">
+                    <div
+                      className="pestsam__graph-bar-fill"
+                      style={{ width: `${percent}%`, background: grade.color }}
+                    />
+                  </div>
+                  <span className="pestsam__graph-percent">{percent}%</span>
                 </div>
-                <div className="pestsam__detail-row">
-                  <span className="pestsam__detail-label">Time in:</span>
-                  <span className="pestsam__detail-value pestsam__detail-value--accent">
-                    {formatTime(batchEntry.start_at)}
-                  </span>
-                </div>
-                <div className="pestsam__detail-row">
-                  <span className="pestsam__detail-label">Time out:</span>
-                  <span className="pestsam__detail-value pestsam__detail-value--accent">
-                    {formatTime(batchEntry.end_at)}
-                  </span>
-                </div>
-                <div className="pestsam__detail-row">
-                  <span className="pestsam__detail-label">Unit:</span>
-                  <span className="pestsam__detail-value pestsam__detail-value--accent">
-                    {batchEntry.unit || "—"}
-                  </span>
-                </div>
-                <div className="pestsam__detail-row">
-                  <span className="pestsam__detail-label">QA Name:</span>
-                  <span className="pestsam__detail-value pestsam__detail-value--accent">
-                    {batchEntry.user || "—"}
-                  </span>
-                </div>
+              );
+            })}
+            <div className="pestsam__graph-legend">
+              <span className="pestsam__legend-item">
+                <span
+                  className="pestsam__legend-dot"
+                  style={{ background: "#7bc67e" }}
+                />
+                Low (0–30%)
+              </span>
+              <span className="pestsam__legend-item">
+                <span
+                  className="pestsam__legend-dot"
+                  style={{ background: "#4db6ac" }}
+                />
+                Moderate (31–60%)
+              </span>
+              <span className="pestsam__legend-item">
+                <span
+                  className="pestsam__legend-dot"
+                  style={{ background: "#1a237e" }}
+                />
+                Critical (61%+)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="pestsam__section">
+          <div className="pestsam__section-header">Others</div>
+          <div className="pestsam__others-body">
+            <div className="pestsam__others-field">
+              <span className="pestsam__others-label">
+                Remarks for Observation
+              </span>
+              <div className="pestsam__others-textarea-wrap">
+                <textarea
+                  className="pestsam__others-textarea"
+                  value={batchEntry.remarks ?? ""}
+                  readOnly
+                  disabled
+                  rows={4}
+                />
               </div>
             </div>
-
-            <div className="pestsam__right">
-              <div className="pestsam__section-card">
-                <p className="pestsam__section-label">Remarks</p>
-                <div className="pestsam__section-body">
-                  {batchEntry.remarks ? (
-                    <p className="pestsam__section-text">{batchEntry.remarks}</p>
-                  ) : (
-                    <span className="pestsam__empty">—</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="pestsam__section-card">
-                <p className="pestsam__section-label">Temporal Audit</p>
-                <div className="pestsam__section-body">
-                  <p className="pestsam__section-text">
-                    {batchEntry.temporal_audit || "—"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pestsam__bottom-row">
-                <div className="pestsam__section-card pestsam__score-card">
-                  <p className="pestsam__section-label">Score Summary</p>
-                  <div className="pestsam__section-body">
-                    {batchEntry.score_breakdown &&
-                      batchEntry.score_breakdown.map((s, i) => (
-                        <div key={i} className="pestsam__score-row">
-                          <span className="pestsam__score-category">
-                            {s.category}
-                          </span>
-                          <span className="pestsam__score-value">
-                            {s.score.toFixed(2)} / {s.allocation.toFixed(2)}{" "}
-                            <span className="pestsam__score-pct">
-                              ({s.percentage.toFixed(2)}%)
-                            </span>
-                          </span>
-                        </div>
-                      ))}
-                    <div className="pestsam__score-divider" />
-                    <div className="pestsam__score-total-row">
-                      <span className="pestsam__score-total-label">Total —</span>
-                      <span className="pestsam__score-total-value">
-                        {batchEntry.score}
-                      </span>
-                      <span className="pestsam__score-total-pct">
-                        {scorePercent}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pestsam__section-card pestsam__attach-card">
-                  <p className="pestsam__section-label">Attachment</p>
-                  <div className="pestsam__attach-body">
-                    {allImages.length === 0 ? (
-                      <div className="pestsam__attach-empty">
-                        <ImageIcon className="pestsam__attach-icon" />
-                        <span>No Photo Attachments</span>
-                      </div>
-                    ) : (
-                      <div className="pestsam__attach-grid">
-                        {allImages.map((url, i) => (
-                          <Tooltip key={i} title="View image" placement="top">
-                            <img
-                              src={url}
-                              alt={`attachment-${i}`}
-                              className="pestsam__attach-thumb"
-                              onClick={() => openPreview(allImages, i)}
-                            />
-                          </Tooltip>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="pestsam__others-field">
+              <span className="pestsam__others-label">Notes</span>
+              <div className="pestsam__others-textarea-wrap">
+                <textarea
+                  className="pestsam__others-textarea"
+                  value={batchEntry.notes ?? ""}
+                  readOnly
+                  disabled
+                  rows={4}
+                />
               </div>
             </div>
           </div>
-        </DialogContent>
+        </div>
+      </DialogContent>
 
-        <DialogActions className="pestsam__footer">
-          <Button
-            variant="text"
-            onClick={onClose}
-            disabled={isApproving}
-            className="pestsam__btn-close">
-            CLOSE
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-            onClick={handleAcknowledge}
-            disabled={isApproving}
-            className="pestsam__btn-approve">
-            {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DialogActions className="pestsam__footer">
+        <Button
+          variant="text"
+          onClick={onClose}
+          disabled={isApproving}
+          className="pestsam__btn-close">
+          CLOSE
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+          onClick={handleAcknowledgeClick}
+          disabled={isApproving}
+          className="pestsam__btn-approve">
+          {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
+        </Button>
+      </DialogActions>
 
-      <COBSImagePreviewDialog
-        open={previewState.open}
-        onClose={closePreview}
-        images={previewState.images}
-        initialIndex={previewState.index}
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={handleConfirmAcknowledge}
+        title="Acknowledge this report?"
+        message="This action will mark the report as acknowledged and cannot be undone."
+        confirmLabel="Acknowledge"
+        cancelLabel="Cancel"
+        isLoading={isApproving}
+        confirmVariant="primary"
       />
-    </>
+    </Dialog>
   );
 };
 

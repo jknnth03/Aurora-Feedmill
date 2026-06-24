@@ -291,6 +291,7 @@
       text-align: left;
       min-width: 160px;
       vertical-align: middle;
+      border-right: 2px solid #000000 !important;
     }
 
     &--group {
@@ -347,6 +348,14 @@
       background: rgba(255, 255, 255, 0.02);
       border-color: rgba(255, 255, 255, 0.08);
     }
+  }
+
+  &__th--divider {
+    border-right: 2px solid #000000 !important;
+  }
+
+  &__td--divider {
+    border-right: 2px solid #000000 !important;
   }
 
   &__th-obs-group {
@@ -410,21 +419,22 @@
       font-family: "Poppins", sans-serif;
       white-space: nowrap;
       min-width: 160px;
-      border-right: 2px solid $border-color;
-
-      [data-theme="dark"] & {
-        border-color: rgba(255, 255, 255, 0.1);
-      }
+      border-right: 2px solid #000000 !important;
     }
 
     &--checkbox {
       text-align: center;
       padding: 6px 8px;
+      vertical-align: top;
     }
 
     &--input {
       text-align: center;
       padding: 6px 8px;
+    }
+
+    &--error {
+      background: rgba(#e53935, 0.04);
     }
 
     [data-theme="dark"] & {
@@ -459,8 +469,12 @@
     }
 
     &::placeholder {
-      color: $text-muted;
-      opacity: 0.5;
+      color: #000000;
+      opacity: 1;
+    }
+
+    &--error {
+      border-color: #e53935;
     }
 
     [data-theme="dark"] & {
@@ -470,6 +484,10 @@
 
       &:focus {
         border-color: $secondary-main;
+      }
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.85);
       }
     }
   }
@@ -672,6 +690,17 @@
       border-radius: 6px;
       background: rgba(#e53935, 0.06);
       border: 1px solid rgba(#e53935, 0.2);
+    }
+
+    &--cell {
+      display: flex;
+      justify-content: center;
+      text-align: center;
+      white-space: normal;
+      max-width: 90px;
+      margin: 4px auto 0;
+      font-size: 0.6rem;
+      line-height: 1.25;
     }
   }
 
