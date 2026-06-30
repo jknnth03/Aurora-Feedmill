@@ -311,13 +311,6 @@ const AreaCard = ({
       <div className="cobsm__items-wrap">
         <div className="cobsm__items-header">
           <p className="cobsm__sub-label">Sub-items</p>
-          <button
-            type="button"
-            className="cobsm__add-item-btn"
-            onClick={() => appendSub({ name: "", type: "radio button" })}>
-            <AddIcon sx={{ fontSize: "0.8rem" }} />
-            Add Sub-item
-          </button>
         </div>
         <div className="cobsm__subitems-list">
           {subFields.map((subField, subIdx) => (
@@ -341,6 +334,13 @@ const AreaCard = ({
             {areaError.sub_items.message}
           </p>
         )}
+        <button
+          type="button"
+          className="cobsm__add-inline-btn"
+          onClick={() => appendSub({ name: "", type: "radio button" })}>
+          <AddIcon sx={{ fontSize: "0.8rem" }} />
+          Add Sub-item
+        </button>
       </div>
     </div>
   );
@@ -403,18 +403,6 @@ const CategoryCard = ({
       <div className="cobsm__items-wrap">
         <div className="cobsm__items-header">
           <p className="cobsm__sub-label">Areas</p>
-          <button
-            type="button"
-            className="cobsm__add-item-btn"
-            onClick={() =>
-              appendArea({
-                name: "",
-                sub_items: [{ name: "", type: "radio button" }],
-              })
-            }>
-            <AddIcon sx={{ fontSize: "0.8rem" }} />
-            Add Area
-          </button>
         </div>
         <div className="cobsm__subitems-list">
           {areaFields.map((areaField, areaIdx) => (
@@ -438,6 +426,18 @@ const CategoryCard = ({
             {catError.items.message}
           </p>
         )}
+        <button
+          type="button"
+          className="cobsm__add-inline-btn"
+          onClick={() =>
+            appendArea({
+              name: "",
+              sub_items: [{ name: "", type: "radio button" }],
+            })
+          }>
+          <AddIcon sx={{ fontSize: "0.8rem" }} />
+          Add Area
+        </button>
       </div>
     </div>
   );
@@ -794,23 +794,6 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
             <div className="cobsm__group">
               <div className="cobsm__section-header">
                 <p className="cobsm__group-label">Categories</p>
-                <button
-                  type="button"
-                  className="cobsm__add-section-btn"
-                  onClick={() =>
-                    appendCat({
-                      name: "",
-                      items: [
-                        {
-                          name: "",
-                          sub_items: [{ name: "", type: "radio button" }],
-                        },
-                      ],
-                    })
-                  }>
-                  <AddIcon sx={{ fontSize: "0.85rem" }} />
-                  Add Category
-                </button>
               </div>
 
               {catFields.map((catField, catIdx) => (
@@ -833,6 +816,24 @@ const COBSQuestionnairesModal = ({ open, onClose, selectedId = null }) => {
                   {errors.items.message}
                 </p>
               )}
+
+              <button
+                type="button"
+                className="cobsm__add-inline-btn cobsm__add-inline-btn--full"
+                onClick={() =>
+                  appendCat({
+                    name: "",
+                    items: [
+                      {
+                        name: "",
+                        sub_items: [{ name: "", type: "radio button" }],
+                      },
+                    ],
+                  })
+                }>
+                <AddIcon sx={{ fontSize: "0.85rem" }} />
+                Add Category
+              </button>
             </div>
 
             <div className="cobsm__footer">

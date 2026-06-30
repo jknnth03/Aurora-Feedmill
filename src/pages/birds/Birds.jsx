@@ -2,6 +2,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import IconButton from "@mui/material/IconButton";
 import { useRememberQueryParams } from "../../hooks/useRememberQueryParams";
 import useDebounce from "../../hooks/useDebounce";
@@ -12,9 +13,11 @@ import { useGetBirdsQuery } from "../../features/api/birds/birdsApi";
 import {
   getChipBg,
   getChipTextColor,
+  getChipName,
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import BirdsModal from "./BirdsModal";
+import BirdsExportDialog from "./BirdsExportDialog";
 import "./Birds.scss";
 
 const COLUMNS = [
@@ -30,11 +33,8 @@ const STATUS_CHIP_MAP = {
   "for acknowledgement": "chip-for-approval",
   "for approval": "chip-for-approval",
   "on going": "chip-processing",
-  "on progress": "chip-processing",
   pending: "chip-pending",
   rejected: "chip-rejected",
-  "checklist not yet created": "chip-pending",
-  "previous month incomplete": "chip-rejected",
 };
 
 const TOTAL_PERIODS = 4;
@@ -73,57 +73,18 @@ const getDerivedBirdsTableStatus = (periodMap) => {
   return "On Going";
 };
 
-const isChecklistNotYetCreated = (checklistData, currentMonth) => {
-  const createdAt = checklistData?.created_at;
-  if (!createdAt) return false;
-  const createdMonth = dayjs(createdAt);
-  if (!createdMonth.isValid()) return false;
-  return createdMonth.startOf("month").isAfter(currentMonth.startOf("month"));
-};
-
-const checklistExistedLastMonth = (checklistData, currentMonth) => {
-  const createdAt = checklistData?.created_at;
-  if (!createdAt) return false;
-  const createdMonth = dayjs(createdAt).startOf("month");
-  const previousMonth = currentMonth.subtract(1, "month").startOf("month");
-  return !createdMonth.isAfter(previousMonth);
-};
-
-const getPreviousMonthCompleted = (checklistData) => {
-  if (checklistData?.previous_month_completed === undefined) return true;
-  return Boolean(checklistData.previous_month_completed);
-};
-
-const flattenBirdsData = (rawData, currentMonth) => {
+const flattenBirdsData = (rawData) => {
   if (!rawData) return [];
   const rows = [];
   Object.entries(rawData).forEach(([checklistKey, checklistData]) => {
     const periodMap = checklistData?.periods ?? {};
     const completedPeriods = getCompletedPeriodsCount(periodMap);
+    const derivedStatus = getDerivedBirdsTableStatus(periodMap);
     const allBatches = Object.values(periodMap).flat();
     const latestBatch =
       allBatches.length > 0
         ? allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a))
         : null;
-
-    const notYetCreated = isChecklistNotYetCreated(checklistData, currentMonth);
-    const existedLastMonth = checklistExistedLastMonth(
-      checklistData,
-      currentMonth,
-    );
-    const previousMonthCompleted = getPreviousMonthCompleted(checklistData);
-
-    let derivedStatus = getDerivedBirdsTableStatus(periodMap);
-    let isLocked = false;
-
-    if (notYetCreated) {
-      derivedStatus = "Checklist Not Yet Created";
-      isLocked = true;
-    } else if (existedLastMonth && !previousMonthCompleted) {
-      derivedStatus = "Previous Month Incomplete";
-      isLocked = true;
-    }
-
     rows.push({
       checklist_name: checklistData?.checklist_name ?? "—",
       week: `${completedPeriods}/${TOTAL_PERIODS}`,
@@ -131,7 +92,6 @@ const flattenBirdsData = (rawData, currentMonth) => {
       _raw: latestBatch,
       _unitKey: checklistKey,
       _unitData: checklistData,
-      _isLocked: isLocked,
     });
   });
   return rows;
@@ -149,7 +109,7 @@ const StatusChip = ({ value }) => {
         background: getChipBg(chipId),
         color: getChipTextColor(chipId),
       }}>
-      {value}
+      {getChipName(chipId)}
     </span>
   );
 };
@@ -161,6 +121,7 @@ const BirdsPage = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -176,7 +137,7 @@ const BirdsPage = () => {
   );
 
   const is404 = error?.status === 404;
-  const tableData = flattenBirdsData(data, currentMonth);
+  const tableData = flattenBirdsData(data);
   const total = tableData.length;
   const paginatedData = tableData.slice(
     (page - 1) * rowsPerPage,
@@ -198,9 +159,9 @@ const BirdsPage = () => {
   const handlePrevMonth = () => setCurrentMonth((m) => m.subtract(1, "month"));
   const handleNextMonth = () => setCurrentMonth((m) => m.add(1, "month"));
 
-  const handleRowClick = (row) => {
-    if (row._isLocked) return;
-    setSelectedUnitKey(row._unitKey);
+  const fetchExportData = async (startDate, endDate) => {
+    const result = await refetch({ startDate, endDate });
+    return result?.data ?? data;
   };
 
   const columnsWithRender = COLUMNS.map((col) =>
@@ -234,7 +195,14 @@ const BirdsPage = () => {
                   <ChevronRightIcon />
                 </IconButton>
               </div>
-              <div className="birds__filters-right" />
+              <div className="birds__filters-right">
+                <button
+                  className="birds__export-btn"
+                  onClick={() => setExportOpen(true)}>
+                  <FileDownloadIcon className="birds__export-btn-icon" />
+                  Export
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -254,7 +222,7 @@ const BirdsPage = () => {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          onRowClick={handleRowClick}
+          onRowClick={(row) => setSelectedUnitKey(row._unitKey)}
         />
       </PageContainer>
 
@@ -267,6 +235,12 @@ const BirdsPage = () => {
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
         onRefetch={refetch}
+      />
+
+      <BirdsExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        fetchExportData={fetchExportData}
       />
     </>
   );

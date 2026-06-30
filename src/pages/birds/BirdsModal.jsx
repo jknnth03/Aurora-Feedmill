@@ -12,12 +12,14 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import EditIcon from "@mui/icons-material/Edit";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import {
   getChipBg,
   getChipTextColor,
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import BirdsStartCheckingDialog from "./BirdsStartCheckingDialog";
+import BirdsShowReportDialog from "./BirdsShowReportDialog";
 import "./BirdsModal.scss";
 
 const MONTHS = [
@@ -118,6 +120,7 @@ const RowActionMenu = ({
   onStartChecking,
   onContinueChecking,
   onShowChecklist,
+  onShowReport,
 }) => {
   const [anchor, setAnchor] = useState(null);
   const latest = getLatestEntry(entries);
@@ -173,6 +176,16 @@ const RowActionMenu = ({
                 }}>
                 <VisibilityIcon className="birds-cm__menu-icon" />
                 Show Checklist
+              </MenuItem>,
+              <MenuItem
+                key="report"
+                className="birds-cm__menu-item"
+                onClick={() => {
+                  close();
+                  onShowReport?.(latest);
+                }}>
+                <AssessmentIcon className="birds-cm__menu-icon" />
+                Show Report
               </MenuItem>,
             ]
           : isDraft
@@ -233,6 +246,7 @@ const BirdsModal = ({
   const [startCheckingData, setStartCheckingData] = useState(null);
   const [continueCheckingData, setContinueCheckingData] = useState(null);
   const [showChecklistData, setShowChecklistData] = useState(null);
+  const [showReportData, setShowReportData] = useState(null);
 
   const monthLabel = MONTHS[(month ?? 1) - 1];
   const periodMap = unitData?.periods ?? {};
@@ -313,6 +327,7 @@ const BirdsModal = ({
                             onStartChecking={setStartCheckingData}
                             onContinueChecking={setContinueCheckingData}
                             onShowChecklist={setShowChecklistData}
+                            onShowReport={setShowReportData}
                           />
                         </td>
                       </tr>
@@ -378,6 +393,13 @@ const BirdsModal = ({
         year={year}
         viewMode
         batchEntry={showChecklistData?.batchEntry}
+      />
+
+      <BirdsShowReportDialog
+        open={Boolean(showReportData)}
+        onClose={() => setShowReportData(null)}
+        reportData={showReportData}
+        onRefetch={onRefetch}
       />
     </>
   );

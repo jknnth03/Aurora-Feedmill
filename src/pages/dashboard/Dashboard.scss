@@ -1,0 +1,770 @@
+@use "../../styles/colors" as *;
+
+// ─── reuse ALL original qad-* styles ─────────────────────────────────────────
+// (copied verbatim from the original Dashboard.scss)
+
+.qad-store-select {
+  display: grid;
+  grid-template-columns: auto calc((100% - 36px) / 4);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+
+  &__label {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-family: "Poppins", sans-serif;
+    white-space: nowrap;
+  }
+
+  &__select {
+    font-size: 0.76rem;
+    font-family: "Poppins", sans-serif;
+    color: var(--text-primary);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:focus {
+      border-color: var(--palette-primary, #f37925);
+    }
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -600px 0;
+  }
+  100% {
+    background-position: 600px 0;
+  }
+}
+
+.qad-skeleton-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.qad-skeleton-card {
+  height: 90px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--palette-primary, #f37925) 6%, transparent) 25%,
+    color-mix(in srgb, var(--palette-primary, #f37925) 14%, transparent) 50%,
+    color-mix(in srgb, var(--palette-primary, #f37925) 6%, transparent) 75%
+  );
+  background-size: 600px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+
+  [data-theme="dark"] & {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 600px 100%;
+  }
+}
+
+.qad__filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qad__filter-select {
+  font-size: 0.78rem;
+  font-family: "Poppins", sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus,
+  &:hover {
+    border-color: var(--palette-primary, #f37925);
+  }
+
+  [data-theme="dark"] & {
+    background: var(--bg-paper);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.qad-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: "Poppins", sans-serif;
+  white-space: nowrap;
+
+  &--done {
+    background: #eaf3de;
+    color: #3b6d11;
+    [data-theme="dark"] & {
+      background: rgba(97, 163, 49, 0.18);
+      color: #97c459;
+    }
+  }
+
+  &--pending {
+    background: #faeeda;
+    color: #854f0b;
+    [data-theme="dark"] & {
+      background: rgba(250, 199, 117, 0.15);
+      color: #fac775;
+    }
+  }
+
+  // new: evaluated badge
+  &--eval {
+    background: #e3f0fc;
+    color: #1a5c9e;
+    [data-theme="dark"] & {
+      background: rgba(123, 188, 240, 0.15);
+      color: #7bbcf0;
+    }
+  }
+
+  &--prev {
+    background: #fcebeb;
+    color: #a32d2d;
+    [data-theme="dark"] & {
+      background: rgba(240, 149, 149, 0.15);
+      color: #f09595;
+    }
+  }
+}
+
+.qad-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: "Poppins", sans-serif;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+}
+
+.qad-metric-card {
+  background: #fef6ee;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(243, 121, 37, 0.18);
+  transition: box-shadow 0.18s;
+
+  [data-theme="dark"] & {
+    background: var(--bg-subtle);
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  &:hover {
+    box-shadow: 0 2px 12px rgba(243, 121, 37, 0.1);
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-family: "Poppins", sans-serif;
+  }
+
+  &__value {
+    font-size: 1.65rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: "Poppins", sans-serif;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  &__sub {
+    font-size: 0.72rem;
+    font-family: "Poppins", sans-serif;
+    color: var(--text-muted);
+
+    &--up {
+      color: #3b6d11;
+      [data-theme="dark"] & {
+        color: #97c459;
+      }
+    }
+    &--down {
+      color: #a32d2d;
+      [data-theme="dark"] & {
+        color: #f09595;
+      }
+    }
+    &--warn {
+      color: #854f0b;
+      [data-theme="dark"] & {
+        color: #fac775;
+      }
+    }
+  }
+}
+
+.qad-chart-card {
+  background: #fef6ee;
+  border: 1px solid rgba(243, 121, 37, 0.18);
+  border-radius: 12px;
+  padding: 1.2rem 1.3rem;
+  overflow: hidden;
+
+  [data-theme="dark"] & {
+    background: var(--bg-paper);
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  &--full {
+    width: 100%;
+  }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: "Poppins", sans-serif;
+    margin-bottom: 4px;
+  }
+
+  &__sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: "Poppins", sans-serif;
+    margin-bottom: 10px;
+  }
+}
+
+.qad-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 220px;
+
+  &--short {
+    height: 180px;
+  }
+  &--donut {
+    height: 180px;
+  }
+  &--tall {
+    height: 300px;
+  }
+}
+
+.qad-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 6px;
+}
+
+.qad-progress-row {
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    font-family: "Poppins", sans-serif;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+  }
+
+  &__track {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+}
+
+.qad {
+  width: 100%;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  min-height: 100%;
+  background-color: transparent;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+    padding: 0.75rem 1.25rem 0;
+
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  }
+
+  &__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  &__subtitle {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1rem;
+    padding: 0 1.25rem;
+  }
+
+  &__tab {
+    padding: 8px 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1.5px;
+    border-radius: 6px 6px 0 0;
+    transition:
+      color 0.15s,
+      background 0.15s;
+    font-family: "Poppins", sans-serif;
+
+    &:hover:not(&--active) {
+      color: var(--text-primary);
+      background: var(--bg-subtle);
+    }
+
+    &--active {
+      color: var(--palette-primary, #f37925);
+      border-bottom-color: var(--palette-primary, #f37925);
+    }
+  }
+
+  &__body {
+    width: 100%;
+    padding: 0 1.25rem 1.25rem;
+  }
+}
+
+.qad-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qad-metric-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.qad-chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  &--wide {
+    grid-template-columns: 1.6fr 1fr;
+  }
+}
+
+.qad-weekly-summaries {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.qad-week-summary {
+  background: #fef6ee;
+  border: 1px solid rgba(243, 121, 37, 0.18);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  overflow: hidden;
+
+  [data-theme="dark"] & {
+    background: var(--bg-paper);
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: "Poppins", sans-serif;
+    margin-bottom: 12px;
+  }
+
+  &__table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.72rem;
+
+    thead tr {
+      border-bottom: 1px solid var(--border-color);
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--palette-primary, #f37925);
+      padding: 0 6px 8px;
+      white-space: nowrap;
+      font-size: 0.7rem;
+    }
+
+    td {
+      padding: 7px 6px;
+      color: var(--text-secondary);
+      vertical-align: top;
+      border-bottom: 1px solid transparent;
+
+      &:first-child {
+        color: var(--text-primary);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 18px 0;
+    font-style: italic;
+    font-family: "Poppins", sans-serif;
+  }
+}
+
+// ─── blank / coming-soon ──────────────────────────────────────────────────────
+
+.qad-blank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  gap: 10px;
+  color: var(--text-muted);
+  font-family: "Poppins", sans-serif;
+
+  &__icon {
+    font-size: 2.4rem;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__sub {
+    font-size: 0.78rem;
+  }
+}
+
+// ─── responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 1200px) {
+  .qad-weekly-summaries {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .qad-metric-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .qad-chart-row {
+    grid-template-columns: 1fr;
+    &--wide {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .qad {
+    padding: 1rem;
+  }
+  .qad-metric-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .qad__title {
+    font-size: 0.9rem;
+  }
+  .qad-weekly-summaries {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .qad-metric-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .qad-metric-card__value {
+    font-size: 1.3rem;
+  }
+  .qad__tab {
+    padding: 7px 12px;
+    font-size: 0.74rem;
+  }
+}
+// ─── COBS Downtime Chart ──────────────────────────────────────────────────────
+
+.qad-downtime {
+  width: 100%;
+  overflow-x: auto;
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  &__th {
+    padding: 8px 10px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    background: var(--bg-subtle);
+    color: var(--text-primary);
+    font-size: 0.73rem;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.1);
+      background: var(--bg-paper);
+    }
+
+    &--left {
+      text-align: left;
+    }
+
+    &--label {
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    &--area {
+      vertical-align: top;
+      padding: 10px 8px;
+    }
+  }
+
+  &__header-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  &__effective {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__area-label {
+    font-weight: 700;
+    font-size: 0.72rem;
+    margin-bottom: 6px;
+  }
+
+  &__area-places {
+    font-weight: 400;
+    font-size: 0.68rem;
+    line-height: 1.6;
+  }
+
+  &__tr {
+    &:hover {
+      background: color-mix(
+        in srgb,
+        var(--palette-primary, #f37925) 4%,
+        transparent
+      );
+    }
+  }
+
+  &__td {
+    padding: 7px 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.73rem;
+    vertical-align: middle;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &--group {
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+      background: var(--bg-subtle);
+
+      [data-theme="dark"] & {
+        background: var(--bg-paper);
+      }
+    }
+
+    &--sub {
+      color: var(--text-secondary);
+    }
+
+    &--val {
+      text-align: center;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+  }
+}
+
+// ─── COBS Score Summary Table ─────────────────────────────────────────────────
+
+.qad-cobs-scores {
+  background: #fef6ee;
+  border: 1px solid rgba(243, 121, 37, 0.18);
+  border-radius: 12px;
+  padding: 1.2rem 1.3rem;
+
+  [data-theme="dark"] & {
+    background: var(--bg-paper);
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: "Poppins", sans-serif;
+    margin-bottom: 12px;
+  }
+
+  &__table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.75rem;
+
+    th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--palette-primary, #f37925);
+      padding: 0 8px 8px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.7rem;
+
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid transparent;
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  &__unit {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  &__score {
+    text-align: center;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+  }
+
+  &__dash {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+}

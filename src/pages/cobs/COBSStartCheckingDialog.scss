@@ -523,13 +523,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 3px;
+    width: 100%;
     border: none;
     background: transparent;
     cursor: pointer;
     padding: 4px 6px;
     border-radius: 6px;
     color: $text-muted;
+    text-align: center;
     transition:
       color 0.15s,
       background 0.15s;

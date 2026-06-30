@@ -156,6 +156,48 @@
     }
   }
 
+  &__add-inline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: $text-muted;
+    background: transparent;
+    border: 1.5px dashed $border-color;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
+
+    &:hover {
+      color: $primary-main;
+      border-color: $primary-main;
+      background: rgba($primary-main, 0.04);
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.15);
+
+      &:hover {
+        color: $secondary-main;
+        border-color: $secondary-main;
+        background: rgba($secondary-main, 0.05);
+      }
+    }
+
+    &--full {
+      margin-top: 4px;
+    }
+  }
+
   &__section-card {
     border: 1.5px solid $border-color;
     border-radius: 10px;
@@ -435,8 +477,6 @@
     }
   }
 
-  // ── Custom Select (single, for Type) ────────────────────────────────────────
-
   &__custom-select {
     position: relative;
     width: 130px;
@@ -567,8 +607,6 @@
     }
   }
 
-  // ── Multi Select (for Units) ─────────────────────────────────────────────────
-
   &__multiselect {
     position: relative;
     width: 100%;
@@ -681,8 +719,6 @@
       border-color: rgba(255, 255, 255, 0.08);
     }
   }
-
-  // ── Rest of existing styles ──────────────────────────────────────────────────
 
   &__select-wrap {
     position: relative;

@@ -950,7 +950,7 @@ const COBSStartCheckingDialog = ({
                                             <CameraAltIcon
                                               sx={{ fontSize: 14 }}
                                             />
-                                            <span>No photo</span>
+                                            <span>Add photo</span>
                                           </button>
                                         </Tooltip>
                                       )}

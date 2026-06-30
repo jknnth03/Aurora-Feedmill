@@ -2,6 +2,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import IconButton from "@mui/material/IconButton";
 import { useRememberQueryParams } from "../../hooks/useRememberQueryParams";
 import useDebounce from "../../hooks/useDebounce";
@@ -15,6 +16,7 @@ import {
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import COBSModal from "./COBSModal";
+import COBSExportDialog from "./COBSExportDialog";
 import "./COBS.scss";
 
 const COLUMNS = [
@@ -171,6 +173,7 @@ const COBS = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -218,6 +221,11 @@ const COBS = () => {
     setSelectedUnitKey(row._unitKey);
   };
 
+  const fetchExportData = async (startDate, endDate) => {
+    const result = await refetch({ startDate, endDate });
+    return result?.data ?? data;
+  };
+
   const columnsWithRender = COLUMNS.map((col) =>
     col.key === "status"
       ? { ...col, render: (val) => <StatusChip value={val} /> }
@@ -249,7 +257,14 @@ const COBS = () => {
                   <ChevronRightIcon />
                 </IconButton>
               </div>
-              <div className="cobs__filters-right" />
+              <div className="cobs__filters-right">
+                <button
+                  className="cobs__export-btn"
+                  onClick={() => setExportOpen(true)}>
+                  <FileDownloadIcon className="cobs__export-btn-icon" />
+                  Export
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -282,6 +297,12 @@ const COBS = () => {
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
         onRefetch={refetch}
+      />
+
+      <COBSExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        fetchExportData={fetchExportData}
       />
     </>
   );

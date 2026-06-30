@@ -9,6 +9,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ImageIcon from "@mui/icons-material/Image";
+import DrawIcon from "@mui/icons-material/Draw";
 import COBSApprovalImagePreviewDialog from "./COBSApprovalImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
 import { useApproveCobApprovalMutation } from "../../../features/api/approval/cobsApproval";
@@ -42,6 +43,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     index: 0,
   });
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [signaturePreviewOpen, setSignaturePreviewOpen] = useState(false);
   const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
   const [localSignatoryName, setLocalSignatoryName] = useState(null);
 
@@ -124,6 +126,13 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
       });
   };
 
+  const handleImageClick = (index) => {
+    openPreview(allImages, index);
+  };
+
+  const hasSignature = !!signatureDataUrl;
+  const hasSignatories = signatory2 || signatory3 || hasSignature;
+
   return (
     <>
       <Dialog
@@ -151,150 +160,179 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
 
         <DialogContent className="cobsam__content">
           <div className="cobsam__body">
-            <div className="cobsam__left">
-              <div className="cobsam__details-card">
-                <p className="cobsam__details-title">Details</p>
-                <div className="cobsam__detail-row">
-                  <span className="cobsam__detail-label">Date:</span>
-                  <span className="cobsam__detail-value cobsam__detail-value--accent">
-                    {formatDate(batchEntry.start_at)}
-                  </span>
-                </div>
-                <div className="cobsam__detail-row">
-                  <span className="cobsam__detail-label">Time in:</span>
-                  <span className="cobsam__detail-value cobsam__detail-value--accent">
-                    {formatTime(batchEntry.start_at)}
-                  </span>
-                </div>
-                <div className="cobsam__detail-row">
-                  <span className="cobsam__detail-label">Time out:</span>
-                  <span className="cobsam__detail-value cobsam__detail-value--accent">
-                    {formatTime(batchEntry.end_at)}
-                  </span>
-                </div>
-                <div className="cobsam__detail-row">
-                  <span className="cobsam__detail-label">Unit:</span>
-                  <span className="cobsam__detail-value cobsam__detail-value--accent">
-                    {batchEntry.unit || "—"}
-                  </span>
-                </div>
-                <div className="cobsam__detail-row">
-                  <span className="cobsam__detail-label">QA Name:</span>
-                  <span className="cobsam__detail-value cobsam__detail-value--accent">
-                    {batchEntry.user || "—"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="cobsam__signed-card">
-                <p className="cobsam__signed-title">Acknowledge by</p>
-                {signatureDataUrl ? (
-                  <>
-                    <Tooltip title="View signature" placement="top">
-                      <div className="cobsam__signature-box cobsam__signature-box--clickable">
-                        <img
-                          src={signatureDataUrl}
-                          alt="signature"
-                          className="cobsam__signature-img"
-                        />
-                      </div>
-                    </Tooltip>
-                    {signatoryName && (
-                      <p className="cobsam__signee-name">{signatoryName}</p>
-                    )}
-                  </>
-                ) : (
-                  <div className="cobsam__signature-box cobsam__signature-box--empty">
-                    <span className="cobsam__signature-empty-text">
-                      No signature yet
+            <div className="cobsam__details-card">
+              <p className="cobsam__details-title">Details</p>
+              <div className="cobsam__details-grid">
+                <div className="cobsam__details-col">
+                  <div className="cobsam__detail-row">
+                    <span className="cobsam__detail-label">Date:</span>
+                    <span className="cobsam__detail-value cobsam__detail-value--accent">
+                      {formatDate(batchEntry.start_at)}
                     </span>
                   </div>
+                  <div className="cobsam__detail-row">
+                    <span className="cobsam__detail-label">Time in:</span>
+                    <span className="cobsam__detail-value cobsam__detail-value--accent">
+                      {formatTime(batchEntry.start_at)}
+                    </span>
+                  </div>
+                </div>
+                <div className="cobsam__details-col">
+                  <div className="cobsam__detail-row">
+                    <span className="cobsam__detail-label">Time out:</span>
+                    <span className="cobsam__detail-value cobsam__detail-value--accent">
+                      {formatTime(batchEntry.end_at)}
+                    </span>
+                  </div>
+                  <div className="cobsam__detail-row">
+                    <span className="cobsam__detail-label">Unit:</span>
+                    <span className="cobsam__detail-value cobsam__detail-value--accent">
+                      {batchEntry.unit || "—"}
+                    </span>
+                  </div>
+                </div>
+                <div className="cobsam__details-col">
+                  <div className="cobsam__detail-row">
+                    <span className="cobsam__detail-label">QA Name:</span>
+                    <span className="cobsam__detail-value cobsam__detail-value--accent">
+                      {batchEntry.user || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="cobsam__section-card">
+              <p className="cobsam__section-label">Good Points</p>
+              <div className="cobsam__section-body">
+                {batchEntry.good_points ? (
+                  <p className="cobsam__section-text">
+                    {batchEntry.good_points}
+                  </p>
+                ) : (
+                  <span className="cobsam__empty">—</span>
                 )}
               </div>
             </div>
 
-            <div className="cobsam__right">
-              <div className="cobsam__section-card">
-                <p className="cobsam__section-label">Remarks</p>
+            <div className="cobsam__section-card">
+              <p className="cobsam__section-label">Remarks</p>
+              <div className="cobsam__section-body">
+                {batchEntry.remarks ? (
+                  <p className="cobsam__section-text">{batchEntry.remarks}</p>
+                ) : (
+                  <span className="cobsam__empty">—</span>
+                )}
+              </div>
+            </div>
+
+            <div className="cobsam__section-card">
+              <p className="cobsam__section-label">Temporal Audit</p>
+              <div className="cobsam__section-body">
+                <p className="cobsam__section-text">
+                  {batchEntry.temporal_audit || "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="cobsam__bottom-row">
+              <div className="cobsam__section-card cobsam__score-card">
+                <p className="cobsam__section-label">Score Summary</p>
                 <div className="cobsam__section-body">
-                  {batchEntry.remarks ? (
-                    <p className="cobsam__section-text">{batchEntry.remarks}</p>
+                  {batchEntry.score_breakdown &&
+                    batchEntry.score_breakdown.map((s, i) => (
+                      <div key={i} className="cobsam__score-row">
+                        <span className="cobsam__score-category">
+                          {s.category}
+                        </span>
+                        <span className="cobsam__score-value">
+                          {s.score.toFixed(2)} / {s.allocation.toFixed(2)}{" "}
+                          <span className="cobsam__score-pct">
+                            ({s.percentage.toFixed(2)}%)
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  <div className="cobsam__score-divider" />
+                  <div className="cobsam__score-total-row">
+                    <span className="cobsam__score-total-label">Total —</span>
+                    <span className="cobsam__score-total-value">
+                      {batchEntry.score}
+                    </span>
+                    <span className="cobsam__score-total-pct">
+                      {scorePercent}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="cobsam__section-card cobsam__attach-card">
+                <p className="cobsam__section-label">Attachment</p>
+                <div className="cobsam__attach-body">
+                  {allImages.length === 0 ? (
+                    <div className="cobsam__attach-empty">
+                      <ImageIcon className="cobsam__attach-icon" />
+                      <span>No Photo Attachments</span>
+                    </div>
                   ) : (
-                    <span className="cobsam__empty">—</span>
+                    <div className="cobsam__attach-grid">
+                      {allImages.map((url, i) => (
+                        <Tooltip key={i} title="View image" placement="top">
+                          <img
+                            src={url}
+                            alt={`attachment-${i}`}
+                            className="cobsam__attach-thumb"
+                            onClick={() => handleImageClick(i)}
+                          />
+                        </Tooltip>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-
-              <div className="cobsam__section-card">
-                <p className="cobsam__section-label">Temporal Audit</p>
-                <div className="cobsam__section-body">
-                  <p className="cobsam__section-text">
-                    {batchEntry.temporal_audit || "—"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="cobsam__bottom-row">
-                <div className="cobsam__section-card cobsam__score-card">
-                  <p className="cobsam__section-label">Score Summary</p>
-                  <div className="cobsam__section-body">
-                    {batchEntry.score_breakdown &&
-                      batchEntry.score_breakdown.map((s, i) => (
-                        <div key={i} className="cobsam__score-row">
-                          <span className="cobsam__score-category">
-                            {s.category}
-                          </span>
-                          <span className="cobsam__score-value">
-                            {s.score.toFixed(2)} / {s.allocation.toFixed(2)}{" "}
-                            <span className="cobsam__score-pct">
-                              ({s.percentage.toFixed(2)}%)
-                            </span>
-                          </span>
-                        </div>
-                      ))}
-                    <div className="cobsam__score-divider" />
-                    <div className="cobsam__score-total-row">
-                      <span className="cobsam__score-total-label">Total —</span>
-                      <span className="cobsam__score-total-value">
-                        {batchEntry.score}
-                      </span>
-                      <span className="cobsam__score-total-pct">
-                        {scorePercent}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="cobsam__section-card cobsam__attach-card">
-                  <p className="cobsam__section-label">Attachment</p>
-                  <div className="cobsam__attach-body">
-                    {allImages.length === 0 ? (
-                      <div className="cobsam__attach-empty">
-                        <ImageIcon className="cobsam__attach-icon" />
-                        <span>No Photo Attachments</span>
-                      </div>
-                    ) : (
-                      <div className="cobsam__attach-grid">
-                        {allImages.map((url, i) => (
-                          <Tooltip key={i} title="View image" placement="top">
-                            <img
-                              src={url}
-                              alt={`attachment-${i}`}
-                              className="cobsam__attach-thumb"
-                              onClick={() => openPreview(allImages, i)}
-                            />
-                          </Tooltip>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
+
+            {!hasSignature && (
+              <div className="cobsam__section-card">
+                <p className="cobsam__section-label">Acknowledge by</p>
+                <div className="cobsam__section-body">
+                  <button
+                    className="cobsam__btn-add-signature"
+                    onClick={() => setSignatureDialogOpen(true)}
+                    disabled={isApproving}>
+                    <DrawIcon style={{ fontSize: 16 }} />
+                    {isApproving ? "Saving..." : "Add Signature"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {(signatory2 || signatory3) && (
+          {hasSignatories && (
             <div className="cobsam__signatories-row">
+              {hasSignature && (
+                <div className="cobsam__signatory-item">
+                  <span className="cobsam__signatory-label">
+                    Acknowledged by:
+                  </span>
+                  <Tooltip title="View signature" placement="top">
+                    <div
+                      className="cobsam__signatory-img-box cobsam__signatory-img-box--clickable"
+                      onClick={() => setSignaturePreviewOpen(true)}>
+                      <img
+                        src={signatureDataUrl}
+                        alt="acknowledged-by"
+                        className="cobsam__signatory-img"
+                      />
+                    </div>
+                  </Tooltip>
+                  {signatoryName && (
+                    <span className="cobsam__signatory-name">
+                      {signatoryName}
+                    </span>
+                  )}
+                </div>
+              )}
               {signatory2 && (
                 <div className="cobsam__signatory-item">
                   <span className="cobsam__signatory-label">Reviewed by:</span>
@@ -349,14 +387,16 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             className="cobsam__btn-close">
             CLOSE
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-            onClick={() => setSignatureDialogOpen(true)}
-            disabled={isApproving}
-            className="cobsam__btn-approve">
-            {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
-          </Button>
+          {!hasSignature && (
+            <Button
+              variant="contained"
+              startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+              onClick={() => setSignatureDialogOpen(true)}
+              disabled={isApproving}
+              className="cobsam__btn-approve">
+              {isApproving ? "SUBMITTING…" : "ACKNOWLEDGE"}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 
@@ -381,6 +421,43 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
         images={previewState.images}
         initialIndex={previewState.index}
       />
+
+      <Dialog
+        open={signaturePreviewOpen}
+        onClose={() => setSignaturePreviewOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ className: "cobsam__sig-preview-paper" }}>
+        <div className="cobsam__sig-preview-header">
+          <div className="cobsam__sig-preview-header-left">
+            <DrawIcon className="cobsam__sig-preview-header-icon" />
+            <span className="cobsam__sig-preview-title">Signature</span>
+          </div>
+          <IconButton
+            size="small"
+            className="cobsam__sig-preview-close"
+            onClick={() => setSignaturePreviewOpen(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
+        <div className="cobsam__sig-preview-body">
+          <div className="cobsam__sig-preview-frame">
+            {signatureDataUrl && (
+              <img
+                src={signatureDataUrl}
+                alt="signature-preview"
+                className="cobsam__sig-preview-img"
+              />
+            )}
+          </div>
+          {signatoryName && (
+            <div className="cobsam__sig-preview-footer">
+              <span className="cobsam__sig-preview-name">{signatoryName}</span>
+              <span className="cobsam__sig-preview-role">Acknowledged by</span>
+            </div>
+          )}
+        </div>
+      </Dialog>
     </>
   );
 };

@@ -29,12 +29,12 @@ const buildSteps = (batchEntry) => {
 
   const {
     user,
+    evaluator,
     approver,
     assessor,
     start_at,
     end_at,
-    is_approved,
-    is_assessed,
+    signatory_1,
     signatory_2,
     signatory_3,
   } = batchEntry;
@@ -49,13 +49,23 @@ const buildSteps = (batchEntry) => {
     sigImage: null,
   };
 
+  const forSignatureStep = {
+    key: "for_signature",
+    label: "For Signature",
+    roleLabel: "Acknowledger",
+    name: signatory_1?.name ?? evaluator ?? null,
+    timestamp: signatory_1?.evaluate_image ? end_at : null,
+    done: !!signatory_1?.evaluate_image,
+    sigImage: signatory_1?.evaluate_image ?? null,
+  };
+
   const firstAckStep = {
     key: "first_ack",
     label: "Acknowledge",
     roleLabel: "Acknowledger",
     name: signatory_2?.name ?? approver ?? null,
-    timestamp: signatory_2 ? end_at : null,
-    done: !!is_approved,
+    timestamp: signatory_2?.approve_image ? end_at : null,
+    done: !!signatory_2?.approve_image,
     sigImage: signatory_2?.approve_image ?? null,
   };
 
@@ -64,14 +74,16 @@ const buildSteps = (batchEntry) => {
     label: "Acknowledge",
     roleLabel: "Acknowledger",
     name: signatory_3?.name ?? assessor ?? null,
-    timestamp: signatory_3 ? end_at : null,
-    done: !!is_assessed,
+    timestamp: signatory_3?.assess_image ? end_at : null,
+    done: !!signatory_3?.assess_image,
     sigImage: signatory_3?.assess_image ?? null,
   };
 
-  // Chronological order — Submitted first/top, then the acknowledgement
-  // stages in the order they actually happen.
-  return [submittedStep, firstAckStep, lastAckStep];
+  // Chronological order — Submitted first/top, then For Signature, then
+  // the acknowledgement stages in the order they actually happen. The
+  // flow is not considered complete until each step's signature image
+  // is actually present, not merely the underlying status flag.
+  return [submittedStep, forSignatureStep, firstAckStep, lastAckStep];
 };
 
 const getStepStatus = (step, steps, idx) => {
@@ -124,7 +136,7 @@ const COBSAcknowledgementTimelineDialog = ({
         <div className="cobs-tl__header-title">
           <span className="cobs-tl__header-bar" />
           <TimelineIcon className="cobs-tl__header-icon" />
-          <span>ACKNOWLEDGE TIMELINE</span>
+          <span>TIMELINE</span>
         </div>
         <IconButton size="small" className="cobs-tl__close" onClick={onClose}>
           <CloseIcon fontSize="small" />
@@ -153,7 +165,7 @@ const COBSAcknowledgementTimelineDialog = ({
       <DialogContent className="cobs-tl__content">
         {isFetching ? (
           <div className="cobs-tl__skeleton-wrap">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton
                 key={i}
                 variant="rectangular"

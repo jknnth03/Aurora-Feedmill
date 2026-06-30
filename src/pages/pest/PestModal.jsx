@@ -372,6 +372,7 @@ const PestModal = ({
                             isPreviousPeriodDone={isPreviousPeriodDone}
                             onStartChecking={setStartCheckingData}
                             onContinueChecking={setContinueCheckingData}
+                            onShowReport={setShowReportData}
                             onShowChecklist={setShowChecklistData}
                           />
                         </td>
@@ -438,6 +439,13 @@ const PestModal = ({
         year={year}
         viewMode
         batchEntry={showChecklistData?.batchEntry}
+      />
+
+      <PestShowReportDialog
+        open={Boolean(showReportData)}
+        onClose={() => setShowReportData(null)}
+        reportData={showReportData?.batchEntry}
+        onRefetch={onRefetch}
       />
 
       <PestAcknowledgementTimelineDialog

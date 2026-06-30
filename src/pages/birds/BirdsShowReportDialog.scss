@@ -10,7 +10,7 @@ $border: #f0ddd0;
 $bg-card: #fffaf7;
 $bg-paper: #ffffff;
 
-.pest-sr__paper {
+.birds-sr__paper {
   border-radius: 14px !important;
   background: $bg-paper !important;
   box-shadow: 0 12px 48px rgba(230, 100, 20, 0.14) !important;
@@ -23,7 +23,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__header {
+.birds-sr__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,13 +37,13 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__header-left {
+.birds-sr__header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.pest-sr__header-icon {
+.birds-sr__header-icon {
   color: $accent !important;
   font-size: 22px !important;
 
@@ -52,7 +52,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__header-title {
+.birds-sr__header-title {
   font-size: 1rem;
   font-weight: 700;
   color: $text-primary;
@@ -64,7 +64,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__close {
+.birds-sr__close {
   color: $text-muted !important;
   transition: color 0.18s;
 
@@ -81,7 +81,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__content {
+.birds-sr__content {
   padding: 20px 24px !important;
   background: #faf6f2;
   overflow-y: auto;
@@ -92,13 +92,13 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__body {
+.birds-sr__body {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.pest-sr__details-card {
+.birds-sr__details-card {
   background: $bg-card;
   border: 1px solid $border;
   border-radius: 10px;
@@ -110,7 +110,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__details-title {
+.birds-sr__details-title {
   font-size: 0.78rem;
   font-weight: 700;
   color: $text-primary;
@@ -122,7 +122,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__details-grid {
+.birds-sr__details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 24px;
@@ -133,18 +133,18 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__details-col {
+.birds-sr__details-col {
   display: flex;
   flex-direction: column;
 }
 
-.pest-sr__detail-row {
+.birds-sr__detail-row {
   display: flex;
   flex-direction: column;
   margin-bottom: 6px;
 }
 
-.pest-sr__detail-label {
+.birds-sr__detail-label {
   font-size: 0.72rem;
   color: $text-muted;
   font-family: "Poppins", sans-serif;
@@ -154,7 +154,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__detail-value {
+.birds-sr__detail-value {
   font-size: 0.78rem;
   color: $text-primary;
   font-family: "Poppins", sans-serif;
@@ -174,7 +174,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__section-card {
+.birds-sr__section-card {
   background: $bg-card;
   border: 1px solid $border;
   border-radius: 10px;
@@ -186,7 +186,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__section-label {
+.birds-sr__section-label {
   font-size: 0.72rem;
   font-weight: 700;
   color: $accent;
@@ -204,7 +204,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__section-body {
+.birds-sr__section-body {
   padding: 8px 14px;
 
   &--no-pad {
@@ -212,7 +212,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__section-text {
+.birds-sr__section-text {
   font-size: 0.8rem;
   color: $text-secondary;
   font-family: "Poppins", sans-serif;
@@ -224,7 +224,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__empty {
+.birds-sr__empty {
   font-size: 0.8rem;
   color: $text-muted;
   font-family: "Poppins", sans-serif;
@@ -234,7 +234,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__empty-pad {
+.birds-sr__empty-pad {
   padding: 8px 14px;
   font-size: 0.8rem;
   color: $text-muted;
@@ -247,19 +247,19 @@ $bg-paper: #ffffff;
 
 // --- Inspection Results Table ---
 
-.pest-sr__inspection-table-wrap {
+.birds-sr__inspection-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-.pest-sr__inspection-table {
+.birds-sr__inspection-table {
   width: 100%;
   border-collapse: collapse;
   font-family: "Poppins", sans-serif;
-  min-width: 380px;
+  min-width: 520px;
 }
 
-.pest-sr__it-th {
+.birds-sr__it-th {
   padding: 8px 12px;
   text-align: left;
   font-size: 0.72rem;
@@ -276,7 +276,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__it-tr {
+.birds-sr__it-tr {
   border-bottom: 1px solid $border;
   background: $bg-paper;
 
@@ -290,7 +290,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__it-td {
+.birds-sr__it-td {
   padding: 8px 12px;
   font-size: 0.78rem;
   color: $text-primary;
@@ -312,23 +312,19 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__no-pest {
+.birds-sr__level-tag {
   font-size: 0.76rem;
-  color: $text-muted;
-  font-style: italic;
-
-  [data-theme="dark"] & {
-    color: rgba(255, 255, 255, 0.3);
-  }
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
 }
 
-.pest-sr__pest-list {
+.birds-sr__wastage-list {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.pest-sr__pest-tag {
+.birds-sr__wastage-tag {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 12px;
@@ -344,48 +340,15 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__obs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+// --- Infestation Level Summary Table ---
 
-.pest-sr__obs-item {
-  font-size: 0.75rem;
-  font-family: "Poppins", sans-serif;
-  color: $text-secondary;
-
-  [data-theme="dark"] & {
-    color: rgba(255, 255, 255, 0.6);
-  }
-}
-
-.pest-sr__obs-key {
-  font-weight: 600;
-  color: $text-primary;
-
-  [data-theme="dark"] & {
-    color: rgba(255, 255, 255, 0.8);
-  }
-}
-
-.pest-sr__obs-val {
-  color: $text-secondary;
-
-  [data-theme="dark"] & {
-    color: rgba(255, 255, 255, 0.55);
-  }
-}
-
-// --- Grading Summary Table ---
-
-.pest-sr__grade-table {
+.birds-sr__grade-table {
   width: 100%;
   border-collapse: collapse;
   font-family: "Poppins", sans-serif;
 }
 
-.pest-sr__grade-th {
+.birds-sr__grade-th {
   padding: 6px 12px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -406,7 +369,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__grade-tr {
+.birds-sr__grade-tr {
   border-bottom: 1px solid $border;
   background: $bg-paper;
 
@@ -420,7 +383,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__grade-td {
+.birds-sr__grade-td {
   padding: 6px 12px;
   font-size: 0.76rem;
   color: $text-primary;
@@ -435,7 +398,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__grade-chip {
+.birds-sr__grade-chip {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 10px;
@@ -448,7 +411,7 @@ $bg-paper: #ffffff;
 
 // --- Signatories ---
 
-.pest-sr__signatories-row {
+.birds-sr__signatories-row {
   display: flex;
   gap: 40px;
   justify-content: flex-end;
@@ -468,7 +431,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__signatory-item {
+.birds-sr__signatory-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -476,7 +439,7 @@ $bg-paper: #ffffff;
   min-width: 110px;
 }
 
-.pest-sr__signatory-label {
+.birds-sr__signatory-label {
   font-size: 0.72rem;
   font-weight: 600;
   color: $text-muted;
@@ -490,7 +453,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__signatory-img-box {
+.birds-sr__signatory-img-box {
   width: 110px;
   height: 52px;
   border-bottom: 1.5px solid $text-secondary;
@@ -512,13 +475,13 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__signatory-img {
+.birds-sr__signatory-img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
 
-.pest-sr__signatory-name {
+.birds-sr__signatory-name {
   font-size: 0.74rem;
   font-weight: 600;
   color: $text-primary;
@@ -533,7 +496,7 @@ $bg-paper: #ffffff;
 
 // --- Footer ---
 
-.pest-sr__footer {
+.birds-sr__footer {
   padding: 12px 20px !important;
   border-top: 1px solid $border;
   background: $bg-paper;
@@ -547,17 +510,17 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__footer-left {
+.birds-sr__footer-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.pest-sr__download-select {
+.birds-sr__download-select {
   min-width: 110px !important;
 }
 
-.pest-sr__select {
+.birds-sr__select {
   font-family: "Poppins", sans-serif !important;
   font-size: 0.82rem !important;
   color: $text-primary !important;
@@ -594,14 +557,14 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__select-menu {
+.birds-sr__select-menu {
   .MuiMenuItem-root {
     font-family: "Poppins", sans-serif !important;
     font-size: 0.82rem !important;
   }
 }
 
-.pest-sr__btn-download {
+.birds-sr__btn-download {
   color: $accent !important;
   border: 1px solid $border !important;
   background: $bg-card !important;
@@ -628,7 +591,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__btn-print {
+.birds-sr__btn-print {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -665,7 +628,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.pest-sr__btn-close {
+.birds-sr__btn-close {
   padding: 7px 22px;
   border: 1.5px solid $border;
   background: $bg-paper;

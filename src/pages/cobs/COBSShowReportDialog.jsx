@@ -15,6 +15,8 @@ import PrintIcon from "@mui/icons-material/Print";
 import ImageIcon from "@mui/icons-material/Image";
 import DrawIcon from "@mui/icons-material/Draw";
 import GestureIcon from "@mui/icons-material/Gesture";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import COBSAcknowledgementTimelineDialog from "./COBSAcknowledgementTimelineDialog";
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
 import { useEvaluateResponseMutation } from "../../features/api/cobs/cobsApi";
@@ -61,6 +63,7 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   const [localSignatoryName, setLocalSignatoryName] = useState(null);
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   const [evaluateResponse, { isLoading: isSubmitting }] =
     useEvaluateResponseMutation();
@@ -143,7 +146,6 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
     if (isSavingAll || allImages.length === 0) return;
     setIsSavingAll(true);
     setSaveProgress({ current: 0, total: allImages.length });
-
     for (let i = 0; i < allImages.length; i++) {
       setSaveProgress({ current: i + 1, total: allImages.length });
       try {
@@ -155,7 +157,6 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
         console.error(`Failed to download image ${i + 1}`);
       }
     }
-
     setIsSavingAll(false);
     setSaveProgress({ current: 0, total: 0 });
   };
@@ -221,6 +222,9 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
     setPreviewOpen(true);
   };
 
+  const hasSignature = !!signatureDataUrl;
+  const hasSignatories = signatory2 || signatory3 || hasSignature;
+
   return (
     <>
       <Dialog
@@ -235,71 +239,188 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
             <AssessmentIcon className="cobs-sr__header-icon" />
             <span className="cobs-sr__header-title">Report Summary</span>
           </div>
-          <IconButton
-            size="small"
-            className="cobs-sr__close"
-            onClick={handleClose}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
+          <div className="cobs-sr__header-actions">
+            <Tooltip title="View acknowledge timeline" placement="top">
+              <IconButton
+                size="small"
+                className="cobs-sr__header-timeline"
+                onClick={() => setTimelineOpen(true)}>
+                <TimelineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <IconButton
+              size="small"
+              className="cobs-sr__close"
+              onClick={handleClose}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </div>
         </div>
 
         <DialogContent className="cobs-sr__content">
           <div className="cobs-sr__body">
-            <div className="cobs-sr__left">
-              <div className="cobs-sr__details-card">
-                <p className="cobs-sr__details-title">Details</p>
-                <div className="cobs-sr__detail-row">
-                  <span className="cobs-sr__detail-label">Date:</span>
-                  <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {formatDate(data.start_at)}
-                  </span>
+            <div className="cobs-sr__details-card">
+              <p className="cobs-sr__details-title">Details</p>
+              <div className="cobs-sr__details-grid">
+                <div className="cobs-sr__details-col">
+                  <div className="cobs-sr__detail-row">
+                    <span className="cobs-sr__detail-label">Date:</span>
+                    <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
+                      {formatDate(data.start_at)}
+                    </span>
+                  </div>
+                  <div className="cobs-sr__detail-row">
+                    <span className="cobs-sr__detail-label">Time in:</span>
+                    <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
+                      {formatTime(data.start_at)}
+                    </span>
+                  </div>
                 </div>
-                <div className="cobs-sr__detail-row">
-                  <span className="cobs-sr__detail-label">Time in:</span>
-                  <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {formatTime(data.start_at)}
-                  </span>
+                <div className="cobs-sr__details-col">
+                  <div className="cobs-sr__detail-row">
+                    <span className="cobs-sr__detail-label">Time out:</span>
+                    <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
+                      {formatTime(data.end_at)}
+                    </span>
+                  </div>
+                  <div className="cobs-sr__detail-row">
+                    <span className="cobs-sr__detail-label">Unit:</span>
+                    <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
+                      {data.unit || "—"}
+                    </span>
+                  </div>
                 </div>
-                <div className="cobs-sr__detail-row">
-                  <span className="cobs-sr__detail-label">Time out:</span>
-                  <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {formatTime(data.end_at)}
-                  </span>
+                <div className="cobs-sr__details-col">
+                  <div className="cobs-sr__detail-row">
+                    <span className="cobs-sr__detail-label">QA Name:</span>
+                    <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
+                      {data.user || "—"}
+                    </span>
+                  </div>
                 </div>
-                <div className="cobs-sr__detail-row">
-                  <span className="cobs-sr__detail-label">Unit:</span>
-                  <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {data.unit || "—"}
-                  </span>
-                </div>
-                <div className="cobs-sr__detail-row">
-                  <span className="cobs-sr__detail-label">QA Name:</span>
-                  <span className="cobs-sr__detail-value cobs-sr__detail-value--accent">
-                    {data.user || "—"}
-                  </span>
+              </div>
+            </div>
+
+            <div className="cobs-sr__section-card">
+              <p className="cobs-sr__section-label">Good Points</p>
+              <div className="cobs-sr__section-body">
+                {data.good_points ? (
+                  <p className="cobs-sr__section-text">{data.good_points}</p>
+                ) : (
+                  <span className="cobs-sr__empty">—</span>
+                )}
+              </div>
+            </div>
+
+            <div className="cobs-sr__section-card">
+              <p className="cobs-sr__section-label">Remarks</p>
+              <div className="cobs-sr__section-body">
+                {data.remarks ? (
+                  <p className="cobs-sr__section-text">{data.remarks}</p>
+                ) : (
+                  <span className="cobs-sr__empty">—</span>
+                )}
+              </div>
+            </div>
+
+            <div className="cobs-sr__section-card">
+              <p className="cobs-sr__section-label">Temporal Audit</p>
+              <div className="cobs-sr__section-body">
+                <p className="cobs-sr__section-text">
+                  {data.temporal_audit || "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="cobs-sr__bottom-row">
+              <div className="cobs-sr__section-card cobs-sr__score-card">
+                <p className="cobs-sr__section-label">Score Summary</p>
+                <div className="cobs-sr__section-body">
+                  {data.score_breakdown &&
+                    data.score_breakdown.map((s, i) => (
+                      <div key={i} className="cobs-sr__score-row">
+                        <span className="cobs-sr__score-category">
+                          {s.category}
+                        </span>
+                        <span className="cobs-sr__score-value">
+                          {s.score.toFixed(2)} / {s.allocation.toFixed(2)}{" "}
+                          <span className="cobs-sr__score-pct">
+                            ({s.percentage.toFixed(2)}%)
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  <div className="cobs-sr__score-divider" />
+                  <div className="cobs-sr__score-total-row">
+                    <span className="cobs-sr__score-total-label">Total —</span>
+                    <span className="cobs-sr__score-total-value">
+                      {data.score}
+                    </span>
+                    <span className="cobs-sr__score-total-pct">
+                      {scorePercent}%
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="cobs-sr__signed-card">
-                <p className="cobs-sr__signed-title">Acknowledge by</p>
-                {signatureDataUrl ? (
-                  <>
-                    <Tooltip title="View signature" placement="top">
-                      <div
-                        className="cobs-sr__signature-box cobs-sr__signature-box--clickable"
-                        onClick={() => setSignaturePreviewOpen(true)}>
-                        <img
-                          src={signatureDataUrl}
-                          alt="signature"
-                          className="cobs-sr__signature-img"
-                        />
-                      </div>
+              <div className="cobs-sr__section-card cobs-sr__attach-card">
+                <div className="cobs-sr__attach-header">
+                  <p className="cobs-sr__section-label">Attachment</p>
+                  {allImages.length > 0 && (
+                    <Tooltip
+                      title={
+                        isSavingAll
+                          ? `Downloading ${saveProgress.current} of ${saveProgress.total}...`
+                          : `Download all ${allImages.length} images`
+                      }
+                      placement="top">
+                      <button
+                        className={`cobs-sr__save-all-btn${isSavingAll ? " cobs-sr__save-all-btn--loading" : ""}`}
+                        onClick={handleSaveAll}
+                        disabled={isSavingAll}>
+                        {isSavingAll ? (
+                          <>
+                            <DownloadingIcon style={{ fontSize: 13 }} />
+                            {saveProgress.current}/{saveProgress.total}
+                          </>
+                        ) : (
+                          <>
+                            <DownloadIcon style={{ fontSize: 13 }} />
+                            Save All
+                          </>
+                        )}
+                      </button>
                     </Tooltip>
-                    {signatoryName && (
-                      <p className="cobs-sr__signee-name">{signatoryName}</p>
-                    )}
-                  </>
-                ) : (
+                  )}
+                </div>
+                <div className="cobs-sr__attach-body">
+                  {allImages.length === 0 ? (
+                    <div className="cobs-sr__attach-empty">
+                      <ImageIcon className="cobs-sr__attach-icon" />
+                      <span>No Photo Attachments</span>
+                    </div>
+                  ) : (
+                    <div className="cobs-sr__attach-grid">
+                      {allImages.map((url, i) => (
+                        <Tooltip key={i} title="View image" placement="top">
+                          <img
+                            src={url}
+                            alt={`attachment-${i}`}
+                            className="cobs-sr__attach-thumb"
+                            onClick={() => handleImageClick(i)}
+                          />
+                        </Tooltip>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {!hasSignature && (
+              <div className="cobs-sr__section-card">
+                <p className="cobs-sr__section-label">Acknowledge by</p>
+                <div className="cobs-sr__section-body">
                   <button
                     className="cobs-sr__btn-add-signature"
                     onClick={() => setSignatureOpen(true)}
@@ -307,133 +428,36 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
                     <DrawIcon style={{ fontSize: 16 }} />
                     {isSubmitting ? "Saving..." : "Add Signature"}
                   </button>
-                )}
-              </div>
-            </div>
-
-            <div className="cobs-sr__right">
-              <div className="cobs-sr__section-card">
-                <p className="cobs-sr__section-label">Good Points</p>
-                <div className="cobs-sr__section-body">
-                  {data.good_points ? (
-                    <p className="cobs-sr__section-text">{data.good_points}</p>
-                  ) : (
-                    <span className="cobs-sr__empty">—</span>
-                  )}
                 </div>
               </div>
-
-              <div className="cobs-sr__section-card">
-                <p className="cobs-sr__section-label">Remarks</p>
-                <div className="cobs-sr__section-body">
-                  {data.remarks ? (
-                    <p className="cobs-sr__section-text">{data.remarks}</p>
-                  ) : (
-                    <span className="cobs-sr__empty">—</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="cobs-sr__section-card">
-                <p className="cobs-sr__section-label">Temporal Audit</p>
-                <div className="cobs-sr__section-body">
-                  <p className="cobs-sr__section-text">
-                    {data.temporal_audit || "—"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="cobs-sr__bottom-row">
-                <div className="cobs-sr__section-card cobs-sr__score-card">
-                  <p className="cobs-sr__section-label">Score Summary</p>
-                  <div className="cobs-sr__section-body">
-                    {data.score_breakdown &&
-                      data.score_breakdown.map((s, i) => (
-                        <div key={i} className="cobs-sr__score-row">
-                          <span className="cobs-sr__score-category">
-                            {s.category}
-                          </span>
-                          <span className="cobs-sr__score-value">
-                            {s.score.toFixed(2)} / {s.allocation.toFixed(2)}{" "}
-                            <span className="cobs-sr__score-pct">
-                              ({s.percentage.toFixed(2)}%)
-                            </span>
-                          </span>
-                        </div>
-                      ))}
-                    <div className="cobs-sr__score-divider" />
-                    <div className="cobs-sr__score-total-row">
-                      <span className="cobs-sr__score-total-label">
-                        Total —
-                      </span>
-                      <span className="cobs-sr__score-total-value">
-                        {data.score}
-                      </span>
-                      <span className="cobs-sr__score-total-pct">
-                        {scorePercent}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="cobs-sr__section-card cobs-sr__attach-card">
-                  <div className="cobs-sr__attach-header">
-                    <p className="cobs-sr__section-label">Attachment</p>
-                    {allImages.length > 0 && (
-                      <Tooltip
-                        title={
-                          isSavingAll
-                            ? `Downloading ${saveProgress.current} of ${saveProgress.total}...`
-                            : `Download all ${allImages.length} images`
-                        }
-                        placement="top">
-                        <button
-                          className={`cobs-sr__save-all-btn${isSavingAll ? " cobs-sr__save-all-btn--loading" : ""}`}
-                          onClick={handleSaveAll}
-                          disabled={isSavingAll}>
-                          {isSavingAll ? (
-                            <>
-                              <DownloadingIcon style={{ fontSize: 13 }} />
-                              {saveProgress.current}/{saveProgress.total}
-                            </>
-                          ) : (
-                            <>
-                              <DownloadIcon style={{ fontSize: 13 }} />
-                              Save All
-                            </>
-                          )}
-                        </button>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <div className="cobs-sr__attach-body">
-                    {allImages.length === 0 ? (
-                      <div className="cobs-sr__attach-empty">
-                        <ImageIcon className="cobs-sr__attach-icon" />
-                        <span>No Photo Attachments</span>
-                      </div>
-                    ) : (
-                      <div className="cobs-sr__attach-grid">
-                        {allImages.map((url, i) => (
-                          <Tooltip key={i} title="View image" placement="top">
-                            <img
-                              src={url}
-                              alt={`attachment-${i}`}
-                              className="cobs-sr__attach-thumb"
-                              onClick={() => handleImageClick(i)}
-                            />
-                          </Tooltip>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
-          {(signatory2 || signatory3) && (
+          {hasSignatories && (
             <div className="cobs-sr__signatories-row">
+              {hasSignature && (
+                <div className="cobs-sr__signatory-item">
+                  <span className="cobs-sr__signatory-label">
+                    Acknowledged by:
+                  </span>
+                  <Tooltip title="View signature" placement="top">
+                    <div
+                      className="cobs-sr__signatory-img-box cobs-sr__signatory-img-box--clickable"
+                      onClick={() => setSignaturePreviewOpen(true)}>
+                      <img
+                        src={signatureDataUrl}
+                        alt="acknowledged-by"
+                        className="cobs-sr__signatory-img"
+                      />
+                    </div>
+                  </Tooltip>
+                  {signatoryName && (
+                    <span className="cobs-sr__signatory-name">
+                      {signatoryName}
+                    </span>
+                  )}
+                </div>
+              )}
               {signatory2 && (
                 <div className="cobs-sr__signatory-item">
                   <span className="cobs-sr__signatory-label">Reviewed by:</span>
@@ -561,6 +585,13 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
           )}
         </div>
       </Dialog>
+
+      <COBSAcknowledgementTimelineDialog
+        open={timelineOpen}
+        onClose={() => setTimelineOpen(false)}
+        batchEntry={data}
+        isFetching={false}
+      />
     </>
   );
 };

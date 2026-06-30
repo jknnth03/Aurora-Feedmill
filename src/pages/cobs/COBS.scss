@@ -115,4 +115,43 @@
       color: $text-muted;
     }
   }
+  // ── Add these inside your existing .cobs {} block in COBS.scss ──────────────
+
+  &__filters-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+  }
+
+  &__export-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    background: $primary-main;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    transition: filter 0.15s;
+
+    &:hover {
+      filter: brightness(0.92);
+    }
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__export-btn-icon {
+    font-size: 1rem !important;
+    color: #fff;
+  }
 }

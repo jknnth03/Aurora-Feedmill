@@ -99,26 +99,8 @@ $bg-paper: #ffffff;
 
 .cobsam__body {
   display: flex;
-  gap: 20px;
-  align-items: stretch;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-  }
-}
-
-.cobsam__left {
-  display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-width: 210px;
-  max-width: 230px;
-  flex-shrink: 0;
-
-  @media (max-width: 600px) {
-    max-width: 100%;
-    min-width: unset;
-  }
+  gap: 14px;
 }
 
 .cobsam__details-card {
@@ -126,7 +108,6 @@ $bg-paper: #ffffff;
   border: 1px solid $border;
   border-radius: 10px;
   padding: 14px 16px;
-  flex: 1;
 
   [data-theme="dark"] & {
     background: rgba(255, 255, 255, 0.04);
@@ -134,20 +115,7 @@ $bg-paper: #ffffff;
   }
 }
 
-.cobsam__signed-card {
-  background: $bg-card;
-  border: 1px solid $border;
-  border-radius: 10px;
-  padding: 14px 16px;
-
-  [data-theme="dark"] & {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-}
-
-.cobsam__details-title,
-.cobsam__signed-title {
+.cobsam__details-title {
   font-size: 0.78rem;
   font-weight: 700;
   color: $text-primary;
@@ -157,6 +125,21 @@ $bg-paper: #ffffff;
   [data-theme="dark"] & {
     color: rgba(255, 255, 255, 0.85);
   }
+}
+
+.cobsam__details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.cobsam__details-col {
+  display: flex;
+  flex-direction: column;
 }
 
 .cobsam__detail-row {
@@ -193,78 +176,6 @@ $bg-paper: #ffffff;
       color: var(--palette-primary);
     }
   }
-}
-
-.cobsam__signature-box {
-  width: 100%;
-  height: 90px;
-  border: 1.5px dashed $border;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  margin-bottom: 8px;
-  overflow: hidden;
-
-  [data-theme="dark"] & {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  &--clickable {
-    cursor: zoom-in;
-    transition:
-      opacity 0.18s,
-      box-shadow 0.18s;
-
-    &:hover {
-      opacity: 0.85;
-      box-shadow: 0 0 0 2px $accent;
-    }
-  }
-
-  &--empty {
-    flex-direction: column;
-    gap: 4px;
-  }
-}
-
-.cobsam__signature-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.cobsam__signature-empty-text {
-  font-size: 0.72rem;
-  color: $text-muted;
-  font-family: "Poppins", sans-serif;
-
-  [data-theme="dark"] & {
-    color: rgba(255, 255, 255, 0.3);
-  }
-}
-
-.cobsam__signee-name {
-  text-align: center;
-  font-size: 0.76rem;
-  color: $text-secondary;
-  font-family: "Poppins", sans-serif;
-  font-weight: 500;
-  margin: 0;
-
-  [data-theme="dark"] & {
-    color: rgba(255, 255, 255, 0.6);
-  }
-}
-
-.cobsam__right {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
 }
 
 .cobsam__section-card {
@@ -327,7 +238,6 @@ $bg-paper: #ffffff;
   display: flex;
   gap: 14px;
   align-items: stretch;
-  flex: 1;
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -512,10 +422,51 @@ $bg-paper: #ffffff;
   &:hover {
     transform: scale(1.06);
     border-color: $accent;
+
+    [data-theme="dark"] & {
+      border-color: var(--palette-primary);
+    }
   }
 
   [data-theme="dark"] & {
     border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.cobsam__btn-add-signature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px dashed $accent-mid;
+  background: $bg-card;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $accent;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+
+  &:hover {
+    background: $accent-light;
+    border-color: $accent;
+
+    [data-theme="dark"] & {
+      background: rgba(230, 100, 20, 0.2);
+      border-color: var(--palette-primary);
+    }
+  }
+
+  [data-theme="dark"] & {
+    background: rgba(230, 100, 20, 0.08);
+    border-color: rgba(230, 100, 20, 0.5);
+    color: var(--palette-primary);
   }
 }
 
@@ -572,6 +523,15 @@ $bg-paper: #ffffff;
 
   &--empty {
     border-bottom: 1.5px solid $border;
+  }
+
+  &--clickable {
+    cursor: zoom-in;
+    transition: opacity 0.18s;
+
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   [data-theme="dark"] & {
@@ -650,5 +610,141 @@ $bg-paper: #ffffff;
 
   [data-theme="dark"] & {
     background-color: var(--palette-primary) !important;
+  }
+}
+
+.cobsam__sig-preview-paper {
+  border-radius: 14px !important;
+  background: $bg-paper !important;
+  box-shadow: 0 16px 56px rgba(230, 100, 20, 0.2) !important;
+  overflow: hidden !important;
+  font-family: "Poppins", sans-serif !important;
+
+  [data-theme="dark"] & {
+    background: $bg-main !important;
+    box-shadow: 0 16px 56px rgba(0, 0, 0, 0.55) !important;
+  }
+}
+
+.cobsam__sig-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  background: $accent;
+
+  [data-theme="dark"] & {
+    background: var(--palette-primary);
+  }
+}
+
+.cobsam__sig-preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.cobsam__sig-preview-header-icon {
+  color: #fff !important;
+  font-size: 19px !important;
+}
+
+.cobsam__sig-preview-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.cobsam__sig-preview-close {
+  color: rgba(255, 255, 255, 0.75) !important;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  &:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+  }
+}
+
+.cobsam__sig-preview-body {
+  padding: 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: $accent-light;
+
+  [data-theme="dark"] & {
+    background: $bg-main;
+  }
+}
+
+.cobsam__sig-preview-frame {
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  box-shadow: inset 0 2px 8px rgba(230, 100, 20, 0.06);
+
+  [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cobsam__sig-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  display: block;
+}
+
+.cobsam__sig-preview-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding-top: 4px;
+  border-top: 1.5px dashed $border;
+  width: 100%;
+
+  [data-theme="dark"] & {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.cobsam__sig-preview-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $text-primary;
+  font-family: "Poppins", sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: center;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.88);
+  }
+}
+
+.cobsam__sig-preview-role {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: $text-muted;
+  font-family: "Poppins", sans-serif;
+  letter-spacing: 0.03em;
+  text-align: center;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.38);
   }
 }

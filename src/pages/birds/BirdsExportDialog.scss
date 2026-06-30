@@ -1,0 +1,252 @@
+@use "../../styles/colors" as *;
+
+.birds-export {
+  &__paper {
+    border-radius: 14px !important;
+    font-family: "Poppins", sans-serif;
+    background: $bg-main !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    overflow: hidden !important;
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__header-icon {
+    font-size: 1.1rem !important;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close {
+    color: $text-muted !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 20px 8px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &__required {
+    color: #e53935;
+    margin-left: 2px;
+  }
+
+  &__input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: $bg-main;
+    transition: border-color 0.15s;
+
+    &:focus-within {
+      border-color: $primary-main;
+    }
+
+    &--error {
+      border-color: #e53935 !important;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+
+      &:focus-within {
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__input-icon {
+    font-size: 0.9rem !important;
+    color: $text-muted;
+    flex-shrink: 0;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  &__input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.82rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    cursor: pointer;
+
+    &::-webkit-calendar-picker-indicator {
+      opacity: 0.5;
+      cursor: pointer;
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+      color-scheme: dark;
+    }
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    color: #e53935;
+    background: rgba(#e53935, 0.06);
+    border: 1px solid rgba(#e53935, 0.2);
+    border-radius: 6px;
+    padding: 7px 10px;
+  }
+
+  &__error-icon {
+    font-size: 0.9rem !important;
+    color: #e53935;
+    flex-shrink: 0;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px 18px;
+    border-top: 1px solid $border-color;
+    margin-top: 8px;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__footer-left {
+    flex: 1;
+  }
+
+  &__footer-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  &__btn-cancel {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: $text-muted;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    transition: color 0.15s;
+
+    &:hover {
+      color: $primary-main;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__btn-submit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    background: $primary-main;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    transition: filter 0.15s;
+
+    &:hover {
+      filter: brightness(0.92);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__btn-icon {
+    font-size: 1rem !important;
+    color: #fff;
+  }
+}
