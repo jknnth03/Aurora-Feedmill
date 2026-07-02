@@ -251,6 +251,7 @@
     width: 100%;
     border-collapse: collapse;
     font-family: "Poppins", sans-serif;
+    table-layout: fixed;
   }
 
   &__thead-row {
@@ -272,7 +273,7 @@
   }
 
   &__th {
-    padding: 9px 12px;
+    padding: 9px 8px;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -289,7 +290,7 @@
 
     &--area {
       text-align: left;
-      min-width: 160px;
+      width: 160px;
       vertical-align: middle;
       border-right: 2px solid #000000 !important;
     }
@@ -319,14 +320,18 @@
 
     &--col {
       text-align: center;
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 600;
       color: $text-primary;
       background: rgba($primary-main, 0.03);
-      padding: 7px 10px;
+      padding: 7px 6px;
       border-right: 1px solid $border-color;
-      white-space: nowrap;
-      min-width: 80px;
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: break-word;
+      line-height: 1.25;
+      width: 72px;
+      vertical-align: middle;
 
       &:last-child {
         border-right: none;
@@ -340,7 +345,7 @@
     }
 
     &--obs-sub {
-      min-width: 70px;
+      width: 72px;
     }
 
     [data-theme="dark"] & {
@@ -359,12 +364,16 @@
   }
 
   &__th-obs-group {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     font-weight: 700;
     text-transform: uppercase;
     color: $text-muted;
     letter-spacing: 0.3px;
     margin-bottom: 2px;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-height: 1.2;
 
     [data-theme="dark"] & {
       color: rgba(255, 255, 255, 0.4);
@@ -372,9 +381,13 @@
   }
 
   &__th-obs-sub {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 600;
     color: $text-primary;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-height: 1.2;
 
     [data-theme="dark"] & {
       color: rgba(255, 255, 255, 0.7);
@@ -418,7 +431,7 @@
       font-weight: 500;
       font-family: "Poppins", sans-serif;
       white-space: nowrap;
-      min-width: 160px;
+      width: 160px;
       border-right: 2px solid #000000 !important;
     }
 
@@ -444,7 +457,7 @@
   }
 
   &__score-input {
-    width: 60px;
+    width: 52px;
     text-align: center;
     border: 1.5px solid $border-color;
     border-radius: 6px;
