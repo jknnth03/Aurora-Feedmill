@@ -619,7 +619,7 @@ const Dashboard = () => {
       <div className="qad__header">
         <div className="qad__header-left">
           <div>
-            <h1 className="qad__title">Aurora Store — QA Dashboard</h1>
+            <h1 className="qad__title">Aurora Feedmill — QA Dashboard</h1>
             <p className="qad__subtitle">
               QA Checklist monitoring · {MONTHS[month - 1]} {year}
             </p>

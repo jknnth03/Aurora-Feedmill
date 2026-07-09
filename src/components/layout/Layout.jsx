@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "../sidebar/Sidebar";
 import Appbar from "../appbar/Appbar";
-import Footer from "../footer/Footer";
 import "./Layout.scss";
 import { useGetApprovalsStatusCountQuery } from "../../features/api/login/loginApiSlice";
 
@@ -39,8 +38,6 @@ const Layout = () => {
         <main className="layout__content">
           <Outlet />
         </main>
-
-        <Footer />
       </div>
     </div>
   );

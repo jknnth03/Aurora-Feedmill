@@ -148,7 +148,7 @@ const AcknowledgementSettingsModal = ({
   const isBirds = selectedSectionName === "BIRDS";
   const isPests = selectedSectionName === "PESTS";
 
-  const skipEvaluators = !open || !isAddOrEdit || (!isCOBS && !isBirds);
+  const skipEvaluators = !open || !isAddOrEdit || !isCOBS;
   const skipApprovers = !open || !isAddOrEdit || !isCOBS;
   const skipQa = !open || !isAddOrEdit || (!isBirds && !isPests);
   const skipQaHeads = !open || !isAddOrEdit || (!isCOBS && !isBirds);
@@ -204,6 +204,7 @@ const AcknowledgementSettingsModal = ({
   const detail = settingDetail?.data ?? settingDetail;
   const detailSectionName = detail?.sections?.name?.toUpperCase() ?? "";
   const isDetailPests = detailSectionName === "PESTS";
+  const isDetailCOBS = detailSectionName === "COBS";
 
   const populateFormFromDetail = (d) => {
     setName(d?.name ?? "");
@@ -279,8 +280,11 @@ const AcknowledgementSettingsModal = ({
     if (!sectionId) errs.section_id = "Section is required.";
     if (isPests) {
       if (!approverId) errs.approver_id = "Approver is required.";
-    } else if (sectionId) {
+    } else if (isCOBS) {
       if (!evaluatorId) errs.evaluator_id = "Evaluator is required.";
+      if (hierarchy.length === 0)
+        errs.hierarchy = "At least one acknowledger is required.";
+    } else if (isBirds) {
       if (hierarchy.length === 0)
         errs.hierarchy = "At least one acknowledger is required.";
     }
@@ -336,8 +340,10 @@ const AcknowledgementSettingsModal = ({
       if (isPests) {
         payload.user_id = Number(approverId);
         payload.hierarchy = [];
-      } else {
+      } else if (isCOBS) {
         payload.user_id = Number(evaluatorId);
+        payload.hierarchy = hierarchy.map(Number);
+      } else {
         payload.hierarchy = hierarchy.map(Number);
       }
 
@@ -470,122 +476,122 @@ const AcknowledgementSettingsModal = ({
         </div>
       )}
 
+      {sectionId && isCOBS && (
+        <div className="acksm__field">
+          <label className="acksm__label">
+            Evaluator <RequiredStar />
+          </label>
+          <FormControl
+            fullWidth
+            size="small"
+            className={`acksm__select-control${errors.evaluator_id ? " acksm__select-control--error" : ""}`}>
+            <Select
+              value={evaluatorId}
+              onChange={(e) => {
+                setEvaluatorId(e.target.value);
+                if (e.target.value) clearFieldError("evaluator_id");
+              }}
+              displayEmpty
+              disabled={isBusy || isLoadingEvaluators}
+              className="acksm__select"
+              MenuProps={{
+                PaperProps: { className: "acksm__select-menu" },
+              }}>
+              <MenuItem value="" disabled>
+                {isLoadingEvaluators ? "Loading..." : "Select evaluator"}
+              </MenuItem>
+              {evaluators.map((u) => (
+                <MenuItem key={u.id} value={String(u.id)}>
+                  {u.full_name || `User #${u.id}`}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {errors.evaluator_id && (
+            <span className="acksm__inline-error">
+              <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+              {errors.evaluator_id}
+            </span>
+          )}
+        </div>
+      )}
+
       {sectionId && (isCOBS || isBirds) && (
-        <>
-          <div className="acksm__field">
-            <label className="acksm__label">
-              Evaluator <RequiredStar />
-            </label>
+        <div className="acksm__field">
+          <label className="acksm__label">
+            Acknowledger Sequence <RequiredStar />
+          </label>
+          <div className="acksm__approver-row">
             <FormControl
               fullWidth
               size="small"
-              className={`acksm__select-control${errors.evaluator_id ? " acksm__select-control--error" : ""}`}>
+              className={`acksm__select-control${errors.hierarchy ? " acksm__select-control--error" : ""}`}>
               <Select
-                value={evaluatorId}
-                onChange={(e) => {
-                  setEvaluatorId(e.target.value);
-                  if (e.target.value) clearFieldError("evaluator_id");
-                }}
+                value={selectedApprover}
+                onChange={(e) => setSelectedApprover(e.target.value)}
                 displayEmpty
-                disabled={isBusy || isLoadingEvaluators}
+                disabled={isBusy || isLoadingAcknowledgers}
                 className="acksm__select"
                 MenuProps={{
                   PaperProps: { className: "acksm__select-menu" },
                 }}>
                 <MenuItem value="" disabled>
-                  {isLoadingEvaluators ? "Loading..." : "Select evaluator"}
+                  {isLoadingAcknowledgers
+                    ? "Loading..."
+                    : "Select Acknowledger"}
                 </MenuItem>
-                {evaluators.map((u) => (
+                {availableAcknowledgers.map((u) => (
                   <MenuItem key={u.id} value={String(u.id)}>
                     {u.full_name || `User #${u.id}`}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
-            {errors.evaluator_id && (
-              <span className="acksm__inline-error">
-                <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                {errors.evaluator_id}
-              </span>
-            )}
+            <Button
+              variant="outlined"
+              className="acksm__add-approver-btn"
+              onClick={handleAddApprover}
+              disabled={!selectedApprover || isBusy}>
+              + ADD
+            </Button>
           </div>
+          {errors.hierarchy && (
+            <span className="acksm__inline-error">
+              <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+              {errors.hierarchy}
+            </span>
+          )}
 
-          <div className="acksm__field">
-            <label className="acksm__label">
-              Acknowledger Sequence <RequiredStar />
-            </label>
-            <div className="acksm__approver-row">
-              <FormControl
-                fullWidth
-                size="small"
-                className={`acksm__select-control${errors.hierarchy ? " acksm__select-control--error" : ""}`}>
-                <Select
-                  value={selectedApprover}
-                  onChange={(e) => setSelectedApprover(e.target.value)}
-                  displayEmpty
-                  disabled={isBusy || isLoadingAcknowledgers}
-                  className="acksm__select"
-                  MenuProps={{
-                    PaperProps: { className: "acksm__select-menu" },
-                  }}>
-                  <MenuItem value="" disabled>
-                    {isLoadingAcknowledgers
-                      ? "Loading..."
-                      : "Select Acknowledger"}
-                  </MenuItem>
-                  {availableAcknowledgers.map((u) => (
-                    <MenuItem key={u.id} value={String(u.id)}>
-                      {u.full_name || `User #${u.id}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Button
-                variant="outlined"
-                className="acksm__add-approver-btn"
-                onClick={handleAddApprover}
-                disabled={!selectedApprover || isBusy}>
-                + ADD
-              </Button>
-            </div>
-            {errors.hierarchy && (
-              <span className="acksm__inline-error">
-                <ErrorOutlineIcon sx={{ fontSize: 11 }} />
-                {errors.hierarchy}
-              </span>
-            )}
-
-            {hierarchy.length > 0 && (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}>
-                <SortableContext
-                  items={hierarchy}
-                  strategy={verticalListSortingStrategy}>
-                  <div className="acksm__hierarchy-list">
-                    {hierarchy.map((id, index) => {
-                      const user = acknowledgerOptions.find(
-                        (u) => String(u.id) === id,
-                      );
-                      return (
-                        <SortableItem
-                          key={id}
-                          id={id}
-                          index={index}
-                          name={user?.full_name}
-                          position={user?.position}
-                          onRemove={handleRemoveApprover}
-                          disabled={isBusy}
-                        />
-                      );
-                    })}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
-          </div>
-        </>
+          {hierarchy.length > 0 && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={hierarchy}
+                strategy={verticalListSortingStrategy}>
+                <div className="acksm__hierarchy-list">
+                  {hierarchy.map((id, index) => {
+                    const user = acknowledgerOptions.find(
+                      (u) => String(u.id) === id,
+                    );
+                    return (
+                      <SortableItem
+                        key={id}
+                        id={id}
+                        index={index}
+                        name={user?.full_name}
+                        position={user?.position}
+                        onRemove={handleRemoveApprover}
+                        disabled={isBusy}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
       )}
 
       {errors._submit && (
@@ -686,16 +692,18 @@ const AcknowledgementSettingsModal = ({
               </div>
             ) : (
               <>
-                <div className="acksm__field">
-                  <label className="acksm__label">Evaluator</label>
-                  <input
-                    type="text"
-                    className="acksm__input"
-                    value={detail?.user?.name ?? "—"}
-                    disabled
-                    readOnly
-                  />
-                </div>
+                {isDetailCOBS && (
+                  <div className="acksm__field">
+                    <label className="acksm__label">Evaluator</label>
+                    <input
+                      type="text"
+                      className="acksm__input"
+                      value={detail?.user?.name ?? "—"}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                )}
 
                 <div className="acksm__field">
                   <label className="acksm__label">Acknowledger Sequence</label>

@@ -41,6 +41,59 @@
     margin-left: auto;
   }
 
+  &__status-item {
+    display: flex;
+    align-items: center;
+    color: $primary-main;
+    cursor: default;
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: background 0.15s;
+
+    &:hover {
+      background: rgba($primary-main, 0.08);
+    }
+
+    &--error {
+      color: $status-error;
+
+      &:hover {
+        background: rgba($status-error, 0.08);
+      }
+    }
+
+    svg {
+      font-size: 18px;
+    }
+  }
+
+  &__datetime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba($primary-main, 0.06);
+
+    @include sm {
+      display: none;
+    }
+  }
+
+  &__date {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+  }
+
+  &__time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+  }
+
   &__greeting {
     font-size: 0.82rem;
     font-weight: 400;
@@ -71,18 +124,5 @@
       color: $status-error !important;
       background: rgba(239, 68, 68, 0.08) !important;
     }
-  }
-}
-
-.appbar__notif {
-  color: $primary-main !important;
-  border-radius: 8px !important;
-
-  &:hover {
-    background: rgba($primary-main, 0.08) !important;
-  }
-
-  svg {
-    font-size: 22px;
   }
 }

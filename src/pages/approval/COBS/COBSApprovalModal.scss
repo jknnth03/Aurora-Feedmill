@@ -463,6 +463,11 @@ $bg-paper: #ffffff;
     }
   }
 
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   [data-theme="dark"] & {
     background: rgba(230, 100, 20, 0.08);
     border-color: rgba(230, 100, 20, 0.5);
@@ -559,6 +564,72 @@ $bg-paper: #ffffff;
 
   [data-theme="dark"] & {
     color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.cobsam__skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 8px;
+}
+
+.cobsam__skeleton-block {
+  height: 64px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba($border, 0.6) 25%,
+    rgba($accent-mid, 0.35) 37%,
+    rgba($border, 0.6) 63%
+  );
+  background-size: 400% 100%;
+  animation: cobsam-skeleton-shimmer 1.4s ease-in-out infinite;
+
+  &--details {
+    height: 96px;
+  }
+
+  &--sm {
+    height: 56px;
+  }
+
+  &--signature {
+    height: 90px;
+    margin-top: 6px;
+  }
+
+  [data-theme="dark"] & {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06) 25%,
+      rgba(255, 255, 255, 0.14) 37%,
+      rgba(255, 255, 255, 0.06) 63%
+    );
+    background-size: 400% 100%;
+  }
+}
+
+.cobsam__skeleton-row-group {
+  display: flex;
+  gap: 14px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+
+  .cobsam__skeleton-block {
+    flex: 1;
+    height: 140px;
+  }
+}
+
+@keyframes cobsam-skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 

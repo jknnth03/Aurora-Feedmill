@@ -85,12 +85,21 @@ const PestsApprovalModal = ({
     ),
   ];
 
-  const pests =
-    responses.length > 0
-      ? (responses[0]?.response?.pests ?? []).map((p) =>
-          typeof p === "string" ? { name: p } : { name: p.name },
-        )
-      : [];
+  const pests = (() => {
+    const seen = new Set();
+    const list = [];
+    responses.forEach((r) => {
+      const raw = r?.response ?? r;
+      (raw?.pests ?? []).forEach((p) => {
+        const name = typeof p === "string" ? p : p.name;
+        if (name && !seen.has(name)) {
+          seen.add(name);
+          list.push({ name });
+        }
+      });
+    });
+    return list;
+  })();
 
   const getBarPercent = (pestName) => {
     const max = inspectionAreas.length * 10;
