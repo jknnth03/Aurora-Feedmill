@@ -13,7 +13,6 @@ import { useGetBirdsQuery } from "../../features/api/birds/birdsApi";
 import {
   getChipBg,
   getChipTextColor,
-  getChipName,
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import BirdsModal from "./BirdsModal";
@@ -35,9 +34,9 @@ const STATUS_CHIP_MAP = {
   "on going": "chip-processing",
   pending: "chip-pending",
   rejected: "chip-rejected",
+  "checklist not yet created": "chip-pending",
+  "previous month incomplete": "chip-rejected",
 };
-
-const TOTAL_PERIODS = 4;
 
 const getCompletedPeriodsCount = (periodMap) => {
   let count = 0;
@@ -56,42 +55,79 @@ const hasAnyInProgressPeriod = (periodMap) => {
     if (!Array.isArray(entries) || entries.length === 0) return false;
     const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
     const status = latest?.status?.toLowerCase() ?? "";
-    return (
-      status === "for acknowledgement" ||
-      status === "for approval" ||
-      status === "on progress"
-    );
+    return status === "for acknowledgement" || status === "for approval";
   });
 };
 
 const getDerivedBirdsTableStatus = (periodMap) => {
+  const totalPeriods = Object.keys(periodMap).length;
   const completedPeriods = getCompletedPeriodsCount(periodMap);
   if (completedPeriods === 0 && !hasAnyInProgressPeriod(periodMap))
     return "Pending";
-  if (completedPeriods === TOTAL_PERIODS && !hasAnyInProgressPeriod(periodMap))
+  if (completedPeriods === totalPeriods && !hasAnyInProgressPeriod(periodMap))
     return "Completed";
   return "On Going";
 };
 
-const flattenBirdsData = (rawData) => {
+const isChecklistNotYetCreated = (checklistData, currentMonth) => {
+  const createdAt = checklistData?.created_at;
+  if (!createdAt) return false;
+  const createdMonth = dayjs(createdAt);
+  if (!createdMonth.isValid()) return false;
+  return createdMonth.startOf("month").isAfter(currentMonth.startOf("month"));
+};
+
+const checklistExistedLastMonth = (checklistData, currentMonth) => {
+  const createdAt = checklistData?.created_at;
+  if (!createdAt) return false;
+  const createdMonth = dayjs(createdAt).startOf("month");
+  const previousMonth = currentMonth.subtract(1, "month").startOf("month");
+  return !createdMonth.isAfter(previousMonth);
+};
+
+const getPreviousMonthCompleted = (checklistData) => {
+  if (checklistData?.previous_month_completed === undefined) return true;
+  return Boolean(checklistData.previous_month_completed);
+};
+
+const flattenBirdsData = (rawData, currentMonth) => {
   if (!rawData) return [];
   const rows = [];
   Object.entries(rawData).forEach(([checklistKey, checklistData]) => {
     const periodMap = checklistData?.periods ?? {};
     const completedPeriods = getCompletedPeriodsCount(periodMap);
-    const derivedStatus = getDerivedBirdsTableStatus(periodMap);
     const allBatches = Object.values(periodMap).flat();
     const latestBatch =
       allBatches.length > 0
         ? allBatches.reduce((a, b) => (b.batch_no > a.batch_no ? b : a))
         : null;
+
+    const notYetCreated = isChecklistNotYetCreated(checklistData, currentMonth);
+    const existedLastMonth = checklistExistedLastMonth(
+      checklistData,
+      currentMonth,
+    );
+    const previousMonthCompleted = getPreviousMonthCompleted(checklistData);
+
+    let derivedStatus = getDerivedBirdsTableStatus(periodMap);
+    let isLocked = false;
+
+    if (notYetCreated) {
+      derivedStatus = "Checklist Not Yet Created";
+      isLocked = true;
+    } else if (existedLastMonth && !previousMonthCompleted) {
+      derivedStatus = "Previous Month Incomplete";
+      isLocked = true;
+    }
+
     rows.push({
       checklist_name: checklistData?.checklist_name ?? "—",
-      week: `${completedPeriods}/${TOTAL_PERIODS}`,
+      week: `${completedPeriods}/${Object.keys(periodMap).length}`,
       status: derivedStatus,
       _raw: latestBatch,
       _unitKey: checklistKey,
       _unitData: checklistData,
+      _isLocked: isLocked,
     });
   });
   return rows;
@@ -109,7 +145,7 @@ const StatusChip = ({ value }) => {
         background: getChipBg(chipId),
         color: getChipTextColor(chipId),
       }}>
-      {getChipName(chipId)}
+      {value}
     </span>
   );
 };
@@ -137,7 +173,7 @@ const BirdsPage = () => {
   );
 
   const is404 = error?.status === 404;
-  const tableData = flattenBirdsData(data);
+  const tableData = flattenBirdsData(data, currentMonth);
   const total = tableData.length;
   const paginatedData = tableData.slice(
     (page - 1) * rowsPerPage,
@@ -158,6 +194,11 @@ const BirdsPage = () => {
   };
   const handlePrevMonth = () => setCurrentMonth((m) => m.subtract(1, "month"));
   const handleNextMonth = () => setCurrentMonth((m) => m.add(1, "month"));
+
+  const handleRowClick = (row) => {
+    if (row._isLocked) return;
+    setSelectedUnitKey(row._unitKey);
+  };
 
   const fetchExportData = async (startDate, endDate) => {
     const result = await refetch({ startDate, endDate });
@@ -222,7 +263,7 @@ const BirdsPage = () => {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSort={handleSort}
-          onRowClick={(row) => setSelectedUnitKey(row._unitKey)}
+          onRowClick={handleRowClick}
         />
       </PageContainer>
 

@@ -89,14 +89,17 @@ const checklistExistedLastMonth = (checklistData, currentMonth) => {
 };
 
 const getPreviousMonthCompleted = (checklistData) => {
-  if (checklistData?.previous_month_completed === undefined) return true;
-  return Boolean(checklistData.previous_month_completed);
+  const val = checklistData?.previous_month_completed;
+  if (val === undefined || val === null) return true;
+  return Boolean(val);
 };
 
 const flattenPestData = (rawData, currentMonth) => {
   if (!rawData) return [];
   const rows = [];
   Object.entries(rawData).forEach(([checklistKey, checklistData]) => {
+    if (!checklistData?.id) return;
+
     const periodMap = checklistData?.periods ?? {};
     const completedPeriods = getCompletedPeriodsCount(periodMap);
     const allBatches = Object.values(periodMap).flat();

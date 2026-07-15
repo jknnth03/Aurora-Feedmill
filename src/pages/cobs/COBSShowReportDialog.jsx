@@ -506,6 +506,7 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
 
         <DialogActions className="cobs-sr__footer">
           <div className="cobs-sr__footer-left">
+            {/*
             <FormControl size="small" className="cobs-sr__download-select">
               <Select
                 value={downloadType}
@@ -528,6 +529,7 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
               <PrintIcon fontSize="small" />
               PRINT
             </button>
+            */}
           </div>
           <button className="cobs-sr__btn-close" onClick={handleClose}>
             Close

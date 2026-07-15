@@ -99,9 +99,11 @@ const flattenCobsData = (rawData, currentMonth) => {
   const rows = [];
 
   Object.entries(rawData).forEach(([unitKey, unitData]) => {
+    const checklists = unitData?.checklists ?? [];
+    if (checklists.length === 0) return;
+
     const unitName = unitKey.replace(/^Unit:\s*/i, "").trim();
     const weekMap = unitData?.weeks ?? {};
-    const checklists = unitData?.checklists ?? [];
     const totalWeeks = Object.keys(weekMap).length;
 
     const completedWeeks = getCompletedWeeksCount(weekMap);
