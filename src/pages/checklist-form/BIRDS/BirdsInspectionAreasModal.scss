@@ -6,78 +6,77 @@
     overflow: hidden;
   }
 
-  &__title {
+  &__header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: "Poppins", sans-serif;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
     color: $primary-main;
-    background: rgba($primary-main, 0.06);
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba($primary-main, 0.12);
-
-    [data-theme="dark"] & {
-      color: $secondary-main;
-      background: rgba($secondary-main, 0.08);
-      border-bottom-color: rgba($secondary-main, 0.16);
-    }
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba($primary-main, 0.15);
 
     svg {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
+      color: $primary-main;
     }
 
     span {
       flex: 1;
     }
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+      border-bottom-color: rgba($secondary-main, 0.2);
+
+      svg {
+        color: $secondary-main;
+      }
+    }
   }
 
   &__close {
-    color: $text-muted;
+    color: $primary-main;
+    padding: 4px;
+
+    .MuiSvgIcon-root {
+      color: $primary-main !important;
+    }
 
     &:hover {
-      background: rgba($text-muted, 0.1);
+      background: rgba($primary-main, 0.1);
+    }
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+
+      .MuiSvgIcon-root {
+        color: $secondary-main !important;
+      }
+
+      &:hover {
+        background: rgba($secondary-main, 0.12);
+      }
     }
   }
 
   &__content {
-    padding: 18px 20px 20px !important;
+    padding: 0 40px 32px !important;
   }
 
-  &__subtitle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+  &__label {
     font-family: "Poppins", sans-serif;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: $text-primary;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba($text-muted, 0.15);
-
-    [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.85);
-      border-bottom-color: rgba(255, 255, 255, 0.12);
-    }
-  }
-
-  &__count {
-    flex-shrink: 0;
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     font-weight: 700;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
     color: $primary-main;
-    background: rgba($primary-main, 0.1);
-    border-radius: 20px;
-    padding: 3px 10px;
+    margin-bottom: 12px;
 
     [data-theme="dark"] & {
       color: $secondary-main;
-      background: rgba($secondary-main, 0.12);
     }
   }
 
@@ -92,10 +91,10 @@
   &__list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 16px 36px;
     list-style: none;
-    margin: 0;
-    padding: 2px 4px 2px 0;
+    margin: 18px 0 0;
+    padding: 0;
     max-height: 320px;
     overflow-y: auto;
 
@@ -118,28 +117,23 @@
     align-items: center;
     font-family: "Poppins", sans-serif;
     font-size: 0.82rem;
-    font-weight: 500;
     color: $text-primary;
-    background: rgba($primary-main, 0.04);
-    border: 1px solid rgba($primary-main, 0.1);
-    border-radius: 8px;
-    padding: 7px 10px;
+    padding: 6px 2px;
 
     &::before {
       content: "";
       display: inline-block;
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: $primary-main;
       margin-right: 8px;
       flex-shrink: 0;
+      opacity: 0.7;
     }
 
     [data-theme="dark"] & {
       color: rgba(255, 255, 255, 0.85);
-      background: rgba($secondary-main, 0.06);
-      border-color: rgba($secondary-main, 0.14);
 
       &::before {
         background: $secondary-main;

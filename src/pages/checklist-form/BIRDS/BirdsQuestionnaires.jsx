@@ -3,6 +3,8 @@ import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
 import FlutterDashIcon from "@mui/icons-material/FlutterDash";
 import AddIcon from "@mui/icons-material/Add";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { IconButton } from "@mui/material";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -18,38 +20,65 @@ import {
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import BirdsModal from "./BirdsQuestionnairesModal";
+import BirdsInspectionAreasModal from "./BirdsInspectionAreasModal";
 import "./BirdsQuestionnaires.scss";
 
-const renderStackedList = (items) => {
-  if (!items || items.length === 0) return "—";
-  const visible = items.slice(0, 5);
-  const remaining = items.slice(5);
+const getGroupItems = (items, groupName) => {
+  const group = items?.find((g) => g.name === groupName);
+  if (!group || !group.items || group.items.length === 0) return null;
+  return group.items;
+};
+
+const renderChips = (items, groupName) => {
+  const groupItems = getGroupItems(items, groupName);
+  if (!groupItems) return "—";
   return (
     <div className="birds__stack">
-      {visible.map((item, idx) => (
+      {groupItems.map((i, idx) => (
         <span key={idx} className="birds__stack-item">
-          {item.name}
+          {i.name}
         </span>
       ))}
-      {remaining.length > 0 && (
-        <span
-          className="birds__stack-more"
-          title={remaining.map((i) => i.name).join(", ")}>
-          +{remaining.length} more
-        </span>
-      )}
     </div>
   );
 };
 
-const COLUMNS = [
+const buildColumns = (onViewInspectionAreas) => [
   { key: "id", label: "ID", sortable: true },
   { key: "checklist_name", label: "Checklist Name", sortable: true },
   {
-    key: "items",
-    label: "Item Groups",
+    key: "inspection_areas",
+    label: "Inspection Areas",
     sortable: false,
-    render: (value) => renderStackedList(value),
+    render: (_, row) => {
+      const groupItems = getGroupItems(row.items, "Inspection Areas");
+      if (!groupItems) return "—";
+      return (
+        <div className="birds__view-cell">
+          <IconButton
+            size="small"
+            className="birds__view-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewInspectionAreas(row, groupItems);
+            }}>
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+        </div>
+      );
+    },
+  },
+  {
+    key: "infestation_level",
+    label: "Infestation Level",
+    sortable: false,
+    render: (_, row) => renderChips(row.items, "Infestation Level"),
+  },
+  {
+    key: "feed_wastage",
+    label: "Presence of Feed/RM Wastage",
+    sortable: false,
+    render: (_, row) => renderChips(row.items, "Presence of Feed/RM Wastage"),
   },
 ];
 
@@ -69,6 +98,9 @@ const BirdsQuestionnaires = () => {
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
+  const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
+  const [inspectionAreas, setInspectionAreas] = useState([]);
+  const [inspectionChecklistName, setInspectionChecklistName] = useState("");
 
   const currentStatus = showArchived ? "inactive" : "active";
 
@@ -140,6 +172,17 @@ const BirdsQuestionnaires = () => {
     setToArchive(row);
     setConfirmOpen(true);
   };
+  const handleViewInspectionAreas = (row, groupItems) => {
+    setInspectionChecklistName(row.checklist_name);
+    setInspectionAreas(groupItems);
+    setInspectionModalOpen(true);
+  };
+  const handleCloseInspectionAreas = () => {
+    setInspectionModalOpen(false);
+    setInspectionAreas([]);
+    setInspectionChecklistName("");
+  };
+  const columns = buildColumns(handleViewInspectionAreas);
   const handleConfirmArchive = async () => {
     try {
       await archiveBird(toArchive.id).unwrap();
@@ -198,7 +241,7 @@ const BirdsQuestionnaires = () => {
           />
         }>
         <UniversalTable
-          columns={COLUMNS}
+          columns={columns}
           data={tableData}
           isLoading={isFetching}
           sortBy={sortBy}
@@ -219,6 +262,13 @@ const BirdsQuestionnaires = () => {
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
+      />
+
+      <BirdsInspectionAreasModal
+        open={inspectionModalOpen}
+        onClose={handleCloseInspectionAreas}
+        checklistName={inspectionChecklistName}
+        areas={inspectionAreas}
       />
 
       <ConfirmDialog

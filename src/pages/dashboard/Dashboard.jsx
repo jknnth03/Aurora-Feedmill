@@ -419,16 +419,13 @@ const DowntimeChart = () => (
           <th className="qad-downtime__th qad-downtime__th--left" colSpan={2}>
             <div className="qad-downtime__header-title">DOWNTIME CHART</div>
           </th>
-          <th className="qad-downtime__th" colSpan={3}>
+          <th
+            className="qad-downtime__th qad-downtime__th--effective"
+            colSpan={3}>
             <div className="qad-downtime__effective">
               Effective Date: August 1, 2024
             </div>
-          </th>
-        </tr>
-        <tr>
-          <th className="qad-downtime__th" colSpan={2} />
-          <th className="qad-downtime__th" colSpan={3}>
-            FEED MILL AREAS
+            <div className="qad-downtime__feedmill">FEED MILL AREAS</div>
           </th>
         </tr>
         <tr>

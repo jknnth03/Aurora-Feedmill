@@ -1,8 +1,5 @@
 @use "../../styles/colors" as *;
 
-// ─── reuse ALL original qad-* styles ─────────────────────────────────────────
-// (copied verbatim from the original Dashboard.scss)
-
 .qad-store-select {
   display: grid;
   grid-template-columns: auto calc((100% - 36px) / 4);
@@ -133,7 +130,6 @@
     }
   }
 
-  // new: evaluated badge
   &--eval {
     background: #e3f0fc;
     color: #1a5c9e;
@@ -497,8 +493,6 @@
   }
 }
 
-// ─── blank / coming-soon ──────────────────────────────────────────────────────
-
 .qad-blank {
   display: flex;
   flex-direction: column;
@@ -523,8 +517,6 @@
     font-size: 0.78rem;
   }
 }
-
-// ─── responsive ───────────────────────────────────────────────────────────────
 
 @media (max-width: 1200px) {
   .qad-weekly-summaries {
@@ -572,7 +564,6 @@
     font-size: 0.74rem;
   }
 }
-// ─── COBS Downtime Chart ──────────────────────────────────────────────────────
 
 .qad-downtime {
   width: 100%;
@@ -606,11 +597,31 @@
 
     &--left {
       text-align: left;
+      background: #fef6ee;
+
+      [data-theme="dark"] & {
+        background: var(--bg-paper);
+      }
+    }
+
+    &--effective {
+      background: #fef6ee;
+
+      [data-theme="dark"] & {
+        background: var(--bg-paper);
+      }
     }
 
     &--label {
       font-weight: 700;
       font-size: 0.8rem;
+      background: var(--palette-primary, #f37925);
+      color: #fff;
+
+      [data-theme="dark"] & {
+        background: var(--palette-primary, #f37925);
+        color: #fff;
+      }
     }
 
     &--area {
@@ -629,6 +640,13 @@
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-primary);
+  }
+
+  &__feedmill {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 4px;
   }
 
   &__area-label {
@@ -686,8 +704,6 @@
     }
   }
 }
-
-// ─── COBS Score Summary Table ─────────────────────────────────────────────────
 
 .qad-cobs-scores {
   background: #fef6ee;

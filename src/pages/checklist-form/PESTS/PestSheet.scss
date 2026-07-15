@@ -33,82 +33,40 @@
     }
   }
 
-  &__eye-btn {
-    color: $primary-main !important;
-
-    &:hover {
-      background: rgba($primary-main, 0.08) !important;
-    }
-  }
-
   &__eye-cell {
     display: flex;
-    justify-content: center;
     align-items: center;
-    width: 100%;
+    justify-content: flex-start;
+    padding-left: 30px;
   }
 
-  &__dialog-paper {
-    border-radius: 12px !important;
-    overflow: hidden;
-  }
-
-  &__dialog-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    background: $primary-main;
-    color: #fff;
-
-    .MuiIconButton-root {
-      color: #fff;
+  &__eye-btn {
+    &,
+    .MuiSvgIcon-root {
+      color: $primary-main !important;
     }
-  }
 
-  &__dialog-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: "Poppins", sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-  }
+    background: rgba($primary-main, 0.08);
+    transition:
+      background 0.15s,
+      transform 0.1s;
 
-  &__dialog-icon {
-    font-size: 1.2rem !important;
-  }
+    &:hover {
+      background: rgba($primary-main, 0.16);
+      transform: scale(1.05);
+    }
 
-  &__dialog-content {
-    padding: 20px !important;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+    [data-theme="dark"] & {
+      &,
+      .MuiSvgIcon-root {
+        color: $secondary-main !important;
+      }
 
-  &__dialog-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+      background: rgba($secondary-main, 0.1);
 
-  &__dialog-group-label {
-    font-family: "Poppins", sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: $primary-main;
-    margin: 0;
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgba($primary-main, 0.15);
-  }
-
-  &__dialog-empty {
-    font-family: "Poppins", sans-serif;
-    font-size: 0.8rem;
-    color: $text-secondary;
-    margin: 0;
-    font-style: italic;
+      &:hover {
+        background: rgba($secondary-main, 0.18);
+      }
+    }
   }
 }

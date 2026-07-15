@@ -1,6 +1,43 @@
 @use "../../../styles/colors" as *;
 
 .birds {
+  &__view-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 30px;
+  }
+
+  &__view-btn {
+    &,
+    .MuiSvgIcon-root {
+      color: $primary-main !important;
+    }
+
+    background: rgba($primary-main, 0.08);
+    transition:
+      background 0.15s,
+      transform 0.1s;
+
+    &:hover {
+      background: rgba($primary-main, 0.16);
+      transform: scale(1.05);
+    }
+
+    [data-theme="dark"] & {
+      &,
+      .MuiSvgIcon-root {
+        color: $secondary-main !important;
+      }
+
+      background: rgba($secondary-main, 0.1);
+
+      &:hover {
+        background: rgba($secondary-main, 0.18);
+      }
+    }
+  }
+
   &__more-btn {
     display: flex;
     align-items: center;
@@ -34,8 +71,72 @@
   &__stack {
     display: flex;
     flex-direction: column;
+    gap: 10px;
+    padding: 6px 0;
+  }
+
+  &__stack-group {
+    display: flex;
+    flex-direction: column;
     gap: 4px;
-    padding: 4px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba($text-muted, 0.25);
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    [data-theme="dark"] & {
+      border-bottom-color: rgba(255, 255, 255, 0.12);
+    }
+  }
+
+  &__stack-label {
+    font-size: 0.72rem;
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__stack-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  &__stack-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.74rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    background: rgba($primary-main, 0.06);
+    border: 1px solid rgba($primary-main, 0.15);
+    border-radius: 4px;
+    padding: 2px 8px;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba($secondary-main, 0.08);
+      border-color: rgba($secondary-main, 0.2);
+    }
+  }
+
+  &__stack-empty {
+    font-size: 0.74rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-muted;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
   }
 
   &__stack-item {
