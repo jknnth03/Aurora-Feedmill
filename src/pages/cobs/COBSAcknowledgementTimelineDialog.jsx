@@ -52,7 +52,7 @@ const buildSteps = (batchEntry) => {
   const forSignatureStep = {
     key: "for_signature",
     label: "For Signature",
-    roleLabel: "Acknowledger",
+    roleLabel: "Evaluatee",
     name: signatory_1?.name ?? evaluator ?? null,
     timestamp: signatory_1?.evaluate_image ? end_at : null,
     done: !!signatory_1?.evaluate_image,

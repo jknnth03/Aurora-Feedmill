@@ -27,7 +27,7 @@ const formatDateTime = (raw) => {
 const buildSteps = (batchEntry) => {
   if (!batchEntry) return [];
 
-  const { user, approver, start_at, end_at, is_approved, signatory_2 } =
+  const { user, evaluator, start_at, end_at, is_approved, signatory_2 } =
     batchEntry;
 
   const submittedStep = {
@@ -43,7 +43,7 @@ const buildSteps = (batchEntry) => {
     key: "acknowledge",
     label: "Acknowledge",
     roleLabel: "Acknowledger",
-    name: signatory_2?.name ?? approver ?? null,
+    name: signatory_2?.name ?? evaluator ?? null,
     timestamp: signatory_2 ? end_at : null,
     done: !!is_approved,
   };

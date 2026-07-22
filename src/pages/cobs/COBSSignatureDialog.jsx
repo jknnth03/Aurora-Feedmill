@@ -180,7 +180,7 @@ const COBSSignatureDialog = ({ open, onClose, onSubmit, isSubmitting }) => {
 
       <DialogContent className="cobs-sig__content">
         <DropdownField
-          label="Evaluator"
+          label="Evaluatee"
           value={selectedEvaluatorId}
           onChange={setSelectedEvaluatorId}
           options={evaluators}

@@ -10,8 +10,10 @@ import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ImageIcon from "@mui/icons-material/Image";
 import DrawIcon from "@mui/icons-material/Draw";
+import ChecklistIcon from "@mui/icons-material/Checklist";
 import COBSApprovalImagePreviewDialog from "./COBSApprovalImagePreviewDialog";
 import COBSSignatureDialog from "./COBSSignatureDialog";
+import COBSStartCheckingDialog from "../../cobs/COBSStartCheckingDialog";
 import { useApproveCobApprovalMutation } from "../../../features/api/approval/cobsApproval";
 import "./COBSApprovalModal.scss";
 
@@ -44,6 +46,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
   });
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [signaturePreviewOpen, setSignaturePreviewOpen] = useState(false);
+  const [viewChecklistOpen, setViewChecklistOpen] = useState(false);
   const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
   const [localSignatoryName, setLocalSignatoryName] = useState(null);
   const [isAcknowledging, setIsAcknowledging] = useState(false);
@@ -416,14 +419,24 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             className="cobsam__btn-close">
             CLOSE
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-            onClick={() => setSignatureDialogOpen(true)}
-            disabled={isBusy}
-            className="cobsam__btn-approve">
-            {isBusy ? "SUBMITTING…" : "ACKNOWLEDGE"}
-          </Button>
+          <div className="cobsam__footer-right">
+            <Button
+              variant="outlined"
+              startIcon={<ChecklistIcon sx={{ fontSize: 16 }} />}
+              onClick={() => setViewChecklistOpen(true)}
+              disabled={isBusy}
+              className="cobsam__btn-view-checklist">
+              VIEW CHECKLIST
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+              onClick={() => setSignatureDialogOpen(true)}
+              disabled={isBusy}
+              className="cobsam__btn-approve">
+              {isBusy ? "SUBMITTING…" : "ACKNOWLEDGE"}
+            </Button>
+          </div>
         </DialogActions>
       </Dialog>
 
@@ -441,6 +454,18 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
         }}
         signerName={batchEntry?.approver ?? ""}
         isSubmitting={isBusy}
+      />
+
+      <COBSStartCheckingDialog
+        open={viewChecklistOpen}
+        onClose={() => setViewChecklistOpen(false)}
+        viewMode
+        batchEntry={batchEntry}
+        unitName={batchEntry?.unit}
+        week={batchEntry?.week}
+        month={batchEntry?.month}
+        year={batchEntry?.year}
+        checklistId={batchEntry?.checklist_id ?? 1}
       />
 
       <COBSApprovalImagePreviewDialog

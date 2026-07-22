@@ -647,6 +647,12 @@ $bg-paper: #ffffff;
   }
 }
 
+.cobsam__footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .cobsam__btn-close {
   font-family: "Poppins", sans-serif !important;
   font-size: 0.78rem !important;
@@ -656,6 +662,38 @@ $bg-paper: #ffffff;
 
   &:hover {
     color: $accent !important;
+  }
+}
+
+.cobsam__btn-view-checklist {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: $accent !important;
+  border: 1.5px solid $accent !important;
+  border-radius: 8px !important;
+  padding: 6px 18px !important;
+  text-transform: uppercase !important;
+  box-shadow: none !important;
+  background: #fff !important;
+
+  &:hover {
+    background: $accent-light !important;
+    border-color: $accent !important;
+  }
+
+  &:disabled {
+    opacity: 0.5 !important;
+  }
+
+  [data-theme="dark"] & {
+    color: var(--palette-primary) !important;
+    border-color: var(--palette-primary) !important;
+    background: transparent !important;
+
+    &:hover {
+      background: rgba(230, 100, 20, 0.12) !important;
+    }
   }
 }
 
