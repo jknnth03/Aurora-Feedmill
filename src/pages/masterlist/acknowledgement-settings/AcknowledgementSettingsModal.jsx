@@ -369,6 +369,16 @@ const AcknowledgementSettingsModal = ({
 
   const isBusy = isLoading || isSubmitting || isFetchingDetail;
 
+  const isFormDataLoading =
+    isAddOrEdit &&
+    (isLoadingSections ||
+      (sectionId &&
+        ((isCOBS && (isLoadingEvaluators || isLoadingAcknowledgers)) ||
+          (isBirds && isLoadingAcknowledgers) ||
+          (isPests && isLoadingApproverField))));
+
+  const showSkeleton = isFetchingDetail || (isAddOrEdit && isFormDataLoading);
+
   const availableAcknowledgers = acknowledgerOptions.filter(
     (u) => !hierarchy.includes(String(u.id)),
   );
@@ -649,7 +659,7 @@ const AcknowledgementSettingsModal = ({
       </div>
 
       <DialogContent className="acksm__content">
-        {isFetchingDetail ? (
+        {showSkeleton ? (
           <div className="acksm__skeleton-wrap">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="acksm__skeleton-row" />

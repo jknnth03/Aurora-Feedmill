@@ -12,7 +12,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import DrawIcon from "@mui/icons-material/Draw";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import COBSApprovalImagePreviewDialog from "./COBSApprovalImagePreviewDialog";
-import COBSSignatureDialog from "./COBSSignatureDialog";
+import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import COBSStartCheckingDialog from "../../cobs/COBSStartCheckingDialog";
 import { useApproveCobApprovalMutation } from "../../../features/api/approval/cobsApproval";
 import "./COBSApprovalModal.scss";
@@ -44,25 +44,16 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     images: [],
     index: 0,
   });
-  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [signaturePreviewOpen, setSignaturePreviewOpen] = useState(false);
   const [viewChecklistOpen, setViewChecklistOpen] = useState(false);
-  const [localSignatureDataUrl, setLocalSignatureDataUrl] = useState(null);
-  const [localSignatoryName, setLocalSignatoryName] = useState(null);
   const [isAcknowledging, setIsAcknowledging] = useState(false);
 
   const [approveCobApproval, { isLoading: isApproving }] =
     useApproveCobApprovalMutation();
 
   useEffect(() => {
-    if (open && batchEntry) {
-      setLocalSignatureDataUrl(null);
-      setLocalSignatoryName(null);
-      setIsAcknowledging(false);
-    }
     if (!open) {
-      setLocalSignatureDataUrl(null);
-      setLocalSignatoryName(null);
       setIsAcknowledging(false);
     }
   }, [open]);
@@ -71,10 +62,8 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
 
   const isBusy = isApproving || isAcknowledging;
 
-  const signatureFromServer = batchEntry.signatory_1?.evaluate_image ?? null;
-  const signatureDataUrl = localSignatureDataUrl ?? signatureFromServer ?? null;
-  const signatoryName =
-    localSignatoryName ?? batchEntry.signatory_1?.name ?? null;
+  const signatureDataUrl = batchEntry.signatory_1?.evaluate_image ?? null;
+  const signatoryName = batchEntry.signatory_1?.name ?? null;
 
   const signatory2 = batchEntry.signatory_2 ?? null;
   const signatory3 = batchEntry.signatory_3 ?? null;
@@ -101,11 +90,10 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     setPreviewState({ open: true, images: imgs, index: idx });
   const closePreview = () => setPreviewState((p) => ({ ...p, open: false }));
 
-  const handleAcknowledge = ({ blob }) => {
-    if (!batchEntry || !blob) return;
-    const signatureFile = new File([blob], "signature.png", {
-      type: "image/png",
-    });
+  const handleAcknowledge = () => {
+    if (!batchEntry) return;
+    setIsAcknowledging(true);
+    setConfirmDialogOpen(false);
     approveCobApproval({
       batch_no: batchEntry.batch_no,
       approver_id: batchEntry.approver_id ?? 1,
@@ -115,7 +103,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
           name: batchEntry.approver ?? "",
         },
       ],
-      signatureFile,
     })
       .unwrap()
       .then(() => {
@@ -319,21 +306,6 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
                     </div>
                   </div>
                 </div>
-
-                {!hasSignature && (
-                  <div className="cobsam__section-card">
-                    <p className="cobsam__section-label">Acknowledge by</p>
-                    <div className="cobsam__section-body">
-                      <button
-                        className="cobsam__btn-add-signature"
-                        onClick={() => setSignatureDialogOpen(true)}
-                        disabled={isBusy}>
-                        <DrawIcon style={{ fontSize: 16 }} />
-                        Add Signature
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {hasSignatories && (
@@ -431,7 +403,7 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
             <Button
               variant="contained"
               startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-              onClick={() => setSignatureDialogOpen(true)}
+              onClick={() => setConfirmDialogOpen(true)}
               disabled={isBusy}
               className="cobsam__btn-approve">
               {isBusy ? "SUBMITTING…" : "ACKNOWLEDGE"}
@@ -440,20 +412,16 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
         </DialogActions>
       </Dialog>
 
-      <COBSSignatureDialog
-        open={signatureDialogOpen}
-        onClose={() => setSignatureDialogOpen(false)}
-        onSubmit={({ blob, dataUrl, selectedEvaluator }) => {
-          setIsAcknowledging(true);
-          setSignatureDialogOpen(false);
-          setLocalSignatureDataUrl(dataUrl);
-          setLocalSignatoryName(
-            selectedEvaluator?.full_name ?? batchEntry?.approver ?? "",
-          );
-          handleAcknowledge({ blob });
-        }}
-        signerName={batchEntry?.approver ?? ""}
-        isSubmitting={isBusy}
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        onConfirm={handleAcknowledge}
+        title="Acknowledge this batch?"
+        message={`You are about to acknowledge Batch #${batchEntry.batch_no} — ${batchEntry.unit ?? "—"}. This action cannot be undone.`}
+        confirmLabel="ACKNOWLEDGE"
+        cancelLabel="Cancel"
+        isLoading={isBusy}
+        confirmVariant="primary"
       />
 
       <COBSStartCheckingDialog

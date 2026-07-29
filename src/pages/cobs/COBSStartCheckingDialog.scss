@@ -253,6 +253,22 @@
         background: rgba(255, 255, 255, 0.02);
       }
     }
+
+    &--bulk {
+      background: rgba($primary-main, 0.045);
+
+      &:hover {
+        background: rgba($primary-main, 0.045);
+
+        [data-theme="dark"] & {
+          background: rgba($secondary-main, 0.06);
+        }
+      }
+
+      [data-theme="dark"] & {
+        background: rgba($secondary-main, 0.06);
+      }
+    }
   }
 
   &__td {
@@ -273,6 +289,167 @@
       border-color: rgba(255, 255, 255, 0.07);
     }
   }
+
+  // ── Bulk "Set all to" row ────────────────────────────────────────────────
+
+  &__bulk-label {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: $primary-main;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__bulk-label-icon {
+    font-size: 14px !important;
+    margin-right: 5px;
+    flex-shrink: 0;
+  }
+
+  &__bulk-note {
+    color: $text-muted;
+    font-size: 0.72rem;
+    font-style: italic;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.35);
+    }
+  }
+
+  // Mirrors __radio-box exactly (padding/gap) so buttons line up with the
+  // radio circles in the rows underneath.
+  &__quickset-box {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 8px 10px;
+    background: $bg-main;
+    border-radius: 6px;
+    border: 1px dashed rgba($primary-main, 0.45);
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba($secondary-main, 0.4);
+    }
+  }
+
+  &__quickset-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    border-radius: 5px;
+    font-family: "Poppins", sans-serif;
+    transition:
+      background 0.15s,
+      transform 0.1s;
+
+    &:hover:not(:disabled) {
+      background: rgba($primary-main, 0.1);
+
+      [data-theme="dark"] & {
+        background: rgba($secondary-main, 0.12);
+      }
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &--active {
+      background: rgba($primary-main, 0.12);
+
+      [data-theme="dark"] & {
+        background: rgba($secondary-main, 0.16);
+      }
+
+      .cobs-sc__quickset-text {
+        color: $primary-main;
+        font-weight: 700;
+
+        [data-theme="dark"] & {
+          color: $secondary-main;
+        }
+      }
+
+      .cobs-sc__quickset-dot {
+        box-shadow: inset 0 0 0 2px #fff;
+        transform: scale(1.1);
+
+        &--0 {
+          background: #f44336;
+        }
+        &--50 {
+          background: #ffc107;
+        }
+        &--75 {
+          background: #ff9800;
+        }
+        &--100 {
+          background: #4caf50;
+        }
+      }
+    }
+  }
+
+  &__quickset-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text-primary;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.75);
+    }
+  }
+
+  &__quickset-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid #bdbdbd;
+    flex-shrink: 0;
+    background: transparent;
+    transition:
+      transform 0.12s,
+      background 0.12s;
+
+    &--0 {
+      border-color: #f44336;
+    }
+    &--50 {
+      border-color: #ffc107;
+    }
+    &--75 {
+      border-color: #ff9800;
+    }
+    &--100 {
+      border-color: #4caf50;
+    }
+  }
+
+  &__quickset-btn:hover:not(:disabled) &__quickset-dot {
+    transform: scale(1.15);
+    filter: brightness(1.08);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   &__radio-box {
     display: flex;

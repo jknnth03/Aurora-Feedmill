@@ -17,7 +17,6 @@ import {
 import { validateForm } from "./BirdsStartCheckingDialogValidation";
 import "./BirdsStartCheckingDialog.scss";
 import { useGetWastagesQuery } from "../../features/api/masterlist/wastagesApi";
-import { useGetEvaluatorsQuery } from "../../features/api/usermanagement/userApi";
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 
 const formatDateTime = (raw) => {
@@ -113,16 +112,6 @@ const buildDraftState = (questionnaireData, responses = []) => {
   return { infestationLevel, treatmentDose, entryPoints, wastageSelection };
 };
 
-const getResponseCompanion = (responses = []) => {
-  for (const r of responses) {
-    const raw = r?.response ?? r;
-    if (raw?.others_companion != null && raw.others_companion !== "")
-      return raw.others_companion;
-    if (raw?.companion != null && raw.companion !== "") return raw.companion;
-  }
-  return "";
-};
-
 const skeletonSx = {
   bgcolor: "rgba(230, 100, 20, 0.10)",
   borderRadius: "6px",
@@ -213,96 +202,6 @@ const WastageDropdown = ({ value, options, onChange, hasError }) => {
   );
 };
 
-const GenericDropdown = ({
-  value,
-  options,
-  onChange,
-  hasError,
-  placeholder = "Select...",
-}) => {
-  const [open, setOpen] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState({});
-  const wrapRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const handleOpen = () => {
-    if (wrapRef.current) {
-      const rect = wrapRef.current.getBoundingClientRect();
-      setDropdownStyle({
-        position: "fixed",
-        top: rect.bottom + 3,
-        left: rect.left,
-        width: rect.width,
-        zIndex: 9999,
-      });
-    }
-    setOpen((p) => !p);
-  };
-
-  const selectedLabel =
-    options.find((o) => o.id === value || o.value === value)?.label ??
-    options.find((o) => o.id === value)?.name ??
-    value ??
-    "";
-
-  return (
-    <div
-      ref={wrapRef}
-      className={`birds-sc__dd-wrap${hasError ? " birds-sc__dd-wrap--error" : ""}`}
-      onClick={handleOpen}>
-      <div className="birds-sc__dd-box">
-        <span
-          className={
-            selectedLabel ? "birds-sc__dd-value" : "birds-sc__dd-placeholder"
-          }>
-          {selectedLabel || placeholder}
-        </span>
-        <ArrowDropDownIcon
-          className={`birds-sc__dd-arrow${open ? " birds-sc__dd-arrow--open" : ""}`}
-        />
-      </div>
-      {open &&
-        createPortal(
-          <div className="birds-sc__dd-dropdown" style={dropdownStyle}>
-            <div
-              className={`birds-sc__dd-option${!value ? " birds-sc__dd-option--selected" : ""}`}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onChange("");
-                setOpen(false);
-              }}></div>
-            {options.map((opt) => {
-              const optId = opt.id ?? opt.value ?? opt.name;
-              const optLabel = opt.label ?? opt.name ?? opt.full_name ?? "";
-              return (
-                <div
-                  key={optId}
-                  className={`birds-sc__dd-option${value === optId ? " birds-sc__dd-option--selected" : ""}`}
-                  onMouseDown={(e) => {
-                    e.stopPropagation();
-                    onChange(optId);
-                    setOpen(false);
-                  }}>
-                  {optLabel}
-                </div>
-              );
-            })}
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
-};
-
 const BirdsStartCheckingDialog = ({
   open,
   onClose,
@@ -324,7 +223,6 @@ const BirdsStartCheckingDialog = ({
   const [entryPoints, setEntryPoints] = useState({});
   const [wastageSelection, setWastageSelection] = useState({});
   const [othersDate, setOthersDate] = useState(getTodayString());
-  const [othersCompanion, setOthersCompanion] = useState("");
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -339,9 +237,6 @@ const BirdsStartCheckingDialog = ({
   const { data: wastagesData } = useGetWastagesQuery(undefined, {
     skip: !open,
   });
-  const { data: usersData } = useGetEvaluatorsQuery(undefined, {
-    skip: !open,
-  });
   const [createBird, { isLoading }] = useCreateBirdMutation();
 
   const questionnaireData = data?.data;
@@ -352,13 +247,6 @@ const BirdsStartCheckingDialog = ({
     questionnaireData?.items?.find((s) => s.name === "Infestation Level")
       ?.items ?? [];
   const wastageOptions = wastagesData?.data ?? [];
-  const usersOptions = (usersData?.data ?? []).map((u) => ({
-    id: u.id,
-    label:
-      u.full_name ??
-      u.name ??
-      `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim(),
-  }));
 
   const errorCount = Object.keys(errors).length;
 
@@ -389,7 +277,6 @@ const BirdsStartCheckingDialog = ({
           periodDateRange.max,
         ),
       );
-      setOthersCompanion(batchEntry.others_companion ?? "");
     } else if (!continueMode) {
       const initWastage = {};
       inspectionAreas.forEach((area) => {
@@ -406,7 +293,6 @@ const BirdsStartCheckingDialog = ({
           periodDateRange.max,
         ),
       );
-      setOthersCompanion("");
     }
   }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
 
@@ -442,6 +328,48 @@ const BirdsStartCheckingDialog = ({
       });
     }
   };
+
+  const handleSelectAllLevel = (levelName) => {
+    const allSelected =
+      inspectionAreas.length > 0 &&
+      inspectionAreas.every(
+        (area) => infestationLevel[area.name] === levelName,
+      );
+    const nextValue = allSelected ? "" : levelName;
+
+    const newInfestation = { ...infestationLevel };
+    inspectionAreas.forEach((area) => {
+      newInfestation[area.name] = nextValue;
+    });
+    setInfestationLevel(newInfestation);
+
+    if (isLowLevel(nextValue) || nextValue === "") {
+      const clearedTreatment = { ...treatmentDose };
+      const clearedEntry = { ...entryPoints };
+      inspectionAreas.forEach((area) => {
+        clearedTreatment[area.name] = "";
+        clearedEntry[area.name] = "";
+      });
+      setTreatmentDose(clearedTreatment);
+      setEntryPoints(clearedEntry);
+    }
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      inspectionAreas.forEach((area) => {
+        delete next[`infestation__${area.name}`];
+        if (isLowLevel(nextValue) || nextValue === "") {
+          delete next[`treatment__${area.name}`];
+          delete next[`entry__${area.name}`];
+        }
+      });
+      return next;
+    });
+  };
+
+  const isLevelAllSelected = (levelName) =>
+    inspectionAreas.length > 0 &&
+    inspectionAreas.every((area) => infestationLevel[area.name] === levelName);
 
   const handleTreatmentChange = (areaName, value) => {
     setTreatmentDose((prev) => ({ ...prev, [areaName]: value }));
@@ -518,7 +446,6 @@ const BirdsStartCheckingDialog = ({
       "batch_no",
       continueMode ? (batchEntry?.batch_no ?? "") : "",
     );
-    formData.append("others_companion", othersCompanion ?? "");
 
     inspectionAreas.forEach((area, index) => {
       const selected = wastageSelection[area.name] ?? "";
@@ -591,7 +518,6 @@ const BirdsStartCheckingDialog = ({
       setEntryPoints({});
       setWastageSelection({});
       setOthersDate(getTodayString());
-      setOthersCompanion("");
       setErrors({});
       setSubmitAttempted(false);
     }
@@ -670,21 +596,10 @@ const BirdsStartCheckingDialog = ({
             height={54}
             sx={{ ...skeletonSx, flex: 1 }}
           />
-          <Skeleton
-            variant="rectangular"
-            height={54}
-            sx={{ ...skeletonSx, flex: 1 }}
-          />
         </div>
       </div>
     </div>
   );
-
-  const viewCompanionLabel =
-    getResponseCompanion(batchEntry?.responses) ||
-    batchEntry?.evaluator ||
-    batchEntry?.others_companion ||
-    "—";
 
   return (
     <>
@@ -769,7 +684,20 @@ const BirdsStartCheckingDialog = ({
                           <th
                             key={lvl.name}
                             className="birds-sc__th birds-sc__th--col">
-                            {lvl.name}
+                            <div className="birds-sc__col-head">
+                              <span>{lvl.name}</span>
+                              {!viewMode && inspectionAreas.length > 0 && (
+                                <input
+                                  type="checkbox"
+                                  className="birds-sc__select-all-checkbox"
+                                  checked={isLevelAllSelected(lvl.name)}
+                                  onChange={() =>
+                                    handleSelectAllLevel(lvl.name)
+                                  }
+                                  title={`Select all as ${lvl.name}`}
+                                />
+                              )}
+                            </div>
                           </th>
                         ))}
                         <th className="birds-sc__th birds-sc__th--col birds-sc__th--wide" />
@@ -968,21 +896,6 @@ const BirdsStartCheckingDialog = ({
                         min={periodDateRange.min ?? undefined}
                         max={periodDateRange.max ?? undefined}
                         onChange={(e) => handleOthersDateChange(e.target.value)}
-                      />
-                    )}
-                  </div>
-                  <div className="birds-sc__others-field">
-                    <label className="birds-sc__others-label">Companion</label>
-                    {viewMode ? (
-                      <span className="birds-sc__text-display">
-                        {viewCompanionLabel}
-                      </span>
-                    ) : (
-                      <GenericDropdown
-                        value={othersCompanion}
-                        options={usersOptions}
-                        onChange={setOthersCompanion}
-                        placeholder="Select companion..."
                       />
                     )}
                   </div>

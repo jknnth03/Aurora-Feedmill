@@ -389,6 +389,60 @@
     }
   }
 
+  &__col-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__select-all-checkbox {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    flex-shrink: 0;
+    border: 1.5px solid $primary-main;
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+
+    &:hover {
+      border-color: $primary-main;
+    }
+
+    &:checked {
+      background: $primary-main;
+      border-color: $primary-main;
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 1.5px 1.5px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    [data-theme="dark"] & {
+      border-color: $secondary-main;
+
+      &:checked {
+        background: $secondary-main;
+        border-color: $secondary-main;
+      }
+    }
+  }
+
   &__tr {
     border-bottom: 1px solid $border-color;
 

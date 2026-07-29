@@ -1,6 +1,6 @@
 @use "../../../styles/colors" as *;
 
-.pm {
+.ptm {
   &__paper {
     border-radius: 14px !important;
     font-family: "Poppins", sans-serif;
@@ -152,7 +152,7 @@
     &:focus-within {
       border-color: $primary-main;
 
-      .pm__label {
+      .ptm__label {
         color: $primary-main;
       }
     }
@@ -160,7 +160,7 @@
     &--error {
       border-color: $status-error !important;
 
-      .pm__label {
+      .ptm__label {
         color: $status-error !important;
       }
     }
@@ -185,7 +185,7 @@
         }
       }
 
-      .pm__label {
+      .ptm__label {
         color: $text-muted !important;
         opacity: 0.7;
       }

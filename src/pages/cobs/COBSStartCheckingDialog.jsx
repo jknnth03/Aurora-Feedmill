@@ -14,6 +14,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
 import {
   useGetQuestionnaireQuery,
   useCreateCobMutation,
@@ -23,12 +24,33 @@ import COBSAcknowledgementTimelineDialog from "./COBSAcknowledgementTimelineDial
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./COBSStartCheckingDialog.scss";
 
-const SCORE_OPTIONS = [0, 50, 75, 100];
+const SCORE_OPTIONS = [
+  { value: 0, label: "N/A" },
+  { value: 50, label: "50" },
+  { value: 75, label: "75" },
+  { value: 100, label: "100" },
+];
 const TEMPORAL_AUDIT_OPTIONS = [
   "Spot/Ongoing",
   "Pre-operation",
   "Post-operation",
 ];
+
+const getKey = (categoryName, itemName, itemIndex, subItemIndex) =>
+  `${categoryName}__${itemName}__${itemIndex}__${subItemIndex}`;
+
+const getViewKey = (categoryName, itemName, subItemName) =>
+  `${categoryName}__${itemName}__${subItemName}`;
+
+const getCategoryKeys = (category) => {
+  const keys = [];
+  category.items?.forEach((item, itemIdx) => {
+    item.sub_items?.forEach((_subItem, subIdx) => {
+      keys.push(getKey(category.name, item.name, itemIdx, subIdx));
+    });
+  });
+  return keys;
+};
 
 const getNow = () => {
   const now = new Date();
@@ -200,6 +222,7 @@ const COBSStartCheckingDialog = ({
   const [remarks, setRemarks] = useState({});
   const [images, setImages] = useState({});
   const [existingImages, setExistingImages] = useState({});
+  const [quicksetSelections, setQuicksetSelections] = useState({});
   const [temporalAudit, setTemporalAudit] = useState("");
   const [goodPoints, setGoodPoints] = useState("");
   const [othersRemarks, setOthersRemarks] = useState("");
@@ -274,11 +297,13 @@ const COBSStartCheckingDialog = ({
       setRemarks(draftRemarks);
       setExistingImages(draftImages);
       setImages({});
+      setQuicksetSelections({});
     } else if (!continueMode) {
       setAnswers({});
       setRemarks({});
       setImages({});
       setExistingImages({});
+      setQuicksetSelections({});
     }
   }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
 
@@ -290,12 +315,6 @@ const COBSStartCheckingDialog = ({
       });
     }
   }, [errors, submitAttempted]);
-
-  const getKey = (categoryName, itemName, itemIndex, subItemIndex) =>
-    `${categoryName}__${itemName}__${itemIndex}__${subItemIndex}`;
-
-  const getViewKey = (categoryName, itemName, subItemName) =>
-    `${categoryName}__${itemName}__${subItemName}`;
 
   const clearFieldError = (field) => {
     setErrors((prev) => {
@@ -312,6 +331,24 @@ const COBSStartCheckingDialog = ({
     if (score === 100) {
       clearFieldError(`remarks__${key}`);
     }
+  };
+
+  const handleSetCategoryScores = (category, value) => {
+    const keys = getCategoryKeys(category);
+    const updates = {};
+    keys.forEach((key) => {
+      updates[key] = value;
+    });
+    setAnswers((prev) => ({ ...prev, ...updates }));
+    setQuicksetSelections((prev) => ({ ...prev, [category.name]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      keys.forEach((key) => {
+        delete next[`score__${key}`];
+        if (value === 100) delete next[`remarks__${key}`];
+      });
+      return next;
+    });
   };
 
   const handleRemarks = (key, value) => {
@@ -462,6 +499,7 @@ const COBSStartCheckingDialog = ({
       setRemarks({});
       setImages({});
       setExistingImages({});
+      setQuicksetSelections({});
       setTemporalAudit("");
       setGoodPoints("");
       setOthersRemarks("");
@@ -632,6 +670,43 @@ const COBSStartCheckingDialog = ({
                         </tr>
                       </thead>
                       <tbody>
+                        {!viewMode && (
+                          <tr className="cobs-sc__tr cobs-sc__tr--bulk">
+                            <td className="cobs-sc__td cobs-sc__td--item cobs-sc__bulk-label">
+                              <DoneAllIcon className="cobs-sc__bulk-label-icon" />
+                              Set all to
+                            </td>
+                            <td className="cobs-sc__td cobs-sc__td--compliance">
+                              <div className="cobs-sc__quickset-box">
+                                {SCORE_OPTIONS.map(({ value, label }) => {
+                                  const isActive =
+                                    quicksetSelections[category.name] === value;
+                                  return (
+                                    <button
+                                      key={value}
+                                      type="button"
+                                      onClick={() =>
+                                        handleSetCategoryScores(category, value)
+                                      }
+                                      disabled={isLoading || isSubmitting}
+                                      className={`cobs-sc__quickset-btn${isActive ? " cobs-sc__quickset-btn--active" : ""}`}>
+                                      <span
+                                        className={`cobs-sc__quickset-dot cobs-sc__quickset-dot--${value}`}
+                                      />
+                                      <span className="cobs-sc__quickset-text">
+                                        {label}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                            <td className="cobs-sc__td cobs-sc__td--remarks cobs-sc__bulk-note">
+                              Applies to all items in this section
+                            </td>
+                            <td className="cobs-sc__td cobs-sc__td--attachment" />
+                          </tr>
+                        )}
                         {category.items?.map((item, itemIdx) =>
                           item.sub_items?.map((subItem, subIdx) => {
                             const editKey = getKey(
@@ -670,9 +745,9 @@ const COBSStartCheckingDialog = ({
                                 <td className="cobs-sc__td cobs-sc__td--compliance">
                                   <div
                                     className={`cobs-sc__radio-box${scoreError ? " cobs-sc__radio-box--error" : ""}`}>
-                                    {SCORE_OPTIONS.map((score) => (
+                                    {SCORE_OPTIONS.map(({ value, label }) => (
                                       <label
-                                        key={score}
+                                        key={value}
                                         className={`cobs-sc__radio-item${viewMode ? " cobs-sc__radio-item--readonly" : ""}`}>
                                         <input
                                           type="radio"
@@ -681,27 +756,27 @@ const COBSStartCheckingDialog = ({
                                               ? `view-${editKey}`
                                               : editKey
                                           }
-                                          value={score}
+                                          value={value}
                                           checked={
                                             viewMode
-                                              ? resp?.score === score
-                                              : answers[editKey] === score
+                                              ? resp?.score === value
+                                              : answers[editKey] === value
                                           }
                                           onChange={
                                             viewMode
                                               ? undefined
                                               : () =>
-                                                  handleScore(editKey, score)
+                                                  handleScore(editKey, value)
                                           }
                                           readOnly={viewMode}
                                           disabled={viewMode}
                                           className="cobs-sc__radio-input"
                                         />
                                         <span
-                                          className={`cobs-sc__radio-circle cobs-sc__radio-circle--${score}`}
+                                          className={`cobs-sc__radio-circle cobs-sc__radio-circle--${value}`}
                                         />
                                         <span className="cobs-sc__radio-text">
-                                          {score}
+                                          {label}
                                         </span>
                                       </label>
                                     ))}

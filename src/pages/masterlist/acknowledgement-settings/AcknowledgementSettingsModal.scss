@@ -74,8 +74,12 @@
   &__skeleton-row {
     height: 48px;
     border-radius: 6px;
-    background: rgba($primary-main, 0.08);
+    background: rgba(255, 152, 0, 0.18);
     animation: acksm-shimmer 1.4s infinite;
+
+    [data-theme="dark"] & {
+      background: rgba(255, 152, 0, 0.28);
+    }
 
     @keyframes acksm-shimmer {
       0% {
