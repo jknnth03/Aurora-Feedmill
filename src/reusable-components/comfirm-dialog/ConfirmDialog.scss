@@ -54,6 +54,88 @@
     line-height: 1.5;
   }
 
+  // ── Optional remarks field (e.g. merge confirmation) ───────────────────
+
+  &__remarks-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    text-align: left;
+    margin: -12px 0 24px;
+  }
+
+  &__remarks-label {
+    font-family: "Poppins", sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: $text-primary;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__remarks-required {
+    color: $status-error;
+    margin-left: 2px;
+  }
+
+  &__remarks-textarea {
+    width: 100%;
+    resize: vertical;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.8rem;
+    font-family: "Poppins", sans-serif;
+    color: $text-primary;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+    min-height: 64px;
+
+    &::placeholder {
+      color: $text-muted;
+      opacity: 0.65;
+    }
+
+    &:focus {
+      border-color: $primary-main;
+    }
+
+    &--error {
+      border-color: $status-error !important;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.02);
+
+      &:focus {
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__remarks-error {
+    font-size: 0.68rem;
+    font-family: "Poppins", sans-serif;
+    color: $status-error;
+    font-weight: 500;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+
   &__footer {
     display: flex;
     align-items: center;

@@ -27,8 +27,7 @@ import COBSAcknowledgementTimelineDialog from "./COBSAcknowledgementTimelineDial
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./COBSModal.scss";
 import { useMergeCobsMutation } from "../../features/api/cobs/cobsApi";
-
-const WEEK_LABELS = ["Week 1", "Week 2", "Week 3", "Week 4"];
+import { getMonthWeekLabels } from "./cobsWeekUtils";
 
 const MONTHS = [
   "January",
@@ -175,6 +174,8 @@ const RowActionMenu = ({
   unitDataId,
   fallbackApproverId,
   isPreviousWeekDone,
+  canMergeRow,
+  mergeTargetLabel,
   onStartChecking,
   onContinueChecking,
   onShowReport,
@@ -193,7 +194,7 @@ const RowActionMenu = ({
 
   const hasEntries = Array.isArray(entries) && entries.length > 0;
   const canAct = hasEntries || isPreviousWeekDone;
-  const isWeek4 = week === "Week 4";
+  const canMerge = canMergeRow && Boolean(mergeTargetLabel);
 
   if (!canAct) return <span className="cobs-cm__dash">—</span>;
 
@@ -276,7 +277,7 @@ const RowActionMenu = ({
                   <EditIcon className="cobs-cm__menu-icon" />
                   Continue Checking
                 </MenuItem>,
-                isWeek4 && (
+                canMerge && (
                   <MenuItem
                     key="merge"
                     className="cobs-cm__menu-item"
@@ -285,7 +286,7 @@ const RowActionMenu = ({
                       onMerge?.();
                     }}>
                     <MergeIcon className="cobs-cm__menu-icon" />
-                    Merge with Week 3
+                    Merge with {mergeTargetLabel}
                   </MenuItem>
                 ),
               ]
@@ -306,7 +307,7 @@ const RowActionMenu = ({
                   <PlayArrowIcon className="cobs-cm__menu-icon" />
                   Start Checking
                 </MenuItem>,
-                isWeek4 && (
+                canMerge && (
                   <MenuItem
                     key="merge"
                     className="cobs-cm__menu-item"
@@ -315,7 +316,7 @@ const RowActionMenu = ({
                       onMerge?.();
                     }}>
                     <MergeIcon className="cobs-cm__menu-icon" />
-                    Merge with Week 3
+                    Merge with {mergeTargetLabel}
                   </MenuItem>
                 ),
               ]}
@@ -338,12 +339,17 @@ const COBSModal = ({
   const [continueCheckingData, setContinueCheckingData] = useState(null);
   const [showReportData, setShowReportData] = useState(null);
   const [showChecklistData, setShowChecklistData] = useState(null);
-  const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
+  const [mergeData, setMergeData] = useState(null);
   const [timelineData, setTimelineData] = useState(null);
 
   const [mergeCobs, { isLoading: isMerging }] = useMergeCobsMutation();
 
   const monthLabel = MONTHS[(month ?? 1) - 1];
+
+  // Weeks are computed from the real calendar for this month/year — a
+  // 31-day month like July will produce 5 weeks (the 5th being a short
+  // 29-31 stub), while a 28-day February only produces 4.
+  const weekLabels = getMonthWeekLabels(month, year);
 
   const weekMap = unitData?.weeks ?? {};
   const checklists = unitData?.checklists ?? [];
@@ -354,15 +360,22 @@ const COBSModal = ({
   const fallbackApproverId =
     allBatches.find((b) => b?.approver_id != null)?.approver_id ?? null;
 
-  const rows = WEEK_LABELS.map((label) => ({
+  const rows = weekLabels.map((label) => ({
     week: label,
     entries: weekMap[label] ?? [],
   }));
 
-  const handleMergeConfirm = async () => {
+  const handleMergeConfirm = async (remarks) => {
+    if (!mergeData) return;
     try {
-      await mergeCobs({ month, year }).unwrap();
-      setMergeConfirmOpen(false);
+      await mergeCobs({
+        month,
+        year,
+        week: mergeData.week,
+        mergeIntoWeek: mergeData.targetWeek,
+        remarks,
+      }).unwrap();
+      setMergeData(null);
     } catch (err) {
       console.error("Merge failed:", err);
     }
@@ -400,7 +413,7 @@ const COBSModal = ({
             </thead>
             <tbody>
               {isFetching
-                ? WEEK_LABELS.map((lbl) => (
+                ? weekLabels.map((lbl) => (
                     <tr key={lbl} className="cobs-cm__tr">
                       {Array.from({ length: 7 }).map((_, i) => (
                         <td key={i} className="cobs-cm__td">
@@ -414,6 +427,12 @@ const COBSModal = ({
                       index === 0 ? null : rows[index - 1].entries;
                     const isPreviousWeekDone =
                       index === 0 || isWeekDone(previousEntries);
+                    // Any week from Week 2 onwards can be merged into the
+                    // week right before it (Week 2 → Week 1, Week 3 → Week 2,
+                    // and so on) — merging is no longer limited to the last
+                    // week of the month.
+                    const prevWeekLabel =
+                      index > 0 ? weekLabels[index - 1] : null;
                     return (
                       <tr key={week} className="cobs-cm__tr">
                         <td className="cobs-cm__td cobs-cm__td--unit">
@@ -445,11 +464,18 @@ const COBSModal = ({
                             unitDataId={unitDataId}
                             fallbackApproverId={fallbackApproverId}
                             isPreviousWeekDone={isPreviousWeekDone}
+                            canMergeRow={Boolean(prevWeekLabel)}
+                            mergeTargetLabel={prevWeekLabel}
                             onStartChecking={setStartCheckingData}
                             onContinueChecking={setContinueCheckingData}
                             onShowReport={setShowReportData}
                             onShowChecklist={setShowChecklistData}
-                            onMerge={() => setMergeConfirmOpen(true)}
+                            onMerge={() =>
+                              setMergeData({
+                                week,
+                                targetWeek: prevWeekLabel,
+                              })
+                            }
                           />
                         </td>
                       </tr>
@@ -528,15 +554,18 @@ const COBSModal = ({
       />
 
       <ConfirmDialog
-        open={mergeConfirmOpen}
-        onClose={() => setMergeConfirmOpen(false)}
+        open={Boolean(mergeData)}
+        onClose={() => setMergeData(null)}
         onConfirm={handleMergeConfirm}
-        title="Merge with Week 3?"
-        message="This will merge Week 4 data with Week 3. This action cannot be undone."
+        title={`Merge with ${mergeData?.targetWeek}?`}
+        message={`This will merge ${mergeData?.week} data with ${mergeData?.targetWeek}. This action cannot be undone.`}
         confirmLabel="Merge"
         cancelLabel="Cancel"
         isLoading={isMerging}
         confirmVariant="success"
+        showRemarksField
+        remarksLabel="Merge Remarks"
+        remarksPlaceholder="Enter reason for merging (optional)"
       />
     </>
   );

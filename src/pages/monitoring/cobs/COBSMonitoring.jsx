@@ -4,20 +4,20 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import IconButton from "@mui/material/IconButton";
-import { useRememberQueryParams } from "../../hooks/useRememberQueryParams";
-import useDebounce from "../../hooks/useDebounce";
-import PageContainer from "../../reusable-components/page-container/PageContainer";
-import UniversalTable from "../../reusable-components/universal-table/UniversalTable";
-import TablePagination from "../../reusable-components/table-pagination/TablePagination";
-import { useGetCobsQuery } from "../../features/api/cobs/cobsApi";
+import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
+import useDebounce from "../../../hooks/useDebounce";
+import PageContainer from "../../../reusable-components/page-container/PageContainer";
+import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
+import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
+import { useGetCobsQuery } from "../../../features/api/cobs/cobsApi";
 import {
   getChipBg,
   getChipTextColor,
   useChipColors,
-} from "../../components/accountmenu/Chipcolorpickerutils";
-import COBSModal from "./COBSModal";
-import COBSExportDialog from "./COBSExportDialog";
-import "./COBS.scss";
+} from "../../../components/accountmenu/Chipcolorpickerutils";
+import COBSMonitoringModal from "./COBSMonitoringModal";
+import COBSExportDialog from "../../cobs/COBSExportDialog";
+import "../../cobs/COBS.scss";
 
 const COLUMNS = [
   { key: "unit", label: "Unit", sortable: false },
@@ -145,7 +145,10 @@ const StatusChip = ({ value }) => {
   );
 };
 
-const COBS = () => {
+// Monitoring/view-only counterpart of COBS.jsx — same listing, but rows open
+// COBSMonitoringModal (view-only: Show Report / Show Checklist), never any
+// Start/Continue Checking or Merge flow.
+const COBSMonitoring = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState(null);
@@ -227,7 +230,7 @@ const COBS = () => {
                   <ChevronLeftIcon />
                 </IconButton>
                 <span className="cobs__month-label">
-                  COBS Dashboard: {currentMonth.format("MMMM YYYY")}
+                  COBS Monitoring: {currentMonth.format("MMMM YYYY")}
                 </span>
                 <IconButton
                   className="cobs__month-arrow"
@@ -267,7 +270,7 @@ const COBS = () => {
         />
       </PageContainer>
 
-      <COBSModal
+      <COBSMonitoringModal
         open={Boolean(selectedRow)}
         unitName={selectedRow?.unit}
         unitData={selectedRow?._unitData}
@@ -275,7 +278,6 @@ const COBS = () => {
         year={Number(currentMonth.format("YYYY"))}
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
-        onRefetch={refetch}
       />
 
       <COBSExportDialog
@@ -287,4 +289,4 @@ const COBS = () => {
   );
 };
 
-export default COBS;
+export default COBSMonitoring;

@@ -32,6 +32,17 @@ const formatDateTime = (raw) => {
   });
 };
 
+const formatDateOnly = (raw) => {
+  if (!raw) return "—";
+  const date = new Date(raw);
+  if (isNaN(date)) return "—";
+  return date.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const getTodayString = () => {
   const now = new Date();
   const y = now.getFullYear();
@@ -126,6 +137,7 @@ const PestStartCheckingDialog = ({
 }) => {
   const [pestGrid, setPestGrid] = useState({});
   const [otherObservations, setOtherObservations] = useState({});
+  const [date, setDate] = useState("");
   const [remarks, setRemarks] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState({});
@@ -193,6 +205,7 @@ const PestStartCheckingDialog = ({
     if (!open) return;
     setErrors({});
     setSubmitAttempted(false);
+    setDate(getTodayString());
     setRemarks("");
     setNotes("");
   }, [open, viewMode]);
@@ -204,6 +217,7 @@ const PestStartCheckingDialog = ({
         buildDraftGrid(questionnaireData, batchEntry.responses ?? []);
       setPestGrid(draftGrid);
       setOtherObservations(draftObs);
+      setDate(batchEntry.date ?? getTodayString());
       setRemarks(batchEntry.remarks ?? "");
       setNotes(batchEntry.notes ?? "");
     } else if (!continueMode) {
@@ -215,6 +229,7 @@ const PestStartCheckingDialog = ({
       });
       setPestGrid(initialGrid);
       setOtherObservations({});
+      setDate(getTodayString());
       setRemarks("");
       setNotes("");
     }
@@ -249,6 +264,29 @@ const PestStartCheckingDialog = ({
     const key = `${areaName}__${itemName}`;
     setOtherObservations((prev) => ({ ...prev, [key]: subName }));
     clearFieldError(`obs__${areaName}__${itemName}`);
+  };
+
+  const isSelectAllChecked = (itemName, subName) =>
+    inspectionAreas.length > 0 &&
+    inspectionAreas.every(
+      (area) => otherObservations[`${area.name}__${itemName}`] === subName,
+    );
+
+  const handleSelectAllObs = (itemName, subName) => {
+    setOtherObservations((prev) => {
+      const next = { ...prev };
+      inspectionAreas.forEach((area) => {
+        next[`${area.name}__${itemName}`] = subName;
+      });
+      return next;
+    });
+    setErrors((prev) => {
+      const next = { ...prev };
+      inspectionAreas.forEach((area) => {
+        delete next[`obs__${area.name}__${itemName}`];
+      });
+      return next;
+    });
   };
 
   const getViewGridValue = (areaName, pestName) => {
@@ -297,6 +335,7 @@ const PestStartCheckingDialog = ({
       "batch_no",
       continueMode ? (batchEntry?.batch_no ?? "") : "",
     );
+    formData.append("date", date);
     formData.append("remarks", remarks);
     formData.append("notes", notes);
 
@@ -352,6 +391,7 @@ const PestStartCheckingDialog = ({
     const { valid, errors: validationErrors } = await validateForm(
       isCompleted,
       {
+        date,
         pestGrid,
         otherObservations,
         questionnaireData,
@@ -379,6 +419,7 @@ const PestStartCheckingDialog = ({
     if (!viewMode) {
       setPestGrid({});
       setOtherObservations({});
+      setDate("");
       setRemarks("");
       setNotes("");
       setErrors({});
@@ -531,6 +572,12 @@ const PestStartCheckingDialog = ({
         {viewMode && batchEntry && !isFetching && (
           <div className="pest-sc__info-strip">
             <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Date</span>
+              <span className="pest-sc__info-value">
+                {formatDateOnly(batchEntry.date)}
+              </span>
+            </div>
+            <div className="pest-sc__info-item">
               <span className="pest-sc__info-label">Submitted by</span>
               <span className="pest-sc__info-value">
                 {batchEntry.user ?? "—"}
@@ -559,6 +606,12 @@ const PestStartCheckingDialog = ({
 
         {continueMode && batchEntry && !isFetching && (
           <div className="pest-sc__info-strip pest-sc__info-strip--draft">
+            <div className="pest-sc__info-item">
+              <span className="pest-sc__info-label">Date</span>
+              <span className="pest-sc__info-value">
+                {formatDateOnly(batchEntry.date)}
+              </span>
+            </div>
             <div className="pest-sc__info-item">
               <span className="pest-sc__info-label">Draft by</span>
               <span className="pest-sc__info-value">
@@ -629,8 +682,20 @@ const PestStartCheckingDialog = ({
                                 <div className="pest-sc__th-obs-group">
                                   {item.name}
                                 </div>
-                                <div className="pest-sc__th-obs-sub">
-                                  {sub.name}
+                                <div className="pest-sc__th-obs-sub-row">
+                                  <span className="pest-sc__th-obs-sub">
+                                    {sub.name}
+                                  </span>
+                                  {!viewMode && (
+                                    <button
+                                      type="button"
+                                      aria-label={`Select all ${sub.name}`}
+                                      className={`pest-sc__select-all-check${isSelectAllChecked(item.name, sub.name) ? " pest-sc__select-all-check--checked" : ""}`}
+                                      onClick={() =>
+                                        handleSelectAllObs(item.name, sub.name)
+                                      }
+                                    />
+                                  )}
                                 </div>
                               </th>
                             );
@@ -792,6 +857,35 @@ const PestStartCheckingDialog = ({
               <div className="pest-sc__section">
                 <div className="pest-sc__section-header">Others</div>
                 <div className="pest-sc__others-body">
+                  <div className="pest-sc__others-row">
+                    <div className="pest-sc__others-field pest-sc__others-field--date">
+                      <span className="pest-sc__others-label">
+                        Date {!viewMode && <RequiredStar />}
+                      </span>
+                      {viewMode ? (
+                        <div className="pest-sc__date-display">
+                          {formatDateOnly(batchEntry?.date)}
+                        </div>
+                      ) : (
+                        <input
+                          type="date"
+                          className={`pest-sc__date-input${errors.date ? " pest-sc__date-input--error" : ""}`}
+                          value={date}
+                          onChange={(e) => {
+                            setDate(e.target.value);
+                            clearFieldError("date");
+                          }}
+                        />
+                      )}
+                      {errors.date && (
+                        <span className="pest-sc__inline-error">
+                          <ErrorOutlineIcon sx={{ fontSize: 11 }} />
+                          {errors.date}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="pest-sc__others-field">
                     <span className="pest-sc__others-label">
                       Remarks for Observation

@@ -22,6 +22,7 @@ import {
 import COBSImagePreviewDialog from "./COBSImagePreviewDialog";
 import COBSAcknowledgementTimelineDialog from "./COBSAcknowledgementTimelineDialog";
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
+import { getWeekDateRange } from "./cobsWeekUtils";
 import "./COBSStartCheckingDialog.scss";
 
 const SCORE_OPTIONS = [
@@ -85,26 +86,6 @@ const formatDateDisplay = (iso) => {
     day: "numeric",
     year: "numeric",
   });
-};
-
-const getWeekDateRange = (week, month, year) => {
-  const m = parseInt(month) - 1;
-  const y = parseInt(year);
-  const w = parseInt(String(week).replace(/\D/g, ""));
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  const ranges = [
-    { start: 1, end: 7 },
-    { start: 8, end: 14 },
-    { start: 15, end: 21 },
-    { start: 22, end: lastDay },
-  ];
-  const range = ranges[w - 1] ?? ranges[0];
-  const pad = (n) => String(n).padStart(2, "0");
-  const monthStr = pad(parseInt(month));
-  return {
-    min: `${y}-${monthStr}-${pad(range.start)}`,
-    max: `${y}-${monthStr}-${pad(range.end)}`,
-  };
 };
 
 const buildResponseMap = (responses = []) => {

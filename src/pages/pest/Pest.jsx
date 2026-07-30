@@ -35,7 +35,6 @@ const STATUS_CHIP_MAP = {
   pending: "chip-pending",
   rejected: "chip-rejected",
   "checklist not yet created": "chip-pending",
-  "previous month incomplete": "chip-rejected",
 };
 
 const getCompletedPeriodsCount = (periodMap) => {
@@ -80,20 +79,6 @@ const isChecklistNotYetCreated = (checklistData, currentMonth) => {
   return createdMonth.startOf("month").isAfter(currentMonth.startOf("month"));
 };
 
-const checklistExistedLastMonth = (checklistData, currentMonth) => {
-  const createdAt = checklistData?.created_at;
-  if (!createdAt) return false;
-  const createdMonth = dayjs(createdAt).startOf("month");
-  const previousMonth = currentMonth.subtract(1, "month").startOf("month");
-  return !createdMonth.isAfter(previousMonth);
-};
-
-const getPreviousMonthCompleted = (checklistData) => {
-  const val = checklistData?.previous_month_completed;
-  if (val === undefined || val === null) return true;
-  return Boolean(val);
-};
-
 const flattenPestData = (rawData, currentMonth) => {
   if (!rawData) return [];
   const rows = [];
@@ -109,20 +94,12 @@ const flattenPestData = (rawData, currentMonth) => {
         : null;
 
     const notYetCreated = isChecklistNotYetCreated(checklistData, currentMonth);
-    const existedLastMonth = checklistExistedLastMonth(
-      checklistData,
-      currentMonth,
-    );
-    const previousMonthCompleted = getPreviousMonthCompleted(checklistData);
 
     let derivedStatus = getDerivedPestTableStatus(periodMap);
     let isLocked = false;
 
     if (notYetCreated) {
       derivedStatus = "Checklist Not Yet Created";
-      isLocked = true;
-    } else if (existedLastMonth && !previousMonthCompleted) {
-      derivedStatus = "Previous Month Incomplete";
       isLocked = true;
     }
 

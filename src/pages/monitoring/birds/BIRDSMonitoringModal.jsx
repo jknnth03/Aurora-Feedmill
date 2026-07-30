@@ -9,21 +9,19 @@ import Tooltip from "@mui/material/Tooltip";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Skeleton from "@mui/material/Skeleton";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import EditIcon from "@mui/icons-material/Edit";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import {
   getChipBg,
   getChipTextColor,
   useChipColors,
-} from "../../components/accountmenu/Chipcolorpickerutils";
-import BirdsStartCheckingDialog from "./BirdsStartCheckingDialog";
-import BirdsShowReportDialog from "./BirdsShowReportDialog";
-import BirdsAcknowledgementTimelineDialog from "./BirdsAcknowledgementTimelineDialog";
-import "./BirdsModal.scss";
+} from "../../../components/accountmenu/Chipcolorpickerutils";
+import BIRDSMonitoringStartCheckingDialog from "./BIRDSMonitoringStartCheckingDialog";
+import BirdsShowReportDialog from "../../birds/BirdsShowReportDialog";
+import BirdsAcknowledgementTimelineDialog from "../../birds/BirdsAcknowledgementTimelineDialog";
+import "../../birds/BirdsModal.scss"; // reuse BirdsModal.scss class names (birds-cm__*) — adjust path as needed
 
 const MONTHS = [
   "January",
@@ -67,19 +65,9 @@ const getWeekStatus = (entries) => {
   return "Pending";
 };
 
-const isWeekDone = (entries) => {
-  const status = getWeekStatus(entries)?.toLowerCase();
-  return status === "done";
-};
-
 const getLatestEntry = (entries) => {
   if (!Array.isArray(entries) || entries.length === 0) return null;
   return entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-};
-
-const isDraftEntry = (entry) => {
-  if (!entry) return false;
-  return entry.is_completed === 0 || entry.is_completed === false;
 };
 
 const hasAcknowledgeableTimeline = (entries) => {
@@ -139,17 +127,15 @@ const TimelineCell = ({ entries, period, onOpenTimeline }) => {
   );
 };
 
+// View-only actions cell: Show Checklist and Show Report (only once there's a
+// done/acknowledged submission). Show Checklist is available for anything
+// already saved (drafts, rejected, on going too). No Start/Continue Checking.
 const RowActionMenu = ({
   period,
   unitName,
   entries,
   checklistId,
   unitDataId,
-  fallbackEvaluatorId,
-  fallbackApproverId,
-  isPreviousPeriodDone,
-  onStartChecking,
-  onContinueChecking,
   onShowChecklist,
   onShowReport,
 }) => {
@@ -157,19 +143,45 @@ const RowActionMenu = ({
   const latest = getLatestEntry(entries);
   const status = getWeekStatus(entries);
   const statusLower = status?.toLowerCase();
-  const isForAcknowledgement =
-    statusLower === "for acknowledgement" || statusLower === "done";
-  const isDraft = latest ? isDraftEntry(latest) : false;
-  const hasEntries = Array.isArray(entries) && entries.length > 0;
-  const canAct = hasEntries || isPreviousPeriodDone;
 
-  if (!canAct) return <span className="birds-cm__dash">—</span>;
+  const hasEntries = Array.isArray(entries) && entries.length > 0;
+  const canShowReport =
+    statusLower === "for acknowledgement" || statusLower === "done";
+  const canShowChecklist = hasEntries && statusLower !== "pending";
+
+  if (!canShowChecklist) return <span className="birds-cm__dash">—</span>;
 
   const close = () => setAnchor(null);
   const resolvedUnitId = latest?.unit_id ?? unitDataId;
-  const resolvedEvaluatorId = latest?.evaluator_id ?? fallbackEvaluatorId;
-  const resolvedApproverId = latest?.approver_id ?? fallbackApproverId;
   const resolvedChecklistId = latest?.checklist_id ?? checklistId;
+
+  const handleShowChecklist = () =>
+    onShowChecklist?.({
+      period,
+      unitName,
+      unitId: resolvedUnitId,
+      checklistId: resolvedChecklistId,
+      batchEntry: latest,
+    });
+
+  const handleShowReport = () => onShowReport?.(latest);
+
+  // Only one action available (e.g. drafts/on going/rejected) — skip the dropdown.
+  if (!canShowReport) {
+    return (
+      <Tooltip title="Show Checklist" placement="top">
+        <IconButton
+          size="small"
+          className="birds-cm__icon-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleShowChecklist();
+          }}>
+          <VisibilityIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Tooltip>
+    );
+  }
 
   return (
     <div className="birds-cm__actions-cell">
@@ -190,81 +202,30 @@ const RowActionMenu = ({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{ className: "birds-cm__menu-paper" }}>
-        {isForAcknowledgement
-          ? [
-              <MenuItem
-                key="checklist"
-                className="birds-cm__menu-item"
-                onClick={() => {
-                  close();
-                  onShowChecklist?.({
-                    period,
-                    unitName,
-                    unitId: resolvedUnitId,
-                    checklistId: resolvedChecklistId,
-                    batchEntry: latest,
-                  });
-                }}>
-                <VisibilityIcon className="birds-cm__menu-icon" />
-                Show Checklist
-              </MenuItem>,
-              <MenuItem
-                key="report"
-                className="birds-cm__menu-item"
-                onClick={() => {
-                  close();
-                  onShowReport?.(latest);
-                }}>
-                <AssessmentIcon className="birds-cm__menu-icon" />
-                Show Report
-              </MenuItem>,
-            ]
-          : isDraft
-            ? [
-                <MenuItem
-                  key="continue"
-                  className="birds-cm__menu-item"
-                  onClick={() => {
-                    close();
-                    onContinueChecking?.({
-                      period,
-                      unitName,
-                      unitId: resolvedUnitId,
-                      evaluatorId: resolvedEvaluatorId,
-                      approverId: resolvedApproverId,
-                      checklistId: resolvedChecklistId,
-                      batchEntry: latest,
-                    });
-                  }}>
-                  <EditIcon className="birds-cm__menu-icon" />
-                  Continue Checking
-                </MenuItem>,
-              ]
-            : [
-                <MenuItem
-                  key="start"
-                  className="birds-cm__menu-item"
-                  onClick={() => {
-                    close();
-                    onStartChecking?.({
-                      period,
-                      unitName,
-                      unitId: resolvedUnitId,
-                      evaluatorId: resolvedEvaluatorId,
-                      approverId: resolvedApproverId,
-                      checklistId: resolvedChecklistId,
-                    });
-                  }}>
-                  <PlayArrowIcon className="birds-cm__menu-icon" />
-                  Start Checking
-                </MenuItem>,
-              ]}
+        <MenuItem
+          className="birds-cm__menu-item"
+          onClick={() => {
+            close();
+            handleShowChecklist();
+          }}>
+          <VisibilityIcon className="birds-cm__menu-icon" />
+          Show Checklist
+        </MenuItem>
+        <MenuItem
+          className="birds-cm__menu-item"
+          onClick={() => {
+            close();
+            handleShowReport();
+          }}>
+          <AssessmentIcon className="birds-cm__menu-icon" />
+          Show Report
+        </MenuItem>
       </Menu>
     </div>
   );
 };
 
-const BirdsModal = ({
+const BIRDSMonitoringModal = ({
   open,
   unitName,
   unitData,
@@ -272,10 +233,7 @@ const BirdsModal = ({
   year,
   onClose,
   isFetching,
-  onRefetch,
 }) => {
-  const [startCheckingData, setStartCheckingData] = useState(null);
-  const [continueCheckingData, setContinueCheckingData] = useState(null);
   const [showChecklistData, setShowChecklistData] = useState(null);
   const [showReportData, setShowReportData] = useState(null);
   const [timelineData, setTimelineData] = useState(null);
@@ -284,12 +242,6 @@ const BirdsModal = ({
   const periodMap = unitData?.periods ?? {};
   const checklistId = unitData?.id ?? null;
   const unitDataId = null;
-
-  const allBatches = Object.values(periodMap).flat();
-  const fallbackEvaluatorId =
-    allBatches.find((b) => b?.evaluator_id != null)?.evaluator_id ?? null;
-  const fallbackApproverId =
-    allBatches.find((b) => b?.approver_id != null)?.approver_id ?? null;
 
   const rows = Object.keys(periodMap).map((label) => ({
     period: label,
@@ -334,47 +286,36 @@ const BirdsModal = ({
                       ))}
                     </tr>
                   ))
-                : rows.map(({ period, entries }, index) => {
-                    const previousEntries =
-                      index === 0 ? null : rows[index - 1].entries;
-                    const isPreviousPeriodDone =
-                      index === 0 || isWeekDone(previousEntries);
-                    return (
-                      <tr key={period} className="birds-cm__tr">
-                        <td className="birds-cm__td">{unitName}</td>
-                        <td className="birds-cm__td">{period}</td>
-                        <td className="birds-cm__td birds-cm__td--doneon">
-                          {getDoneOn(entries)}
-                        </td>
-                        <td className="birds-cm__td birds-cm__td--timeline">
-                          <TimelineCell
-                            entries={entries}
-                            period={period}
-                            onOpenTimeline={setTimelineData}
-                          />
-                        </td>
-                        <td className="birds-cm__td">
-                          <StatusChip status={getWeekStatus(entries)} />
-                        </td>
-                        <td className="birds-cm__td birds-cm__td--actions">
-                          <RowActionMenu
-                            period={period}
-                            unitName={unitName}
-                            entries={entries}
-                            checklistId={checklistId}
-                            unitDataId={unitDataId}
-                            fallbackEvaluatorId={fallbackEvaluatorId}
-                            fallbackApproverId={fallbackApproverId}
-                            isPreviousPeriodDone={isPreviousPeriodDone}
-                            onStartChecking={setStartCheckingData}
-                            onContinueChecking={setContinueCheckingData}
-                            onShowChecklist={setShowChecklistData}
-                            onShowReport={setShowReportData}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
+                : rows.map(({ period, entries }) => (
+                    <tr key={period} className="birds-cm__tr">
+                      <td className="birds-cm__td">{unitName}</td>
+                      <td className="birds-cm__td">{period}</td>
+                      <td className="birds-cm__td birds-cm__td--doneon">
+                        {getDoneOn(entries)}
+                      </td>
+                      <td className="birds-cm__td birds-cm__td--timeline">
+                        <TimelineCell
+                          entries={entries}
+                          period={period}
+                          onOpenTimeline={setTimelineData}
+                        />
+                      </td>
+                      <td className="birds-cm__td">
+                        <StatusChip status={getWeekStatus(entries)} />
+                      </td>
+                      <td className="birds-cm__td birds-cm__td--actions">
+                        <RowActionMenu
+                          period={period}
+                          unitName={unitName}
+                          entries={entries}
+                          checklistId={checklistId}
+                          unitDataId={unitDataId}
+                          onShowChecklist={setShowChecklistData}
+                          onShowReport={setShowReportData}
+                        />
+                      </td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
         </DialogContent>
@@ -389,43 +330,7 @@ const BirdsModal = ({
         </DialogActions>
       </Dialog>
 
-      <BirdsStartCheckingDialog
-        open={Boolean(startCheckingData)}
-        onClose={() => setStartCheckingData(null)}
-        onSuccess={() => {
-          setStartCheckingData(null);
-          onRefetch?.();
-        }}
-        unitName={startCheckingData?.unitName}
-        period={startCheckingData?.period}
-        unitId={startCheckingData?.unitId}
-        evaluatorId={startCheckingData?.evaluatorId}
-        approverId={startCheckingData?.approverId}
-        checklistId={startCheckingData?.checklistId}
-        month={month}
-        year={year}
-      />
-
-      <BirdsStartCheckingDialog
-        open={Boolean(continueCheckingData)}
-        onClose={() => setContinueCheckingData(null)}
-        onSuccess={() => {
-          setContinueCheckingData(null);
-          onRefetch?.();
-        }}
-        unitName={continueCheckingData?.unitName}
-        period={continueCheckingData?.period}
-        unitId={continueCheckingData?.unitId}
-        evaluatorId={continueCheckingData?.evaluatorId}
-        approverId={continueCheckingData?.approverId}
-        checklistId={continueCheckingData?.checklistId}
-        month={month}
-        year={year}
-        continueMode
-        batchEntry={continueCheckingData?.batchEntry}
-      />
-
-      <BirdsStartCheckingDialog
+      <BIRDSMonitoringStartCheckingDialog
         open={Boolean(showChecklistData)}
         onClose={() => setShowChecklistData(null)}
         unitName={showChecklistData?.unitName}
@@ -433,7 +338,6 @@ const BirdsModal = ({
         checklistId={showChecklistData?.checklistId}
         month={month}
         year={year}
-        viewMode
         batchEntry={showChecklistData?.batchEntry}
       />
 
@@ -441,7 +345,6 @@ const BirdsModal = ({
         open={Boolean(showReportData)}
         onClose={() => setShowReportData(null)}
         reportData={showReportData}
-        onRefetch={onRefetch}
       />
 
       <BirdsAcknowledgementTimelineDialog
@@ -454,4 +357,4 @@ const BirdsModal = ({
   );
 };
 
-export default BirdsModal;
+export default BIRDSMonitoringModal;

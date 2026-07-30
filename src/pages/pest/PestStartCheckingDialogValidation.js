@@ -1,12 +1,16 @@
 export const validateForm = async (
   isCompleted,
-  { pestGrid, otherObservations, questionnaireData },
+  { date, pestGrid, otherObservations, questionnaireData },
 ) => {
   if (isCompleted === 0) {
     return { valid: true, errors: {} };
   }
 
   const errors = {};
+
+  if (!date) {
+    errors.date = "Date is required.";
+  }
 
   const inspectionAreas =
     questionnaireData?.items?.find((s) => s.name === "Inspection Areas")

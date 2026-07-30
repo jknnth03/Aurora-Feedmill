@@ -19,6 +19,7 @@ import StarIcon from "@mui/icons-material/Star";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import SettingsIcon from "@mui/icons-material/Settings";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export const iconStyles = {
   main: { fontSize: "22px" },
@@ -233,6 +234,37 @@ export const MODULES = {
         name: "Pest",
         permissionId: "APPROVAL.PESTS",
         displayName: "PESTS Acknowledgement",
+        path: "pests",
+        icon: <BugReportIcon sx={iconStyles.child} />,
+      },
+    },
+  },
+
+  MONITORING: {
+    name: "Monitoring",
+    permissionId: "MONITORING",
+    displayName: "Monitoring",
+    path: "/monitoring",
+    icon: <VisibilityIcon sx={iconStyles.main} />,
+    children: {
+      COBS: {
+        name: "COBS",
+        permissionId: "MONITORING.COBS",
+        displayName: "COBS Monitoring",
+        path: "cobs",
+        icon: <SanitizerIcon sx={iconStyles.child} />,
+      },
+      BIRDS: {
+        name: "Birds",
+        permissionId: "MONITORING.BIRDS",
+        displayName: "BIRDS Monitoring",
+        path: "birds",
+        icon: <FlutterDashIcon sx={iconStyles.child} />,
+      },
+      PESTS: {
+        name: "Pest",
+        permissionId: "MONITORING.PESTS",
+        displayName: "PESTS Monitoring",
         path: "pests",
         icon: <BugReportIcon sx={iconStyles.child} />,
       },

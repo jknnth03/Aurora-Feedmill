@@ -24,6 +24,9 @@ import StandalonePest from "../pages/pest/Pest.jsx";
 import COBSApproval from "../pages/approval/COBS/COBSApproval.jsx";
 import BirdsApproval from "../pages/approval/BIRDS/BirdsApproval.jsx";
 import PestsApproval from "../pages/approval/PESTS/PestsApproval.jsx";
+import COBSMonitoring from "../pages/monitoring/cobs/COBSMonitoring.jsx";
+import BIRDSMonitoring from "../pages/monitoring/birds/BIRDSMonitoring.jsx";
+import PESTSMonitoring from "../pages/monitoring/pests/PESTSMonitoring.jsx";
 
 export const ROUTES = [
   {
@@ -199,6 +202,25 @@ export const ROUTES = [
         path: `${MODULES.APPROVAL.path}/${MODULES.APPROVAL.children.PESTS.path}`,
         element: <PestsApproval />,
         handle: { permission: MODULES.APPROVAL.children.PESTS.permissionId },
+      },
+
+      {
+        id: "MONITORING.COBS",
+        path: `${MODULES.MONITORING.path}/${MODULES.MONITORING.children.COBS.path}`,
+        element: <COBSMonitoring />,
+        handle: { permission: MODULES.MONITORING.children.COBS.permissionId },
+      },
+      {
+        id: "MONITORING.BIRDS",
+        path: `${MODULES.MONITORING.path}/${MODULES.MONITORING.children.BIRDS.path}`,
+        element: <BIRDSMonitoring />,
+        handle: { permission: MODULES.MONITORING.children.BIRDS.permissionId },
+      },
+      {
+        id: "MONITORING.PESTS",
+        path: `${MODULES.MONITORING.path}/${MODULES.MONITORING.children.PESTS.path}`,
+        element: <PESTSMonitoring />,
+        handle: { permission: MODULES.MONITORING.children.PESTS.permissionId },
       },
     ],
   },

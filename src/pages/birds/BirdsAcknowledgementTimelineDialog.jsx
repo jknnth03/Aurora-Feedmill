@@ -29,15 +29,12 @@ const buildSteps = (batchEntry) => {
 
   const {
     user,
-    evaluator,
     approver,
     assessor,
     start_at,
     end_at,
-    is_evaluated,
     is_approved,
     is_assessed,
-    signatory_1,
     signatory_2,
     signatory_3,
   } = batchEntry;
@@ -51,19 +48,10 @@ const buildSteps = (batchEntry) => {
     done: true,
   };
 
-  const evaluatedStep = {
-    key: "evaluated",
-    label: "Evaluate",
-    roleLabel: "Evaluator",
-    name: signatory_1?.name ?? evaluator ?? null,
-    timestamp: signatory_1 ? end_at : null,
-    done: !!is_evaluated,
-  };
-
   const approvedStep = {
     key: "approved",
-    label: "Approve",
-    roleLabel: "Approver",
+    label: "Acknowledge",
+    roleLabel: "Acknowledger",
     name: signatory_2?.name ?? approver ?? null,
     timestamp: signatory_2 ? end_at : null,
     done: !!is_approved,
@@ -71,14 +59,14 @@ const buildSteps = (batchEntry) => {
 
   const assessedStep = {
     key: "assessed",
-    label: "Assess",
-    roleLabel: "Assessor",
+    label: "Acknowledge",
+    roleLabel: "Acknowledger",
     name: signatory_3?.name ?? assessor ?? null,
     timestamp: signatory_3 ? end_at : null,
     done: !!is_assessed,
   };
 
-  return [submittedStep, evaluatedStep, approvedStep, assessedStep];
+  return [submittedStep, approvedStep, assessedStep];
 };
 
 const getStepStatus = (step, steps, idx) => {
@@ -143,7 +131,7 @@ const BirdsAcknowledgementTimelineDialog = ({
       <DialogContent className="birds-tl__content">
         {isFetching ? (
           <div className="birds-tl__skeleton-wrap">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton
                 key={i}
                 variant="rectangular"

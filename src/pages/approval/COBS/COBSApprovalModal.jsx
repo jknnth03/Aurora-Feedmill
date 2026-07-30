@@ -38,6 +38,16 @@ const formatTime = (dateStr) => {
   });
 };
 
+// batchEntry doesn't carry explicit numeric month/year fields — derive them
+// from start_at (the actual source of truth for when the batch happened).
+const getMonthYearFromEntry = (entry) => {
+  const raw = entry?.start_at;
+  if (!raw) return { month: undefined, year: undefined };
+  const d = new Date(raw);
+  if (isNaN(d)) return { month: undefined, year: undefined };
+  return { month: d.getMonth() + 1, year: d.getFullYear() };
+};
+
 const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
   const [previewState, setPreviewState] = useState({
     open: false,
@@ -125,6 +135,9 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
 
   const hasSignature = !!signatureDataUrl;
   const hasSignatories = signatory2 || signatory3 || hasSignature;
+
+  const { month: checklistMonth, year: checklistYear } =
+    getMonthYearFromEntry(batchEntry);
 
   return (
     <>
@@ -431,8 +444,8 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
         batchEntry={batchEntry}
         unitName={batchEntry?.unit}
         week={batchEntry?.week}
-        month={batchEntry?.month}
-        year={batchEntry?.year}
+        month={checklistMonth}
+        year={checklistYear}
         checklistId={batchEntry?.checklist_id ?? 1}
       />
 

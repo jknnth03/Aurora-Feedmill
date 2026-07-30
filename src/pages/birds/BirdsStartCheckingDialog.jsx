@@ -223,6 +223,7 @@ const BirdsStartCheckingDialog = ({
   const [entryPoints, setEntryPoints] = useState({});
   const [wastageSelection, setWastageSelection] = useState({});
   const [othersDate, setOthersDate] = useState(getTodayString());
+  const [remarks, setRemarks] = useState("");
   const [errors, setErrors] = useState({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -277,6 +278,7 @@ const BirdsStartCheckingDialog = ({
           periodDateRange.max,
         ),
       );
+      setRemarks(batchEntry.remarks ?? "");
     } else if (!continueMode) {
       const initWastage = {};
       inspectionAreas.forEach((area) => {
@@ -293,6 +295,7 @@ const BirdsStartCheckingDialog = ({
           periodDateRange.max,
         ),
       );
+      setRemarks("");
     }
   }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
 
@@ -446,6 +449,7 @@ const BirdsStartCheckingDialog = ({
       "batch_no",
       continueMode ? (batchEntry?.batch_no ?? "") : "",
     );
+    formData.append("remarks", remarks);
 
     inspectionAreas.forEach((area, index) => {
       const selected = wastageSelection[area.name] ?? "";
@@ -518,6 +522,7 @@ const BirdsStartCheckingDialog = ({
       setEntryPoints({});
       setWastageSelection({});
       setOthersDate(getTodayString());
+      setRemarks("");
       setErrors({});
       setSubmitAttempted(false);
     }
@@ -896,6 +901,25 @@ const BirdsStartCheckingDialog = ({
                         min={periodDateRange.min ?? undefined}
                         max={periodDateRange.max ?? undefined}
                         onChange={(e) => handleOthersDateChange(e.target.value)}
+                      />
+                    )}
+                  </div>
+
+                  <div className="birds-sc__others-field birds-sc__others-field--remarks">
+                    <label className="birds-sc__others-label">
+                      Remarks (Optional)
+                    </label>
+                    {viewMode ? (
+                      <span className="birds-sc__text-display">
+                        {batchEntry?.remarks || "—"}
+                      </span>
+                    ) : (
+                      <textarea
+                        className="birds-sc__others-textarea"
+                        placeholder="Type here"
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        rows={2}
                       />
                     )}
                   </div>
