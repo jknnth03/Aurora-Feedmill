@@ -37,10 +37,19 @@ const cobsApi = apiSlice.injectEndpoints({
     }),
 
     mergeCobs: builder.mutation({
-      query: ({ month, year }) => ({
+      query: ({ batch_no, duplicate_reason }) => ({
         url: "/api/responses/merge",
         method: "POST",
-        params: { month, year },
+        body: { batch_no, duplicate_reason },
+      }),
+      invalidatesTags: ["Cobs"],
+    }),
+
+    addAdditionalAttachment: builder.mutation({
+      query: (formData) => ({
+        url: "/api/responses/additional-attachment",
+        method: "POST",
+        body: formData,
       }),
       invalidatesTags: ["Cobs"],
     }),
@@ -53,4 +62,5 @@ export const {
   useGetQuestionnaireQuery,
   useEvaluateResponseMutation,
   useMergeCobsMutation,
+  useAddAdditionalAttachmentMutation,
 } = cobsApi;

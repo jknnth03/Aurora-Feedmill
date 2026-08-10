@@ -1,20 +1,29 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
+import Collapse from "@mui/material/Collapse";
 import CloseIcon from "@mui/icons-material/Close";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import EditIcon from "@mui/icons-material/Edit";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import SearchIcon from "@mui/icons-material/Search";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import SpaceDashboardIcon from "@mui/icons-material/SpaceDashboard";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import BugReportIcon from "@mui/icons-material/BugReport";
+import SanitizerIcon from "@mui/icons-material/Sanitizer";
+import FlutterDashIcon from "@mui/icons-material/FlutterDash";
+import GppMaybeIcon from "@mui/icons-material/GppMaybe";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import ChecklistIcon from "@mui/icons-material/Checklist";
 import {
   SaveButton,
   EditButton,
@@ -26,6 +35,7 @@ import {
   useUpdateRoleMutation,
 } from "../../../features/api/usermanagement/rolesApi";
 import { useGetPermissionsQuery } from "../../../features/api/usermanagement/permissionsApi";
+import { MODULES } from "../../../config/modules.jsx";
 import "./RolesModal.scss";
 
 const schema = yup.object({
@@ -35,6 +45,68 @@ const schema = yup.object({
     .of(yup.number())
     .min(1, "At least one permission is required"),
 });
+
+const PERMISSION_ICON_MAP = {
+  Dashboard: <SpaceDashboardIcon />,
+  "User Management": <ManageAccountsIcon />,
+  Users: <ManageAccountsIcon />,
+  Roles: <ManageAccountsIcon />,
+  Permissions: <ManageAccountsIcon />,
+  Masterlist: <ListAltIcon />,
+  Questionnaires: <AssignmentIcon />,
+  Pest: <BugReportIcon />,
+  COBS: <SanitizerIcon />,
+  Birds: <FlutterDashIcon />,
+  Acknowledgement: <GppMaybeIcon />,
+  "COBS Acknowledgement": <SanitizerIcon />,
+  "BIRDS Acknowledgement": <FlutterDashIcon />,
+  Monitoring: <VisibilityIcon />,
+  "COBS Monitoring": <SanitizerIcon />,
+};
+
+const DEFAULT_PERMISSION_ICON = <ChecklistIcon />;
+
+const buildPermissionGroups = (permissions) => {
+  const byName = new Map(permissions.map((p) => [p.name, p]));
+  const used = new Set();
+  const groups = [];
+
+  Object.values(MODULES).forEach((module) => {
+    if (module.permissionId === "LOGIN") return;
+
+    const parentPermission =
+      byName.get(module.displayName) || byName.get(module.name);
+    if (!parentPermission || used.has(parentPermission.id)) return;
+
+    const children = [];
+    if (module.children) {
+      Object.values(module.children).forEach((child) => {
+        const childPermission =
+          byName.get(child.displayName) || byName.get(child.name);
+        if (
+          childPermission &&
+          childPermission.id !== parentPermission.id &&
+          !used.has(childPermission.id)
+        ) {
+          children.push(childPermission);
+          used.add(childPermission.id);
+        }
+      });
+    }
+
+    used.add(parentPermission.id);
+    groups.push({ ...parentPermission, children });
+  });
+
+  permissions.forEach((permission) => {
+    if (!used.has(permission.id)) {
+      groups.push({ ...permission, children: [] });
+      used.add(permission.id);
+    }
+  });
+
+  return groups;
+};
 
 const SkeletonLoader = () => (
   <div className="rm__skeleton-wrap">
@@ -52,50 +124,75 @@ const SkeletonLoader = () => (
   </div>
 );
 
-const PermissionsAutocomplete = ({
+const PermissionsChecklist = ({
   value = [],
   onChange,
   error,
   displayOptions = [],
 }) => {
-  const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
+  const [expanded, setExpanded] = useState({});
 
   const { data, isFetching } = useGetPermissionsQuery({
     status: 1,
-    search,
     page: 1,
     per_page: 50,
   });
 
-  const options = data?.data ?? [];
+  const options = data?.data?.length ? data.data : displayOptions;
+  const groups = buildPermissionGroups(options);
 
-  const handleSelect = (permission) => {
-    const already = value.includes(permission.id);
+  useEffect(() => {
+    if (options.length === 0) return;
+    setExpanded((prev) => {
+      const next = { ...prev };
+      groups.forEach((group) => {
+        if (
+          group.children.length > 0 &&
+          next[group.id] === undefined &&
+          group.children.some((child) => value.includes(child.id))
+        ) {
+          next[group.id] = true;
+        }
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  const allIds = options.map((o) => o.id);
+  const allSelected =
+    allIds.length > 0 && allIds.every((id) => value.includes(id));
+  const someSelected = value.some((id) => allIds.includes(id));
+  const selectAllIndeterminate = someSelected && !allSelected;
+
+  const toggleId = (id) => {
     onChange(
-      already
-        ? value.filter((id) => id !== permission.id)
-        : [...value, permission.id],
+      value.includes(id) ? value.filter((v) => v !== id) : [...value, id],
     );
   };
 
-  const handleRemove = (id) => onChange(value.filter((v) => v !== id));
+  const toggleSelectAll = () => {
+    onChange(allSelected ? [] : allIds);
+  };
 
-  const selectedOptions = options.filter((o) => value.includes(o.id));
+  const toggleGroup = (group) => {
+    const childIds = group.children.map((c) => c.id);
+    const allChildrenChecked = childIds.every((id) => value.includes(id));
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (allChildrenChecked) {
+      onChange(value.filter((v) => v !== group.id && !childIds.includes(v)));
+    } else {
+      const toAdd = [group.id, ...childIds].filter((id) => !value.includes(id));
+      onChange([...value, ...toAdd]);
+    }
+  };
+
+  const toggleExpand = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
-    <div className={`rm__ac${error ? " rm__ac--error" : ""}`} ref={wrapRef}>
+    <div className={`rm__perm${error ? " rm__perm--error" : ""}`}>
       <label className="rm__label">
         Permissions
         <span className="rm__required">
@@ -103,89 +200,93 @@ const PermissionsAutocomplete = ({
         </span>
       </label>
 
-      <div className="rm__ac-box" onClick={() => setOpen((p) => !p)}>
-        <div className="rm__ac-tags">
-          {value.length === 0 && (
-            <span className="rm__ac-placeholder">Select permissions...</span>
-          )}
-          {selectedOptions.map((p) => (
-            <span key={p.id} className="rm__ac-tag">
-              {p.name}
-              <button
-                type="button"
-                className="rm__ac-tag-remove"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRemove(p.id);
-                }}>
-                <CloseRoundedIcon sx={{ fontSize: "0.65rem" }} />
-              </button>
-            </span>
-          ))}
-          {value
-            .filter((id) => !options.find((o) => o.id === id))
-            .map((id) => {
-              const fallback = displayOptions.find((o) => o.id === id);
-              return (
-                <span key={id} className="rm__ac-tag">
-                  {fallback ? fallback.name : `#${id}`}
-                  <button
-                    type="button"
-                    className="rm__ac-tag-remove"
+      <div className="rm__perm-box">
+        <div className="rm__perm-selectall" onClick={toggleSelectAll}>
+          <span
+            className={`rm__perm-checkbox${
+              allSelected ? " rm__perm-checkbox--checked" : ""
+            }${
+              selectAllIndeterminate ? " rm__perm-checkbox--indeterminate" : ""
+            }`}
+          />
+          <span className="rm__perm-selectall-label">Select All</span>
+        </div>
+
+        {isFetching && options.length === 0 ? (
+          <p className="rm__ac-empty">Loading...</p>
+        ) : groups.length === 0 ? (
+          <p className="rm__ac-empty">No permissions found</p>
+        ) : (
+          groups.map((group) => {
+            const hasChildren = group.children.length > 0;
+            const isOpen = !!expanded[group.id];
+            const childIds = group.children.map((c) => c.id);
+            const allChildrenChecked =
+              hasChildren && childIds.every((id) => value.includes(id));
+            const someChildrenChecked =
+              hasChildren && childIds.some((id) => value.includes(id));
+            const checked = hasChildren
+              ? allChildrenChecked
+              : value.includes(group.id);
+            const indeterminate =
+              hasChildren && someChildrenChecked && !allChildrenChecked;
+
+            return (
+              <div key={group.id} className="rm__perm-group">
+                <div
+                  className="rm__perm-row"
+                  onClick={() =>
+                    hasChildren ? toggleExpand(group.id) : toggleId(group.id)
+                  }>
+                  <span
+                    className={`rm__perm-checkbox${
+                      checked ? " rm__perm-checkbox--checked" : ""
+                    }${
+                      indeterminate ? " rm__perm-checkbox--indeterminate" : ""
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRemove(id);
-                    }}>
-                    <CloseRoundedIcon sx={{ fontSize: "0.65rem" }} />
-                  </button>
-                </span>
-              );
-            })}
-        </div>
-        <span className="rm__ac-arrow">
-          {open ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
-        </span>
-      </div>
+                      hasChildren ? toggleGroup(group) : toggleId(group.id);
+                    }}
+                  />
+                  <span className="rm__perm-icon">
+                    {PERMISSION_ICON_MAP[group.name] ?? DEFAULT_PERMISSION_ICON}
+                  </span>
+                  <span className="rm__perm-label">{group.name}</span>
+                  {hasChildren && (
+                    <span className="rm__perm-arrow">
+                      {isOpen ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+                    </span>
+                  )}
+                </div>
 
-      {open && (
-        <div className="rm__ac-dropdown">
-          <div className="rm__ac-search">
-            <SearchIcon
-              sx={{ fontSize: "0.9rem", color: "var(--text-muted)" }}
-            />
-            <input
-              autoFocus
-              type="text"
-              placeholder="Search permissions..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="rm__ac-search-input"
-            />
-          </div>
-          <div className="rm__ac-options">
-            {isFetching ? (
-              <p className="rm__ac-empty">Loading...</p>
-            ) : options.length === 0 ? (
-              <p className="rm__ac-empty">No permissions found</p>
-            ) : (
-              options.map((p) => {
-                const selected = value.includes(p.id);
-                return (
-                  <div
-                    key={p.id}
-                    className={`rm__ac-option${selected ? " rm__ac-option--selected" : ""}`}
-                    onClick={() => handleSelect(p)}>
-                    <span
-                      className={`rm__ac-checkbox${selected ? " rm__ac-checkbox--checked" : ""}`}
-                    />
-                    {p.name}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
+                {hasChildren && (
+                  <Collapse in={isOpen}>
+                    <div className="rm__perm-children">
+                      {group.children.map((child) => {
+                        const childChecked = value.includes(child.id);
+                        return (
+                          <div
+                            key={child.id}
+                            className={`rm__perm-chip${childChecked ? " rm__perm-chip--checked" : ""}`}
+                            onClick={() => toggleId(child.id)}>
+                            <span
+                              className={`rm__perm-checkbox${childChecked ? " rm__perm-checkbox--checked" : ""}`}
+                            />
+                            <span className="rm__perm-chip-label">
+                              {child.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Collapse>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
@@ -369,7 +470,7 @@ const RolesModal = ({ open, onClose, selectedId = null }) => {
                 name="permission_id"
                 control={control}
                 render={({ field }) => (
-                  <PermissionsAutocomplete
+                  <PermissionsChecklist
                     value={field.value}
                     onChange={field.onChange}
                     error={!!errors.permission_id}

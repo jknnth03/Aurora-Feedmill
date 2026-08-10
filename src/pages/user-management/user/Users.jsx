@@ -14,6 +14,7 @@ import {
 import {
   useGetUsersQuery,
   useArchiveUserMutation,
+  useResetPasswordMutation,
 } from "../../../features/api/usermanagement/userApi";
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
@@ -55,6 +56,10 @@ const Users = () => {
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
+  const [resetPasswordConfirmOpen, setResetPasswordConfirmOpen] =
+    useState(false);
+  const [toResetPassword, setToResetPassword] = useState(null);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const currentStatus = showArchived ? "inactive" : "active";
 
@@ -65,6 +70,7 @@ const Users = () => {
     per_page: rowsPerPage,
   });
   const [archiveUser, { isLoading: isArchiving }] = useArchiveUserMutation();
+  const [resetPassword] = useResetPasswordMutation();
 
   const is404 = error?.status === 404;
   const tableData = data?.data ?? [];
@@ -132,6 +138,26 @@ const Users = () => {
     }
   };
 
+  const handleResetPasswordClick = (row) => {
+    setToResetPassword(row);
+    setResetPasswordConfirmOpen(true);
+  };
+  const handleConfirmResetPassword = async () => {
+    setIsResettingPassword(true);
+    try {
+      await resetPassword(toResetPassword.id).unwrap();
+      window.__snackbar__?.enqueueSnackbar("Password reset successfully.", {
+        variant: "success",
+      });
+      setResetPasswordConfirmOpen(false);
+      setToResetPassword(null);
+    } catch (err) {
+      console.error("Reset password failed:", err);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   return (
     <>
       <PageContainer
@@ -187,6 +213,7 @@ const Users = () => {
               isArchived={showArchived}
               onArchive={() => handleArchiveClick(row)}
               onRestore={() => handleRestoreClick(row)}
+              onResetPassword={() => handleResetPasswordClick(row)}
             />
           )}
         />
@@ -220,6 +247,19 @@ const Users = () => {
         isLoading={isArchiving}
         title="Restore User"
         message={`Are you sure you want to restore "${toRestore?.first_name} ${toRestore?.last_name}"? This will set it back to active.`}
+      />
+
+      <ConfirmDialog
+        open={resetPasswordConfirmOpen}
+        onClose={() => {
+          setResetPasswordConfirmOpen(false);
+          setToResetPassword(null);
+        }}
+        onConfirm={handleConfirmResetPassword}
+        isLoading={isResettingPassword}
+        title="Reset Password"
+        message={`Are you sure you want to reset the password of "${toResetPassword?.first_name} ${toResetPassword?.last_name}"? A new password will be generated for this user.`}
+        confirmLabel="Reset Password"
       />
     </>
   );

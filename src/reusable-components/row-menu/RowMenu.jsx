@@ -2,9 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
+import LockResetIcon from "@mui/icons-material/LockReset";
 import "./RowMenu.scss";
 
-const RowMenu = ({ onArchive, onRestore, isArchived = false }) => {
+const RowMenu = ({
+  onArchive,
+  onRestore,
+  onResetPassword,
+  isArchived = false,
+}) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
@@ -51,16 +57,28 @@ const RowMenu = ({ onArchive, onRestore, isArchived = false }) => {
               Restore
             </button>
           ) : (
-            <button
-              className="row-menu__item row-menu__item--danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-                onArchive?.();
-              }}>
-              <ArchiveIcon sx={{ fontSize: "0.95rem" }} />
-              Archive
-            </button>
+            <>
+              <button
+                className="row-menu__item row-menu__item--reset"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                  onResetPassword?.();
+                }}>
+                <LockResetIcon sx={{ fontSize: "0.95rem" }} />
+                Reset Password
+              </button>
+              <button
+                className="row-menu__item row-menu__item--danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
+                  onArchive?.();
+                }}>
+                <ArchiveIcon sx={{ fontSize: "0.95rem" }} />
+                Archive
+              </button>
+            </>
           )}
         </div>
       )}

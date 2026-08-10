@@ -5,6 +5,7 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { IconButton } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -21,6 +22,7 @@ import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDi
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import PestSheetModal from "./PestSheetModal";
 import PestInspectionAreasModal from "./PestInspectionAreasModal";
+import PestViewChecklistDialog from "./PestViewChecklistDialog";
 import "./PestSheet.scss";
 
 const getGroupItems = (items, groupName) => {
@@ -43,7 +45,7 @@ const renderBulletList = (items, groupName) => {
   );
 };
 
-const buildColumns = (onViewInspectionAreas) => [
+const buildColumns = (onViewInspectionAreas, onViewChecklist) => [
   { key: "id", label: "ID", sortable: true },
   { key: "checklist_name", label: "Checklist Name", sortable: true },
   {
@@ -74,6 +76,26 @@ const buildColumns = (onViewInspectionAreas) => [
     sortable: false,
     render: (_, row) => renderBulletList(row.items, "Pest"),
   },
+  {
+    key: "view_checklist",
+    label: "View Checklist",
+    sortable: false,
+    render: (_, row) => (
+      <div className="pest-sheet__eye-cell pest-sheet__eye-cell--center">
+        <Tooltip title="View Checklist" placement="top">
+          <IconButton
+            size="small"
+            className="pest-sheet__eye-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewChecklist(row);
+            }}>
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
+    ),
+  },
 ];
 
 const PestSheet = () => {
@@ -94,6 +116,8 @@ const PestSheet = () => {
   const [toRestore, setToRestore] = useState(null);
   const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
   const [inspectionAreas, setInspectionAreas] = useState([]);
+  const [viewChecklistOpen, setViewChecklistOpen] = useState(false);
+  const [viewChecklistData, setViewChecklistData] = useState(null);
 
   const currentStatus = showArchived ? 0 : 1;
 
@@ -171,7 +195,15 @@ const PestSheet = () => {
     setInspectionModalOpen(false);
     setInspectionAreas([]);
   };
-  const columns = buildColumns(handleViewInspectionAreas);
+  const handleViewChecklist = (row) => {
+    setViewChecklistData(row);
+    setViewChecklistOpen(true);
+  };
+  const handleCloseViewChecklist = () => {
+    setViewChecklistOpen(false);
+    setViewChecklistData(null);
+  };
+  const columns = buildColumns(handleViewInspectionAreas, handleViewChecklist);
   const handleConfirmArchive = async () => {
     try {
       await archiveChecklist(toArchive.id).unwrap();
@@ -257,6 +289,12 @@ const PestSheet = () => {
         open={inspectionModalOpen}
         onClose={handleCloseInspectionAreas}
         areas={inspectionAreas}
+      />
+
+      <PestViewChecklistDialog
+        open={viewChecklistOpen}
+        onClose={handleCloseViewChecklist}
+        checklistData={viewChecklistData}
       />
 
       <ConfirmDialog

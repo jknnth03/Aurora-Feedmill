@@ -57,6 +57,8 @@
     overflow-x: hidden !important;
     overflow-y: auto !important;
     max-height: 70vh;
+    display: flex;
+    flex-direction: column;
 
     &:not(:hover) {
       scrollbar-width: none;
@@ -82,6 +84,7 @@
 
   &__group {
     margin-bottom: 16px;
+    flex-shrink: 0;
   }
 
   &__group-label {
@@ -303,6 +306,7 @@
     margin-top: 20px;
     padding-top: 16px;
     border-top: 1px solid $border-color;
+    flex-shrink: 0;
 
     [data-theme="dark"] & {
       border-color: rgba(255, 255, 255, 0.08);
@@ -315,63 +319,6 @@
       border-radius: 8px !important;
       box-sizing: border-box;
     }
-  }
-
-  &__ac {
-    position: relative;
-    border: 1.5px solid $border-color;
-    border-radius: 8px;
-    background: $bg-main;
-    transition: border-color 0.2s;
-
-    [data-theme="dark"] & {
-      border-color: rgba(255, 255, 255, 0.12);
-    }
-
-    &:focus-within {
-      border-color: $primary-main;
-
-      .rm__label {
-        color: $primary-main;
-      }
-    }
-
-    &--error {
-      border-color: $status-error !important;
-
-      .rm__label {
-        color: $status-error !important;
-      }
-    }
-  }
-
-  &__ac-box {
-    min-height: 44px;
-    padding: 8px 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  &__ac-arrow {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    color: $text-muted;
-
-    svg {
-      font-size: 1.2rem !important;
-    }
-  }
-
-  &__ac-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-    flex: 1;
   }
 
   &__ac-placeholder {
@@ -403,125 +350,223 @@
     }
   }
 
-  &__ac-tag-remove {
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: inherit;
-    opacity: 0.7;
-    transition: opacity 0.15s;
+  &__ac-empty {
+    font-size: 0.78rem;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+    text-align: center;
+    padding: 16px;
+    margin: 0;
+  }
 
-    &:hover {
-      opacity: 1;
+  &__perm {
+    position: relative;
+
+    &--error {
+      .rm__perm-box {
+        border-color: $status-error !important;
+      }
+
+      .rm__label {
+        color: $status-error !important;
+      }
     }
   }
 
-  &__ac-dropdown {
+  &__perm-box {
     border: 1.5px solid $border-color;
     border-radius: 8px;
     background: $bg-main;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    margin-top: 4px;
+    max-height: 45vh;
+    overflow-y: auto;
+    overflow-x: hidden;
 
     [data-theme="dark"] & {
       border-color: rgba(255, 255, 255, 0.12);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    &:not(:hover) {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    &:hover {
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: $primary-main;
+        border-radius: 4px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
     }
   }
 
-  &__ac-search {
+  &__perm-selectall {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
     border-bottom: 1px solid $border-color;
+    position: sticky;
+    top: 0;
+    background: $bg-main;
+    z-index: 1;
 
     [data-theme="dark"] & {
       border-bottom-color: rgba(255, 255, 255, 0.08);
     }
   }
 
-  &__ac-search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    outline: none;
-    font-family: "Poppins", sans-serif;
+  &__perm-selectall-label {
     font-size: 0.78rem;
-    color: $text-primary;
-
-    &::placeholder {
-      color: $text-muted;
-    }
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
 
     [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.85);
+      color: $secondary-main;
     }
   }
 
-  &__ac-options {
-    max-height: 180px;
-    overflow-y: auto;
+  &__perm-group {
+    border-bottom: 1px solid $border-color;
 
-    &::-webkit-scrollbar {
-      width: 4px;
+    [data-theme="dark"] & {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
     }
-    &::-webkit-scrollbar-thumb {
-      background: $primary-main;
-      border-radius: 4px;
-    }
-    &::-webkit-scrollbar-track {
-      background: transparent;
+
+    &:last-child {
+      border-bottom: none;
     }
   }
 
-  &__ac-option {
+  &__perm-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 9px 14px;
-    font-size: 0.8rem;
-    font-family: "Poppins", sans-serif;
-    color: $text-primary;
+    padding: 12px 14px;
     cursor: pointer;
     transition: background 0.12s;
 
     &:hover {
-      background: rgba($primary-main, 0.06);
-    }
-
-    &--selected {
-      color: $primary-main;
-      font-weight: 500;
+      background: rgba($primary-main, 0.04);
 
       [data-theme="dark"] & {
-        color: $secondary-main;
-      }
-    }
-
-    [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.85);
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.03);
       }
     }
   }
 
-  &__ac-checkbox {
-    width: 14px;
-    height: 14px;
+  &__perm-icon {
+    display: flex;
+    align-items: center;
+    color: $primary-main;
+    flex-shrink: 0;
+
+    svg {
+      font-size: 1.1rem !important;
+    }
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__perm-label {
+    flex: 1;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__perm-arrow {
+    display: flex;
+    align-items: center;
+    color: $text-muted;
+    flex-shrink: 0;
+
+    svg {
+      font-size: 1.2rem !important;
+    }
+  }
+
+  &__perm-children {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 4px 14px 14px 40px;
+  }
+
+  &__perm-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &:hover {
+      border-color: $primary-main;
+    }
+
+    &--checked {
+      border-color: $primary-main;
+      background: rgba($primary-main, 0.05);
+
+      [data-theme="dark"] & {
+        border-color: $secondary-main;
+        background: rgba($secondary-main, 0.08);
+      }
+    }
+  }
+
+  &__perm-chip-label {
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__perm-checkbox {
+    width: 15px;
+    height: 15px;
     border: 1.5px solid $border-color;
-    border-radius: 3px;
+    border-radius: 4px;
     flex-shrink: 0;
     position: relative;
     transition:
       background 0.15s,
       border-color 0.15s;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
 
     &--checked {
       background: $primary-main;
@@ -530,10 +575,10 @@
       &::after {
         content: "";
         position: absolute;
-        left: 3px;
+        left: 4px;
         top: 1px;
         width: 4px;
-        height: 7px;
+        height: 8px;
         border: 1.5px solid #fff;
         border-top: none;
         border-left: none;
@@ -545,18 +590,5 @@
         border-color: $secondary-main;
       }
     }
-
-    [data-theme="dark"] & {
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-  }
-
-  &__ac-empty {
-    font-size: 0.78rem;
-    color: $text-muted;
-    font-family: "Poppins", sans-serif;
-    text-align: center;
-    padding: 16px;
-    margin: 0;
   }
 }

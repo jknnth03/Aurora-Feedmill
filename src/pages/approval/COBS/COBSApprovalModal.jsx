@@ -38,14 +38,38 @@ const formatTime = (dateStr) => {
   });
 };
 
-// batchEntry doesn't carry explicit numeric month/year fields — derive them
-// from start_at (the actual source of truth for when the batch happened).
 const getMonthYearFromEntry = (entry) => {
   const raw = entry?.start_at;
   if (!raw) return { month: undefined, year: undefined };
   const d = new Date(raw);
   if (isNaN(d)) return { month: undefined, year: undefined };
   return { month: d.getMonth() + 1, year: d.getFullYear() };
+};
+
+const dataUrlToFile = (dataUrl, filename) => {
+  if (!dataUrl) return null;
+  const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
+  if (!match) return null;
+  const mimeType = match[1];
+  const base64Data = match[2];
+  const byteString = atob(base64Data);
+  const byteArray = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) {
+    byteArray[i] = byteString.charCodeAt(i);
+  }
+  const extension = mimeType === "image/jpeg" ? "jpg" : "png";
+  return new File([byteArray], `${filename}.${extension}`, {
+    type: mimeType,
+  });
+};
+
+const getLoggedInUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 };
 
 const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
@@ -104,15 +128,25 @@ const COBSApprovalModal = ({ open, onClose, batchEntry = null, onApprove }) => {
     if (!batchEntry) return;
     setIsAcknowledging(true);
     setConfirmDialogOpen(false);
+
+    const loggedInUser = getLoggedInUser();
+    console.log("loggedInUser:", loggedInUser);
+    console.log("signature present:", Boolean(loggedInUser?.signature));
+    const approverId = batchEntry.approver_id ?? loggedInUser?.id ?? 1;
+    const approverName =
+      batchEntry.approver ??
+      `${loggedInUser?.first_name ?? ""} ${loggedInUser?.last_name ?? ""}`.trim();
+    const signatureFile = dataUrlToFile(
+      loggedInUser?.signature,
+      `signature-${approverId}`,
+    );
+    console.log("signatureFile:", signatureFile);
+
     approveCobApproval({
       batch_no: batchEntry.batch_no,
-      approver_id: batchEntry.approver_id ?? 1,
-      approvers: [
-        {
-          id: batchEntry.approver_id ?? 1,
-          name: batchEntry.approver ?? "",
-        },
-      ],
+      approver_id: approverId,
+      approvers: [{ id: approverId, name: approverName }],
+      signatureFile,
     })
       .unwrap()
       .then(() => {

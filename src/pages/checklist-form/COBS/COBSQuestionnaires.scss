@@ -34,26 +34,27 @@
     justify-content: center;
     width: 30px;
     height: 30px;
+    margin-left: 24px;
     border: none;
     border-radius: 6px;
     background: transparent;
-    color: $text-muted;
+    color: $primary-main;
     cursor: pointer;
     transition:
       color 0.15s,
       background 0.15s;
 
     &:hover {
-      color: $primary-main;
-      background: rgba($primary-main, 0.06);
+      color: $primary-dark;
+      background: rgba($primary-main, 0.1);
     }
 
     [data-theme="dark"] & {
-      color: rgba(255, 255, 255, 0.5);
+      color: $secondary-main;
 
       &:hover {
-        color: $secondary-main;
-        background: rgba($secondary-main, 0.08);
+        color: $secondary-dark;
+        background: rgba($secondary-main, 0.12);
       }
     }
   }
@@ -98,5 +99,113 @@
     font-size: 0.82rem;
     color: $text-muted;
     font-family: "Poppins", sans-serif;
+  }
+
+  &__captcha-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    padding: 20px 10px;
+  }
+
+  &__captcha-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    padding: 12px 18px;
+    cursor: pointer;
+    background: $bg-main;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+    width: 100%;
+    max-width: 280px;
+    box-sizing: border-box;
+
+    &:hover {
+      border-color: $primary-main;
+    }
+
+    &--checked {
+      border-color: #4caf50;
+      background: rgba(#4caf50, 0.05);
+      cursor: default;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+
+      &:hover {
+        border-color: $secondary-main;
+      }
+
+      &--checked {
+        border-color: #4caf50;
+        background: rgba(#4caf50, 0.08);
+      }
+    }
+  }
+
+  &__captcha-checkbox {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 1.5px solid #bdbdbd;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+
+    &--checked {
+      background: #4caf50;
+      border-color: #4caf50;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  &__captcha-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+    flex: 1;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__captcha-badge {
+    font-size: 1.3rem !important;
+    color: $primary-main;
+    opacity: 0.5;
+    flex-shrink: 0;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__captcha-note {
+    margin: 0;
+    font-size: 0.75rem;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+    text-align: center;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
   }
 }

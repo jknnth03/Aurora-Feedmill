@@ -10,6 +10,7 @@ import PageContainer from "../../reusable-components/page-container/PageContaine
 import UniversalTable from "../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../reusable-components/table-pagination/TablePagination";
 import { useGetCobsQuery } from "../../features/api/cobs/cobsApi";
+import { getMonthWeekLabels } from "./cobsWeekUtils";
 import {
   getChipBg,
   getChipTextColor,
@@ -60,8 +61,7 @@ const hasAnyInProgressWeek = (weekMap) => {
   });
 };
 
-const getDerivedTableStatus = (weekMap) => {
-  const totalWeeks = Object.keys(weekMap).length;
+const getDerivedTableStatus = (weekMap, totalWeeks) => {
   const completedWeeks = getCompletedWeeksCount(weekMap);
   if (completedWeeks === 0 && !hasAnyInProgressWeek(weekMap)) return "Pending";
   if (completedWeeks === totalWeeks && !hasAnyInProgressWeek(weekMap))

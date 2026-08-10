@@ -92,6 +92,15 @@
       }
     }
 
+    &--reset {
+      color: $primary-main;
+
+      &:hover {
+        background: rgba($primary-main, 0.1);
+        color: $primary-main;
+      }
+    }
+
     [data-theme="dark"] & {
       color: rgba(255, 255, 255, 0.85);
 
@@ -112,6 +121,14 @@
 
         &:hover {
           background: rgba($status-success, 0.1);
+        }
+      }
+
+      &--reset {
+        color: $primary-main;
+
+        &:hover {
+          background: rgba($primary-main, 0.14);
         }
       }
     }

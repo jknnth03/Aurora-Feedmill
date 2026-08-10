@@ -3,6 +3,8 @@ import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
 import SanitizerIcon from "@mui/icons-material/Sanitizer";
 import AddIcon from "@mui/icons-material/Add";
+import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
+import Tooltip from "@mui/material/Tooltip";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -15,6 +17,7 @@ import {
 import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDialog";
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import COBSModal from "./COBSQuestionnairesModal";
+import COBSViewChecklistDialog from "./COBSViewChecklistDialog";
 import "./COBSQuestionnaires.scss";
 
 const COLUMNS = [
@@ -22,6 +25,7 @@ const COLUMNS = [
   { key: "checklist_name", label: "Checklist Name", sortable: true },
   { key: "units_display", label: "Units", sortable: false },
   { key: "section_name", label: "Section", sortable: true },
+  { key: "view_checklist", label: "View Checklist", sortable: false },
 ];
 
 const UnitsBulletList = ({ units = [] }) => {
@@ -37,12 +41,24 @@ const UnitsBulletList = ({ units = [] }) => {
   );
 };
 
-const flattenCobsData = (rawData = []) =>
+const flattenCobsData = (rawData = [], onView) =>
   rawData.map((entry) => ({
     id: entry.id,
     checklist_name: entry.checklist_name ?? "—",
     units_display: <UnitsBulletList units={entry.units ?? []} />,
     section_name: entry.section?.name ?? "—",
+    view_checklist: (
+      <Tooltip title="View Checklist" placement="top">
+        <span
+          className="cobs__eye-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(entry);
+          }}>
+          <RemoveRedEyeIcon fontSize="small" />
+        </span>
+      </Tooltip>
+    ),
   }));
 
 const COBSQuestionnaires = () => {
@@ -61,6 +77,8 @@ const COBSQuestionnaires = () => {
   const [toArchive, setToArchive] = useState(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [toRestore, setToRestore] = useState(null);
+  const [viewChecklistOpen, setViewChecklistOpen] = useState(false);
+  const [viewChecklistData, setViewChecklistData] = useState(null);
 
   const currentStatus = showArchived ? "inactive" : "active";
 
@@ -80,7 +98,6 @@ const COBSQuestionnaires = () => {
 
   const is404 = error?.status === 404;
   const rawData = data?.data ?? [];
-  const tableData = flattenCobsData(rawData);
   const total = data?.total ?? 0;
 
   const handleSort = (key, order) => {
@@ -146,6 +163,16 @@ const COBSQuestionnaires = () => {
       console.error("Archive failed:", err);
     }
   };
+  const handleViewChecklist = (row) => {
+    setViewChecklistData(row);
+    setViewChecklistOpen(true);
+  };
+  const handleCloseViewChecklist = () => {
+    setViewChecklistOpen(false);
+    setViewChecklistData(null);
+  };
+
+  const tableData = flattenCobsData(rawData, handleViewChecklist);
 
   return (
     <>
@@ -206,6 +233,12 @@ const COBSQuestionnaires = () => {
         open={modalOpen}
         onClose={handleClose}
         selectedId={selectedId}
+      />
+
+      <COBSViewChecklistDialog
+        open={viewChecklistOpen}
+        onClose={handleCloseViewChecklist}
+        checklistData={viewChecklistData}
       />
 
       <ConfirmDialog

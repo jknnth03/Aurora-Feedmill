@@ -1,0 +1,196 @@
+@use "../../../styles/colors" as *;
+
+.sig-dialog {
+  &__paper {
+    border-radius: 14px !important;
+    background: $bg-main !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14) !important;
+    overflow: hidden !important;
+    font-family: "Poppins", sans-serif !important;
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__header-icon {
+    font-size: 1.1rem !important;
+    color: $primary-main;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__header-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $primary-main;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: $secondary-main;
+    }
+  }
+
+  &__close {
+    color: $text-muted !important;
+    transition: color 0.15s !important;
+
+    &:hover {
+      color: $primary-main !important;
+    }
+  }
+
+  &__content {
+    padding: 8px 20px 16px !important;
+  }
+
+  &__hint {
+    font-size: 0.8rem;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+    margin: 0 0 12px;
+    text-align: center;
+  }
+
+  &__canvas-wrapper {
+    position: relative;
+    border: 1.5px solid $border-color;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  &__canvas {
+    display: block;
+    width: 100%;
+    height: 260px;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  &__btn-clear {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border: 1px solid $border-color;
+    background: $bg-main;
+    border-radius: 6px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: $text-muted;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+
+    &:hover {
+      color: $primary-main;
+      border-color: $primary-main;
+    }
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.5);
+
+      &:hover {
+        color: $secondary-main;
+        border-color: $secondary-main;
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid $border-color;
+
+    [data-theme="dark"] & {
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__btn-cancel {
+    padding: 8px 20px;
+    border: 1.5px solid $border-color;
+    background: $bg-main;
+    border-radius: 8px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text-muted;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+
+    &:hover {
+      color: $primary-main;
+      border-color: $primary-main;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  &__btn-submit {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 20px;
+    border: none;
+    background: $primary-main;
+    border-radius: 8px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition:
+      opacity 0.15s,
+      background 0.15s;
+
+    &:hover:not(&--disabled) {
+      opacity: 0.9;
+    }
+
+    &--disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+}

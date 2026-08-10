@@ -10,6 +10,7 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import PaletteIcon from "@mui/icons-material/Palette";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
 import StyleIcon from "@mui/icons-material/Style";
+import LockResetIcon from "@mui/icons-material/LockReset";
 import "./AccountMenu.scss";
 import { useTheme } from "../../styles/Themecontext";
 import { setLoggingOut } from "../../app/authSlice";
@@ -19,6 +20,7 @@ import PalettePickerDialog, {
 } from "./PalettePickerDialog";
 import TextColorPickerDialog from "./TextColorPickerDialog";
 import ChipColorPickerDialog from "./ChipColorPickerDialog";
+import UpdatePasswordDialog from "./UpdatePasswordDialog";
 
 const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
   const dispatch = useDispatch();
@@ -27,6 +29,7 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [textColorOpen, setTextColorOpen] = useState(false);
   const [chipColorOpen, setChipColorOpen] = useState(false);
+  const [updatePasswordOpen, setUpdatePasswordOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState("default-orange");
   const open = Boolean(anchorEl);
 
@@ -56,6 +59,11 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
   const handleChipColorPicker = () => {
     handleClose();
     setChipColorOpen(true);
+  };
+
+  const handleUpdatePassword = () => {
+    handleClose();
+    setUpdatePasswordOpen(true);
   };
 
   const handlePaletteSelect = (id) => {
@@ -139,6 +147,13 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
           Chip Colors
         </MenuItem>
 
+        <MenuItem className="account-menu__item" onClick={handleUpdatePassword}>
+          <ListItemIcon>
+            <LockResetIcon fontSize="small" />
+          </ListItemIcon>
+          Update Password
+        </MenuItem>
+
         <MenuItem
           className="account-menu__item account-menu__item--logout"
           onClick={handleLogout}>
@@ -164,6 +179,11 @@ const AccountMenu = ({ user, initials, sidebarOpen = true }) => {
       <ChipColorPickerDialog
         open={chipColorOpen}
         onClose={() => setChipColorOpen(false)}
+      />
+
+      <UpdatePasswordDialog
+        open={updatePasswordOpen}
+        onClose={() => setUpdatePasswordOpen(false)}
       />
     </>
   );

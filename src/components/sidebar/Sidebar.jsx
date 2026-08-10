@@ -9,20 +9,38 @@ import AuroraIcon from "../../assets/aurora.svg";
 import AccountMenu from "../accountmenu/AccountMenu.jsx";
 import "./Sidebar.scss";
 
+const filterModuleByPermission = (module, permissionNames) => {
+  if (module.permissionId === "DASHBOARD") return module;
+
+  if (module.children) {
+    const filteredChildren = Object.entries(module.children).reduce(
+      (acc, [key, child]) => {
+        if (permissionNames.includes(child.displayName)) {
+          acc[key] = child;
+        }
+        return acc;
+      },
+      {},
+    );
+
+    if (Object.keys(filteredChildren).length === 0) return null;
+    return { ...module, children: filteredChildren };
+  }
+
+  return permissionNames.includes(module.displayName) ||
+    permissionNames.includes(module.name)
+    ? module
+    : null;
+};
+
 const getFilteredNavItems = (user) => {
   const permissions = user?.role?.permissions ?? [];
   const permissionNames = permissions.map((p) => p.name);
 
   return Object.values(MODULES)
     .filter((m) => m.permissionId !== "LOGIN")
-    .filter((m) => {
-      if (m.permissionId === "DASHBOARD") return true;
-      return permissionNames.includes(m.name);
-    })
-    .map((m) => {
-      if (!m.children) return m;
-      return m;
-    });
+    .map((m) => filterModuleByPermission(m, permissionNames))
+    .filter(Boolean);
 };
 
 const NavItem = ({

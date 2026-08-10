@@ -5,6 +5,7 @@ import FlutterDashIcon from "@mui/icons-material/FlutterDash";
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { IconButton } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
 import PageContainer from "../../../reusable-components/page-container/PageContainer";
 import UniversalTable from "../../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../../reusable-components/table-pagination/TablePagination";
@@ -21,6 +22,7 @@ import ConfirmDialog from "../../../reusable-components/comfirm-dialog/ConfirmDi
 import RowMenu from "../../../reusable-components/row-menu/RowMenu";
 import BirdsModal from "./BirdsQuestionnairesModal";
 import BirdsInspectionAreasModal from "./BirdsInspectionAreasModal";
+import BirdsViewChecklistDialog from "./BirdsViewChecklistDialog";
 import "./BirdsQuestionnaires.scss";
 
 const getGroupItems = (items, groupName) => {
@@ -43,7 +45,7 @@ const renderChips = (items, groupName) => {
   );
 };
 
-const buildColumns = (onViewInspectionAreas) => [
+const buildColumns = (onViewInspectionAreas, onViewChecklist) => [
   { key: "id", label: "ID", sortable: true },
   { key: "checklist_name", label: "Checklist Name", sortable: true },
   {
@@ -80,6 +82,26 @@ const buildColumns = (onViewInspectionAreas) => [
     sortable: false,
     render: (_, row) => renderChips(row.items, "Presence of Feed/RM Wastage"),
   },
+  {
+    key: "view_checklist",
+    label: "View Checklist",
+    sortable: false,
+    render: (_, row) => (
+      <div className="birds__view-cell birds__view-cell--center">
+        <Tooltip title="View Checklist" placement="top">
+          <IconButton
+            size="small"
+            className="birds__view-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewChecklist(row);
+            }}>
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </div>
+    ),
+  },
 ];
 
 const BirdsQuestionnaires = () => {
@@ -101,6 +123,8 @@ const BirdsQuestionnaires = () => {
   const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
   const [inspectionAreas, setInspectionAreas] = useState([]);
   const [inspectionChecklistName, setInspectionChecklistName] = useState("");
+  const [viewChecklistOpen, setViewChecklistOpen] = useState(false);
+  const [viewChecklistData, setViewChecklistData] = useState(null);
 
   const currentStatus = showArchived ? "inactive" : "active";
 
@@ -182,7 +206,15 @@ const BirdsQuestionnaires = () => {
     setInspectionAreas([]);
     setInspectionChecklistName("");
   };
-  const columns = buildColumns(handleViewInspectionAreas);
+  const handleViewChecklist = (row) => {
+    setViewChecklistData(row);
+    setViewChecklistOpen(true);
+  };
+  const handleCloseViewChecklist = () => {
+    setViewChecklistOpen(false);
+    setViewChecklistData(null);
+  };
+  const columns = buildColumns(handleViewInspectionAreas, handleViewChecklist);
   const handleConfirmArchive = async () => {
     try {
       await archiveBird(toArchive.id).unwrap();
@@ -269,6 +301,12 @@ const BirdsQuestionnaires = () => {
         onClose={handleCloseInspectionAreas}
         checklistName={inspectionChecklistName}
         areas={inspectionAreas}
+      />
+
+      <BirdsViewChecklistDialog
+        open={viewChecklistOpen}
+        onClose={handleCloseViewChecklist}
+        checklistData={viewChecklistData}
       />
 
       <ConfirmDialog

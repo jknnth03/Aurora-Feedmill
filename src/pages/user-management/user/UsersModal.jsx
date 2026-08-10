@@ -9,12 +9,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EditIcon from "@mui/icons-material/Edit";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import DrawIcon from "@mui/icons-material/Draw";
 import {
   SaveButton,
   EditButton,
@@ -26,6 +26,7 @@ import {
   useUpdateUserMutation,
 } from "../../../features/api/usermanagement/userApi";
 import { useGetRolesQuery } from "../../../features/api/usermanagement/rolesApi";
+import SignatureDialog from "./SignatureDialog";
 import "./UsersModal.scss";
 
 const FIELD_GROUPS = [
@@ -54,15 +55,6 @@ const FIELD_GROUPS = [
     label: "Account Credentials",
     fields: [
       { name: "username", label: "Username", required: true, half: true },
-      {
-        name: "password",
-        label: "Password",
-        required: true,
-        half: true,
-        type: "password",
-        addOnly: true,
-        hidden: true,
-      },
     ],
   },
 ];
@@ -73,18 +65,20 @@ const SkeletonLoader = () => (
       <div key={group.label} className="um__skeleton-group">
         <span className="ut__skeleton um__skeleton-label" />
         <div className="um__grid">
-          {group.fields
-            .filter((f) => !f.addOnly)
-            .map((f) => (
-              <div
-                key={f.name}
-                className={f.half ? "um__col-half" : "um__col-full"}>
-                <span className="ut__skeleton um__skeleton-field" />
-              </div>
-            ))}
+          {group.fields.map((f) => (
+            <div
+              key={f.name}
+              className={f.half ? "um__col-half" : "um__col-full"}>
+              <span className="ut__skeleton um__skeleton-field" />
+            </div>
+          ))}
         </div>
       </div>
     ))}
+    <div className="um__skeleton-group">
+      <span className="ut__skeleton um__skeleton-label" />
+      <span className="ut__skeleton um__skeleton-field um__col-full um__skeleton-field--sig" />
+    </div>
     <div className="um__skeleton-group">
       <span className="ut__skeleton um__skeleton-label" />
       <span className="ut__skeleton um__skeleton-field um__col-full" />
@@ -186,6 +180,51 @@ const RoleAutocomplete = ({ value, onChange, error, displayValue }) => {
   );
 };
 
+const SignatureField = ({ value, onChange, error, disabled }) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleSubmit = ({ dataUrl }) => {
+    onChange(dataUrl);
+    setDialogOpen(false);
+  };
+
+  return (
+    <div className={`um__sig${error ? " um__sig--error" : ""}`}>
+      <label className="um__label">
+        <span className="um__required">
+          <PushPinIcon />
+        </span>
+      </label>
+
+      <div className="um__sig-box">
+        {value ? (
+          <div
+            className="um__sig-preview"
+            onClick={() => !disabled && setDialogOpen(true)}>
+            <img src={value} alt="signature" className="um__sig-preview-img" />
+            <span className="um__sig-preview-overlay">Change Signature</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="um__sig-add-btn"
+            onClick={() => setDialogOpen(true)}
+            disabled={disabled}>
+            <DrawIcon fontSize="small" />
+            Add Signature
+          </button>
+        )}
+      </div>
+
+      <SignatureDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onSubmit={handleSubmit}
+      />
+    </div>
+  );
+};
+
 const ViewField = ({ label, value, half }) => (
   <div className={half ? "um__col-half" : "um__col-full"}>
     <div className="um__field">
@@ -197,17 +236,7 @@ const ViewField = ({ label, value, half }) => (
   </div>
 );
 
-const FormField = ({
-  name,
-  label,
-  required,
-  type = "text",
-  register,
-  errors,
-  showPass,
-  onTogglePass,
-}) => {
-  const isPassword = type === "password";
+const FormField = ({ name, label, required, register, errors }) => {
   const hasError = !!errors[name];
 
   return (
@@ -222,23 +251,7 @@ const FormField = ({
             </span>
           )}
         </label>
-        <input
-          type={isPassword ? (showPass ? "text" : "password") : "text"}
-          {...register(name)}
-          autoComplete={isPassword ? "new-password" : "off"}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            className="um__toggle-pass"
-            onClick={onTogglePass}>
-            {showPass ? (
-              <RemoveRedEyeIcon fontSize="small" />
-            ) : (
-              <VisibilityOffOutlinedIcon fontSize="small" />
-            )}
-          </button>
-        )}
+        <input type="text" {...register(name)} autoComplete="off" />
       </div>
       {hasError && (
         <p className="um__error">
@@ -252,7 +265,6 @@ const FormField = ({
 
 const UsersModal = ({ open, onClose, selectedId = null }) => {
   const [mode, setMode] = useState("add");
-  const [showPass, setShowPass] = useState(false);
 
   const { data: userDetail, isFetching: userLoading } = useGetUserByIdQuery(
     selectedId,
@@ -283,13 +295,12 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
       suffix: "",
       position: "",
       username: "",
-      password: "",
+      signature: "",
     },
   });
 
   useEffect(() => {
     if (open) {
-      setShowPass(false);
       setMode(selectedId ? "view" : "add");
       if (!selectedId) {
         reset({
@@ -301,7 +312,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
           suffix: "",
           position: "",
           username: "",
-          password: "",
+          signature: "",
         });
       }
     }
@@ -318,7 +329,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
         suffix: rowData.suffix ?? "",
         position: rowData.position ?? "",
         username: rowData.username ?? "",
-        password: "",
+        signature: rowData.signature ?? "",
       });
     }
   }, [rowData, open, selectedId, reset]);
@@ -326,8 +337,7 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
   const onSubmit = async (form) => {
     try {
       if (mode === "edit") {
-        const { password, ...rest } = form;
-        await updateUser({ id: rowData?.id, ...rest }).unwrap();
+        await updateUser({ id: rowData?.id, ...form }).unwrap();
         window.__snackbar__?.enqueueSnackbar("User updated successfully.", {
           variant: "success",
         });
@@ -390,19 +400,33 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
               <div key={group.label} className="um__group">
                 <p className="um__group-label">{group.label}</p>
                 <div className="um__grid">
-                  {group.fields
-                    .filter((f) => !f.addOnly)
-                    .map((f) => (
-                      <ViewField
-                        key={f.name}
-                        label={f.label}
-                        half={f.half}
-                        value={rowData?.[f.name]}
-                      />
-                    ))}
+                  {group.fields.map((f) => (
+                    <ViewField
+                      key={f.name}
+                      label={f.label}
+                      half={f.half}
+                      value={rowData?.[f.name]}
+                    />
+                  ))}
                 </div>
               </div>
             ))}
+            <div className="um__group">
+              <p className="um__group-label">E-signature</p>
+              <div className="um__field">
+                <div className="um__sig-view-box">
+                  {rowData?.signature ? (
+                    <img
+                      src={rowData.signature}
+                      alt="signature"
+                      className="um__sig-view-img"
+                    />
+                  ) : (
+                    <span className="um__ac-placeholder">No signature</span>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="um__group">
               <p className="um__group-label">Role</p>
               <div className="um__field">
@@ -430,27 +454,40 @@ const UsersModal = ({ open, onClose, selectedId = null }) => {
                   {group.fields.map((f) => (
                     <div
                       key={f.name}
-                      className={f.half ? "um__col-half" : "um__col-full"}
-                      style={
-                        f.addOnly && mode !== "add"
-                          ? { display: "none" }
-                          : undefined
-                      }>
+                      className={f.half ? "um__col-half" : "um__col-full"}>
                       <FormField
                         name={f.name}
                         label={f.label}
                         required={f.required}
-                        type={f.type || "text"}
                         register={register}
                         errors={errors}
-                        showPass={showPass}
-                        onTogglePass={() => setShowPass((p) => !p)}
                       />
                     </div>
                   ))}
                 </div>
               </div>
             ))}
+
+            <div className="um__group">
+              <p className="um__group-label">E-signature</p>
+              <Controller
+                name="signature"
+                control={control}
+                render={({ field }) => (
+                  <SignatureField
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={!!errors.signature}
+                  />
+                )}
+              />
+              {errors.signature && (
+                <p className="um__error" style={{ marginTop: 6 }}>
+                  <ReportProblemIcon />
+                  {errors.signature?.message}
+                </p>
+              )}
+            </div>
 
             <div className="um__group">
               <p className="um__group-label">Role</p>

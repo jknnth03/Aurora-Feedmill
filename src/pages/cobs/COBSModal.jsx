@@ -16,6 +16,7 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import EditIcon from "@mui/icons-material/Edit";
 import MergeIcon from "@mui/icons-material/MergeType";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import {
   getChipBg,
   getChipTextColor,
@@ -64,6 +65,7 @@ const getWeekStatus = (entries) => {
     if (!latest.is_evaluated) return "For Signature";
     if (!latest.is_approved) return "For Acknowledgement";
     if (!latest.is_assessed) return "For Acknowledgement";
+    if (latest.score == null) return "Merged";
     return "Done";
   }
 
@@ -75,7 +77,7 @@ const getWeekStatus = (entries) => {
 
 const isWeekDone = (entries) => {
   const status = getWeekStatus(entries)?.toLowerCase();
-  return status === "done";
+  return status === "done" || status === "merged";
 };
 
 const getLatestEntry = (entries) => {
@@ -136,6 +138,14 @@ const getDoneOn = (entries) => {
   });
 };
 
+const getRemarks = (entries) => {
+  if (!Array.isArray(entries) || entries.length === 0) return "—";
+  const latest = getLatestEntry(entries);
+  const remarks = latest?.remarks ?? latest?.merge_remarks ?? null;
+  if (!remarks || !String(remarks).trim()) return "—";
+  return remarks;
+};
+
 const StatusChip = ({ status }) => {
   useChipColors();
 
@@ -146,6 +156,19 @@ const StatusChip = ({ status }) => {
         style={{
           background: "#ede9fe",
           color: "#6d28d9",
+        }}>
+        {status}
+      </span>
+    );
+  }
+
+  if (status?.toLowerCase() === "merged") {
+    return (
+      <span
+        className="cobs-cm__chip"
+        style={{
+          background: "#dbeafe",
+          color: "#1d4ed8",
         }}>
         {status}
       </span>
@@ -166,6 +189,16 @@ const StatusChip = ({ status }) => {
   );
 };
 
+const RemarksCell = ({ entries }) => {
+  const text = getRemarks(entries);
+  if (text === "—") return <span className="cobs-cm__dash">—</span>;
+  return (
+    <Tooltip title={text} placement="top">
+      <span className="cobs-cm__remarks-text">{text}</span>
+    </Tooltip>
+  );
+};
+
 const RowActionMenu = ({
   week,
   unitName,
@@ -176,24 +209,29 @@ const RowActionMenu = ({
   isPreviousWeekDone,
   canMergeRow,
   mergeTargetLabel,
+  mergeSourceBatchNo,
   onStartChecking,
   onContinueChecking,
   onShowReport,
   onShowChecklist,
+  onUpdateChecklist,
   onMerge,
 }) => {
   const [anchor, setAnchor] = useState(null);
   const latest = getLatestEntry(entries);
   const status = getWeekStatus(entries);
   const statusLower = status?.toLowerCase();
+
+  const isMerged = statusLower === "merged";
   const isForAcknowledgement =
     statusLower === "for acknowledgement" ||
     statusLower === "for signature" ||
     statusLower === "done";
+  const canUpdateAttachment = statusLower === "done";
   const isDraft = latest ? isDraftEntry(latest) : false;
 
   const hasEntries = Array.isArray(entries) && entries.length > 0;
-  const canAct = hasEntries || isPreviousWeekDone;
+  const canAct = (hasEntries || isPreviousWeekDone) && !isMerged;
   const canMerge = canMergeRow && Boolean(mergeTargetLabel);
 
   if (!canAct) return <span className="cobs-cm__dash">—</span>;
@@ -257,6 +295,25 @@ const RowActionMenu = ({
                 <VisibilityIcon className="cobs-cm__menu-icon" />
                 Show Checklist
               </MenuItem>,
+              canUpdateAttachment && (
+                <MenuItem
+                  key="update"
+                  className="cobs-cm__menu-item"
+                  onClick={() => {
+                    close();
+                    onUpdateChecklist?.({
+                      week,
+                      unitName,
+                      unitId: resolvedUnitId,
+                      approverId: resolvedApproverId,
+                      checklistId: resolvedChecklistId,
+                      batchEntry: latest,
+                    });
+                  }}>
+                  <AddAPhotoIcon className="cobs-cm__menu-icon" />
+                  Add Photos
+                </MenuItem>
+              ),
             ]
           : isDraft
             ? [
@@ -283,7 +340,7 @@ const RowActionMenu = ({
                     className="cobs-cm__menu-item"
                     onClick={() => {
                       close();
-                      onMerge?.();
+                      onMerge?.(mergeSourceBatchNo);
                     }}>
                     <MergeIcon className="cobs-cm__menu-icon" />
                     Merge with {mergeTargetLabel}
@@ -313,7 +370,7 @@ const RowActionMenu = ({
                     className="cobs-cm__menu-item"
                     onClick={() => {
                       close();
-                      onMerge?.();
+                      onMerge?.(mergeSourceBatchNo);
                     }}>
                     <MergeIcon className="cobs-cm__menu-icon" />
                     Merge with {mergeTargetLabel}
@@ -339,6 +396,7 @@ const COBSModal = ({
   const [continueCheckingData, setContinueCheckingData] = useState(null);
   const [showReportData, setShowReportData] = useState(null);
   const [showChecklistData, setShowChecklistData] = useState(null);
+  const [updateChecklistData, setUpdateChecklistData] = useState(null);
   const [mergeData, setMergeData] = useState(null);
   const [timelineData, setTimelineData] = useState(null);
 
@@ -346,9 +404,6 @@ const COBSModal = ({
 
   const monthLabel = MONTHS[(month ?? 1) - 1];
 
-  // Weeks are computed from the real calendar for this month/year — a
-  // 31-day month like July will produce 5 weeks (the 5th being a short
-  // 29-31 stub), while a 28-day February only produces 4.
   const weekLabels = getMonthWeekLabels(month, year);
 
   const weekMap = unitData?.weeks ?? {};
@@ -369,11 +424,8 @@ const COBSModal = ({
     if (!mergeData) return;
     try {
       await mergeCobs({
-        month,
-        year,
-        week: mergeData.week,
-        mergeIntoWeek: mergeData.targetWeek,
-        remarks,
+        batch_no: mergeData.batchNo,
+        duplicate_reason: remarks,
       }).unwrap();
       setMergeData(null);
     } catch (err) {
@@ -408,6 +460,7 @@ const COBSModal = ({
                 <th className="cobs-cm__th cobs-cm__th--doneon">Done On</th>
                 <th className="cobs-cm__th cobs-cm__th--timeline">Timeline</th>
                 <th className="cobs-cm__th cobs-cm__th--status">Status</th>
+                <th className="cobs-cm__th cobs-cm__th--remarks">Remarks</th>
                 <th className="cobs-cm__th cobs-cm__th--actions">Actions</th>
               </tr>
             </thead>
@@ -415,7 +468,7 @@ const COBSModal = ({
               {isFetching
                 ? weekLabels.map((lbl) => (
                     <tr key={lbl} className="cobs-cm__tr">
-                      {Array.from({ length: 7 }).map((_, i) => (
+                      {Array.from({ length: 8 }).map((_, i) => (
                         <td key={i} className="cobs-cm__td">
                           <Skeleton variant="text" width="70%" height={20} />
                         </td>
@@ -427,12 +480,11 @@ const COBSModal = ({
                       index === 0 ? null : rows[index - 1].entries;
                     const isPreviousWeekDone =
                       index === 0 || isWeekDone(previousEntries);
-                    // Any week from Week 2 onwards can be merged into the
-                    // week right before it (Week 2 → Week 1, Week 3 → Week 2,
-                    // and so on) — merging is no longer limited to the last
-                    // week of the month.
                     const prevWeekLabel =
                       index > 0 ? weekLabels[index - 1] : null;
+                    const mergeSourceBatchNo = previousEntries
+                      ? getLatestEntry(previousEntries)?.batch_no
+                      : null;
                     return (
                       <tr key={week} className="cobs-cm__tr">
                         <td className="cobs-cm__td cobs-cm__td--unit">
@@ -455,6 +507,9 @@ const COBSModal = ({
                         <td className="cobs-cm__td">
                           <StatusChip status={getWeekStatus(entries)} />
                         </td>
+                        <td className="cobs-cm__td cobs-cm__td--remarks">
+                          <RemarksCell entries={entries} />
+                        </td>
                         <td className="cobs-cm__td cobs-cm__td--actions">
                           <RowActionMenu
                             week={week}
@@ -466,14 +521,17 @@ const COBSModal = ({
                             isPreviousWeekDone={isPreviousWeekDone}
                             canMergeRow={Boolean(prevWeekLabel)}
                             mergeTargetLabel={prevWeekLabel}
+                            mergeSourceBatchNo={mergeSourceBatchNo}
                             onStartChecking={setStartCheckingData}
                             onContinueChecking={setContinueCheckingData}
                             onShowReport={setShowReportData}
                             onShowChecklist={setShowChecklistData}
-                            onMerge={() =>
+                            onUpdateChecklist={setUpdateChecklistData}
+                            onMerge={(batchNo) =>
                               setMergeData({
                                 week,
                                 targetWeek: prevWeekLabel,
+                                batchNo,
                               })
                             }
                           />
@@ -533,6 +591,24 @@ const COBSModal = ({
         year={year}
         viewMode
         batchEntry={showChecklistData?.batchEntry}
+      />
+
+      <COBSStartCheckingDialog
+        open={Boolean(updateChecklistData)}
+        onClose={() => setUpdateChecklistData(null)}
+        onSuccess={() => {
+          setUpdateChecklistData(null);
+          onRefetch?.();
+        }}
+        unitName={updateChecklistData?.unitName}
+        week={updateChecklistData?.week}
+        unitId={updateChecklistData?.unitId}
+        approverId={updateChecklistData?.approverId}
+        checklistId={updateChecklistData?.checklistId}
+        month={month}
+        year={year}
+        updateMode
+        batchEntry={updateChecklistData?.batchEntry}
       />
 
       <COBSShowReportDialog

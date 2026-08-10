@@ -243,21 +243,6 @@
     }
   }
 
-  &__toggle-pass {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: $text-muted;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
-
-    &:hover {
-      color: $primary-main;
-    }
-  }
-
   &__error {
     display: flex;
     align-items: center;
@@ -306,6 +291,10 @@
     width: 100% !important;
     flex: none !important;
     min-width: unset !important;
+
+    &--sig {
+      height: 90px !important;
+    }
   }
 
   &__skeleton-footer {
@@ -381,6 +370,119 @@
         border-color: $text-muted;
       }
     }
+  }
+
+  &__sig {
+    &--error {
+      .um__sig-box {
+        border-color: $status-error !important;
+      }
+
+      .um__label {
+        color: $status-error !important;
+      }
+    }
+  }
+
+  &__sig-box {
+    position: relative;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    background: $bg-main;
+    overflow: hidden;
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+  }
+
+  &__sig-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: transparent;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $text-muted;
+    cursor: pointer;
+    transition: color 0.15s;
+
+    &:hover {
+      color: $primary-main;
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.5);
+
+      &:hover {
+        color: $secondary-main;
+      }
+    }
+  }
+
+  &__sig-preview {
+    position: relative;
+    height: 90px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  &__sig-preview-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  &__sig-preview-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.15s;
+
+    .um__sig-preview:hover & {
+      opacity: 1;
+    }
+  }
+
+  &__sig-view-box {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid $border-color;
+    border-radius: 8px;
+    background: rgba($primary-main, 0.03);
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
+
+  &__sig-view-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
   }
 
   &__ac {

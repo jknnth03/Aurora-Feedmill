@@ -43,6 +43,22 @@ const userApi = apiSlice.injectEndpoints({
       invalidatesTags: ["Users"],
     }),
 
+    resetPassword: builder.mutation({
+      query: (id) => ({
+        url: `/api/users/${id}/reset-password`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Users"],
+    }),
+
+    changePassword: builder.mutation({
+      query: (body) => ({
+        url: "/api/change-password",
+        method: "PUT",
+        body,
+      }),
+    }),
+
     getEvaluators: builder.query({
       query: () => ({
         url: "/api/dropdown/evaluators",
@@ -107,6 +123,8 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useArchiveUserMutation,
+  useResetPasswordMutation,
+  useChangePasswordMutation,
   useGetEvaluatorsQuery,
   useGetApproversQuery,
   useGetAssessorsQuery,
