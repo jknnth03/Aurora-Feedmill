@@ -28,7 +28,12 @@ import COBSAcknowledgementTimelineDialog from "./COBSAcknowledgementTimelineDial
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 import "./COBSModal.scss";
 import { useMergeCobsMutation } from "../../features/api/cobs/cobsApi";
-import { getMonthWeekLabels } from "./cobsWeekUtils";
+import {
+  getMonthWeekLabels,
+  getWeekStatus,
+  getLatestEntry,
+  isWeekDone,
+} from "./cobsWeekUtils";
 
 const MONTHS = [
   "January",
@@ -52,37 +57,6 @@ const STATUS_CHIP_MAP = {
   pending: "chip-pending",
   "on progress": "chip-draft",
   "saved as draft": "chip-draft",
-};
-
-const getWeekStatus = (entries) => {
-  if (!Array.isArray(entries) || entries.length === 0) return "Pending";
-  const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-  const raw = latest.status?.toLowerCase() ?? "";
-
-  if (raw === "on going") return "On Going";
-
-  if (latest.is_completed === 1 || latest.is_completed === true) {
-    if (!latest.is_evaluated) return "For Signature";
-    if (!latest.is_approved) return "For Acknowledgement";
-    if (!latest.is_assessed) return "For Acknowledgement";
-    if (latest.score == null) return "Merged";
-    return "Done";
-  }
-
-  if (latest.is_completed === 0 || latest.is_completed === false)
-    return "Saved as Draft";
-
-  return "Pending";
-};
-
-const isWeekDone = (entries) => {
-  const status = getWeekStatus(entries)?.toLowerCase();
-  return status === "done" || status === "merged";
-};
-
-const getLatestEntry = (entries) => {
-  if (!Array.isArray(entries) || entries.length === 0) return null;
-  return entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
 };
 
 const isDraftEntry = (entry) => {
@@ -140,8 +114,10 @@ const getDoneOn = (entries) => {
 
 const getRemarks = (entries) => {
   if (!Array.isArray(entries) || entries.length === 0) return "—";
+  const statusLower = getWeekStatus(entries)?.toLowerCase();
+  if (statusLower !== "merged") return "—";
   const latest = getLatestEntry(entries);
-  const remarks = latest?.remarks ?? latest?.merge_remarks ?? null;
+  const remarks = latest?.remarks ?? null;
   if (!remarks || !String(remarks).trim()) return "—";
   return remarks;
 };

@@ -128,6 +128,7 @@ const PestStartCheckingDialog = ({
   month,
   year,
   checklistId = PEST_CHECKLIST_ID,
+  checklistCreatedAt,
   unitId,
   evaluatorId,
   approverId,
@@ -169,6 +170,14 @@ const PestStartCheckingDialog = ({
     (key) => !key.startsWith("obs__") && key !== "_submit",
   ).length;
   const errorCount = obsFieldErrors.length + otherFieldErrorCount;
+
+  const preparedName = batchEntry?.user ?? null;
+  const preparedSignature = batchEntry?.user_signatory ?? null;
+  const signatory2 = batchEntry?.signatory_2 ?? null;
+  const hasSignatories = preparedSignature || signatory2;
+
+  const getDisplayDate = () =>
+    batchEntry?.date ?? checklistCreatedAt ?? batchEntry?.start_at ?? null;
 
   const getPestTotalScore = (pestName) => {
     return inspectionAreas.reduce((sum, area) => {
@@ -217,7 +226,7 @@ const PestStartCheckingDialog = ({
         buildDraftGrid(questionnaireData, batchEntry.responses ?? []);
       setPestGrid(draftGrid);
       setOtherObservations(draftObs);
-      setDate(batchEntry.date ?? getTodayString());
+      setDate(batchEntry.date ?? checklistCreatedAt ?? getTodayString());
       setRemarks(batchEntry.remarks ?? "");
       setNotes(batchEntry.notes ?? "");
     } else if (!continueMode) {
@@ -233,7 +242,14 @@ const PestStartCheckingDialog = ({
       setRemarks("");
       setNotes("");
     }
-  }, [open, continueMode, batchEntry, questionnaireData, viewMode]);
+  }, [
+    open,
+    continueMode,
+    batchEntry,
+    questionnaireData,
+    viewMode,
+    checklistCreatedAt,
+  ]);
 
   useEffect(() => {
     if (submitAttempted && firstErrorRef.current) {
@@ -574,7 +590,7 @@ const PestStartCheckingDialog = ({
             <div className="pest-sc__info-item">
               <span className="pest-sc__info-label">Date</span>
               <span className="pest-sc__info-value">
-                {formatDateOnly(batchEntry.date)}
+                {formatDateOnly(getDisplayDate())}
               </span>
             </div>
             <div className="pest-sc__info-item">
@@ -609,7 +625,7 @@ const PestStartCheckingDialog = ({
             <div className="pest-sc__info-item">
               <span className="pest-sc__info-label">Date</span>
               <span className="pest-sc__info-value">
-                {formatDateOnly(batchEntry.date)}
+                {formatDateOnly(getDisplayDate())}
               </span>
             </div>
             <div className="pest-sc__info-item">
@@ -864,7 +880,7 @@ const PestStartCheckingDialog = ({
                       </span>
                       {viewMode ? (
                         <div className="pest-sc__date-display">
-                          {formatDateOnly(batchEntry?.date)}
+                          {formatDateOnly(getDisplayDate())}
                         </div>
                       ) : (
                         <input
@@ -941,6 +957,53 @@ const PestStartCheckingDialog = ({
                   )}
                 </div>
               </div>
+
+              {viewMode && hasSignatories && (
+                <div className="pest-sc__signatories-row">
+                  {preparedSignature && (
+                    <div className="pest-sc__signatory-item">
+                      <span className="pest-sc__signatory-label">
+                        Inspected by:
+                      </span>
+                      <div className="pest-sc__signatory-img-box">
+                        <img
+                          src={preparedSignature}
+                          alt="inspected-by"
+                          className="pest-sc__signatory-img"
+                        />
+                      </div>
+                      {preparedName && (
+                        <span className="pest-sc__signatory-name">
+                          {preparedName}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {signatory2 && (
+                    <div className="pest-sc__signatory-item">
+                      <span className="pest-sc__signatory-label">
+                        Noted & Checked by:
+                      </span>
+                      {signatory2.approve_image ? (
+                        <div className="pest-sc__signatory-img-box">
+                          <img
+                            src={signatory2.approve_image}
+                            alt="noted-and-checked-by"
+                            className="pest-sc__signatory-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className="pest-sc__signatory-img-box pest-sc__signatory-img-box--empty" />
+                      )}
+                      {signatory2.name && (
+                        <span className="pest-sc__signatory-name">
+                          {signatory2.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </DialogContent>

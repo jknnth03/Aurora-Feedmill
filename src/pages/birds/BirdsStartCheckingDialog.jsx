@@ -253,6 +253,12 @@ const BirdsStartCheckingDialog = ({
 
   const periodDateRange = getPeriodDateRange(period, month, year);
 
+  const preparedName = batchEntry?.user ?? null;
+  const preparedSignature = batchEntry?.user_signatory ?? null;
+  const signatory2 = batchEntry?.signatory_2 ?? null;
+  const signatory3 = batchEntry?.signatory_3 ?? null;
+  const hasSignatories = preparedSignature || signatory2 || signatory3;
+
   useEffect(() => {
     if (viewMode) return;
     if (!open) return;
@@ -925,6 +931,76 @@ const BirdsStartCheckingDialog = ({
                   </div>
                 </div>
               </div>
+
+              {viewMode && hasSignatories && (
+                <div className="birds-sc__signatories-row">
+                  {preparedSignature && (
+                    <div className="birds-sc__signatory-item">
+                      <span className="birds-sc__signatory-label">
+                        Prepared by:
+                      </span>
+                      <div className="birds-sc__signatory-img-box">
+                        <img
+                          src={preparedSignature}
+                          alt="prepared-by"
+                          className="birds-sc__signatory-img"
+                        />
+                      </div>
+                      {preparedName && (
+                        <span className="birds-sc__signatory-name">
+                          {preparedName}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {signatory2 && (
+                    <div className="birds-sc__signatory-item">
+                      <span className="birds-sc__signatory-label">
+                        Noted by:
+                      </span>
+                      {signatory2.approve_image ? (
+                        <div className="birds-sc__signatory-img-box">
+                          <img
+                            src={signatory2.approve_image}
+                            alt="noted-by"
+                            className="birds-sc__signatory-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className="birds-sc__signatory-img-box birds-sc__signatory-img-box--empty" />
+                      )}
+                      {signatory2.name && (
+                        <span className="birds-sc__signatory-name">
+                          {signatory2.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {signatory3 && (
+                    <div className="birds-sc__signatory-item">
+                      <span className="birds-sc__signatory-label">
+                        Reviewed by:
+                      </span>
+                      {signatory3.assess_image ? (
+                        <div className="birds-sc__signatory-img-box">
+                          <img
+                            src={signatory3.assess_image}
+                            alt="reviewed-by"
+                            className="birds-sc__signatory-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className="birds-sc__signatory-img-box birds-sc__signatory-img-box--empty" />
+                      )}
+                      {signatory3.name && (
+                        <span className="birds-sc__signatory-name">
+                          {signatory3.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {errors._submit && (
                 <span className="birds-sc__inline-error birds-sc__inline-error--block">

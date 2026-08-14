@@ -36,6 +36,32 @@ const getWastage = (responses, areaName) => {
   return "—";
 };
 
+const dataUrlToFile = (dataUrl, filename) => {
+  if (!dataUrl) return null;
+  const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
+  if (!match) return null;
+  const mimeType = match[1];
+  const base64Data = match[2];
+  const byteString = atob(base64Data);
+  const byteArray = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) {
+    byteArray[i] = byteString.charCodeAt(i);
+  }
+  const extension = mimeType === "image/jpeg" ? "jpg" : "png";
+  return new File([byteArray], `${filename}.${extension}`, {
+    type: mimeType,
+  });
+};
+
+const getLoggedInUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const BirdsApprovalModal = ({
   open,
   onClose,
@@ -65,15 +91,25 @@ const BirdsApprovalModal = ({
 
   const handleConfirmAcknowledge = () => {
     if (!batchEntry) return;
+
+    const loggedInUser = getLoggedInUser();
+    const approverId =
+      batchEntry.approver_id ?? loggedInUser?.id ?? batchEntry.user_id;
+    const approverName =
+      batchEntry.approver ??
+      (`${loggedInUser?.first_name ?? ""} ${loggedInUser?.last_name ?? ""}`.trim() ||
+        batchEntry.user ||
+        "");
+    const signatureFile = dataUrlToFile(
+      loggedInUser?.signature,
+      `signature-${approverId}`,
+    );
+
     approveBirdsApproval({
       batch_no: batchEntry.batch_no,
-      user_id: batchEntry.user_id,
-      approvers: [
-        {
-          id: batchEntry.user_id,
-          name: batchEntry.user ?? "",
-        },
-      ],
+      approver_id: approverId,
+      approvers: [{ id: approverId, name: approverName }],
+      signatureFile,
     })
       .unwrap()
       .then(() => {

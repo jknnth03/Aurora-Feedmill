@@ -63,9 +63,12 @@ const PestShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
       )
     : [];
 
+  const preparedName = data.user ?? null;
+  const preparedSignature = data.user_signatory ?? null;
   const signatory2 = data.signatory_2 ?? null;
 
-  // Collect all unique pest names across all responses
+  const hasSignatories = preparedSignature || signatory2;
+
   const allPestNames = [
     ...new Set(
       responses.flatMap((r) =>
@@ -76,7 +79,6 @@ const PestShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
     ),
   ];
 
-  // Total quantity per pest type across all areas
   const gradingSummary = allPestNames.map((name) => {
     const total = responses.reduce((sum, r) => {
       const found = (r.response?.pests ?? []).find((p) => p.name === name);
@@ -275,27 +277,48 @@ const PestShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
           </div>
         </div>
 
-        {signatory2 && (
+        {hasSignatories && (
           <div className="pest-sr__signatories-row">
-            <div className="pest-sr__signatory-item">
-              <span className="pest-sr__signatory-label">Acknowledged by:</span>
-              {signatory2.approve_image ? (
+            {preparedSignature && (
+              <div className="pest-sr__signatory-item">
+                <span className="pest-sr__signatory-label">Inspected by:</span>
                 <div className="pest-sr__signatory-img-box">
                   <img
-                    src={signatory2.approve_image}
-                    alt="acknowledged-by"
+                    src={preparedSignature}
+                    alt="inspected-by"
                     className="pest-sr__signatory-img"
                   />
                 </div>
-              ) : (
-                <div className="pest-sr__signatory-img-box pest-sr__signatory-img-box--empty" />
-              )}
-              {signatory2.name && (
-                <span className="pest-sr__signatory-name">
-                  {signatory2.name}
+                {preparedName && (
+                  <span className="pest-sr__signatory-name">
+                    {preparedName}
+                  </span>
+                )}
+              </div>
+            )}
+            {signatory2 && (
+              <div className="pest-sr__signatory-item">
+                <span className="pest-sr__signatory-label">
+                  Noted & Checked by:
                 </span>
-              )}
-            </div>
+                {signatory2.approve_image ? (
+                  <div className="pest-sr__signatory-img-box">
+                    <img
+                      src={signatory2.approve_image}
+                      alt="noted-and-checked-by"
+                      className="pest-sr__signatory-img"
+                    />
+                  </div>
+                ) : (
+                  <div className="pest-sr__signatory-img-box pest-sr__signatory-img-box--empty" />
+                )}
+                {signatory2.name && (
+                  <span className="pest-sr__signatory-name">
+                    {signatory2.name}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </DialogContent>

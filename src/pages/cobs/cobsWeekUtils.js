@@ -66,3 +66,59 @@ export const getWeekDateRange = (week, month, year) => {
     max: `${y}-${monthStr}-${pad(match.end)}`,
   };
 };
+
+// ---------------------------------------------------------------------------
+// Week status helpers (shared source of truth between COBS.jsx / table
+// summary and COBSModal.jsx / per-row display, so they never diverge).
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the batch with the highest batch_no from a week's entries array
+ * (i.e. the "current" / most recent state of that week), or null if empty.
+ */
+export const getLatestEntry = (entries) => {
+  if (!Array.isArray(entries) || entries.length === 0) return null;
+  return entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+};
+
+/**
+ * Derives a human-readable status for a week based on its latest batch entry.
+ * Note: this intentionally does NOT rely on the raw `batch.status` field
+ * (which is often just "On Progress" from the API regardless of actual
+ * completion state) — it derives status from the is_completed / is_evaluated /
+ * is_approved / is_assessed flags and score instead.
+ *
+ * Possible return values:
+ *   "Pending" | "Saved as Draft" | "On Going" | "For Signature" |
+ *   "For Acknowledgement" | "Merged" | "Done"
+ */
+export const getWeekStatus = (entries) => {
+  const latest = getLatestEntry(entries);
+  if (!latest) return "Pending";
+  const raw = latest.status?.toLowerCase() ?? "";
+
+  if (raw === "on going") return "On Going";
+
+  if (latest.is_completed === 1 || latest.is_completed === true) {
+    if (!latest.is_evaluated) return "For Signature";
+    if (!latest.is_approved) return "For Acknowledgement";
+    if (!latest.is_assessed) return "For Acknowledgement";
+    if (latest.score == null) return "Merged";
+    return "Done";
+  }
+
+  if (latest.is_completed === 0 || latest.is_completed === false)
+    return "Saved as Draft";
+
+  return "Pending";
+};
+
+/**
+ * A week counts as "completed" for progress/summary purposes (e.g. the
+ * "4/5" counter, or the overall table status) when it's either fully
+ * Done or Merged into another week.
+ */
+export const isWeekDone = (entries) => {
+  const status = getWeekStatus(entries)?.toLowerCase();
+  return status === "done" || status === "merged";
+};

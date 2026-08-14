@@ -99,6 +99,9 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   const signatory2 = data.signatory_2 ?? null;
   const signatory3 = data.signatory_3 ?? null;
 
+  const preparedName = data.user ?? null;
+  const preparedSignature = data.user_signatory ?? null;
+
   const allImages = data.responses
     ? data.responses
         .filter((r) => r.response !== null && r.response !== undefined)
@@ -223,7 +226,8 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   };
 
   const hasSignature = !!signatureDataUrl;
-  const hasSignatories = signatory2 || signatory3 || hasSignature;
+  const hasSignatories =
+    preparedSignature || signatory2 || signatory3 || hasSignature;
 
   return (
     <>
@@ -435,6 +439,23 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
 
           {hasSignatories && (
             <div className="cobs-sr__signatories-row">
+              {preparedSignature && (
+                <div className="cobs-sr__signatory-item">
+                  <span className="cobs-sr__signatory-label">Audited by:</span>
+                  <div className="cobs-sr__signatory-img-box">
+                    <img
+                      src={preparedSignature}
+                      alt="audited-by"
+                      className="cobs-sr__signatory-img"
+                    />
+                  </div>
+                  {preparedName && (
+                    <span className="cobs-sr__signatory-name">
+                      {preparedName}
+                    </span>
+                  )}
+                </div>
+              )}
               {hasSignature && (
                 <div className="cobs-sr__signatory-item">
                   <span className="cobs-sr__signatory-label">

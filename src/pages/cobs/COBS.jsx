@@ -10,7 +10,7 @@ import PageContainer from "../../reusable-components/page-container/PageContaine
 import UniversalTable from "../../reusable-components/universal-table/UniversalTable";
 import TablePagination from "../../reusable-components/table-pagination/TablePagination";
 import { useGetCobsQuery } from "../../features/api/cobs/cobsApi";
-import { getMonthWeekLabels } from "./cobsWeekUtils";
+import { getWeekStatus, isWeekDone } from "./cobsWeekUtils";
 import {
   getChipBg,
   getChipTextColor,
@@ -39,25 +39,25 @@ const STATUS_CHIP_MAP = {
   "checklist not yet created": "chip-pending",
 };
 
+// A week counts toward the completed total when it's Done or Merged
+// (shared logic with COBSModal.jsx via cobsWeekUtils, so the table count
+// and the per-row status chips can never disagree).
 const getCompletedWeeksCount = (weekMap) => {
   let count = 0;
   Object.values(weekMap).forEach((entries) => {
-    if (!Array.isArray(entries) || entries.length === 0) return;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-    const status = latest?.status?.toLowerCase() ?? "";
-    if (status === "completed" || status === "done" || status === "approved") {
-      count += 1;
-    }
+    if (isWeekDone(entries)) count += 1;
   });
   return count;
 };
 
 const hasAnyInProgressWeek = (weekMap) => {
   return Object.values(weekMap).some((entries) => {
-    if (!Array.isArray(entries) || entries.length === 0) return false;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-    const status = latest?.status?.toLowerCase() ?? "";
-    return status === "for acknowledgement" || status === "for approval";
+    const status = getWeekStatus(entries)?.toLowerCase();
+    return (
+      status === "for acknowledgement" ||
+      status === "for signature" ||
+      status === "on going"
+    );
   });
 };
 
@@ -102,7 +102,7 @@ const flattenCobsData = (rawData, currentMonth) => {
 
     const notYetCreated = isChecklistNotYetCreated(checklists, currentMonth);
 
-    let derivedStatus = getDerivedTableStatus(weekMap);
+    let derivedStatus = getDerivedTableStatus(weekMap, totalWeeks);
     let isLocked = false;
 
     if (notYetCreated) {

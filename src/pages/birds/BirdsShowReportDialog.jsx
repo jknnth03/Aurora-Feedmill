@@ -3,13 +3,8 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
 import CloseIcon from "@mui/icons-material/Close";
 import FlutterDashIcon from "@mui/icons-material/FlutterDash";
-import DownloadIcon from "@mui/icons-material/Download";
-import PrintIcon from "@mui/icons-material/Print";
 import "./BirdsShowReportDialog.scss";
 
 const getInfestationColor = (level) => {
@@ -22,7 +17,6 @@ const getInfestationColor = (level) => {
 
 const BirdsShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   const [frozenData, setFrozenData] = useState(null);
-  const [downloadType, setDownloadType] = useState("PDF");
 
   useEffect(() => {
     if (open && reportData) setFrozenData(reportData);
@@ -31,14 +25,6 @@ const BirdsShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
 
   const data = frozenData;
   if (!data) return null;
-
-  const handleDownload = () => {
-    console.log("Download as:", downloadType);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -65,7 +51,12 @@ const BirdsShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
       )
     : [];
 
+  const preparedName = data.user ?? null;
+  const preparedSignature = data.user_signatory ?? null;
   const signatory2 = data.signatory_2 ?? null;
+  const signatory3 = data.signatory_3 ?? null;
+
+  const hasSignatories = preparedSignature || signatory2 || signatory3;
 
   const infestationSummary = responses.reduce((acc, r) => {
     const level = r.response?.infestation_level;
@@ -273,58 +264,72 @@ const BirdsShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
           </div>
         </div>
 
-        {signatory2 && (
+        {hasSignatories && (
           <div className="birds-sr__signatories-row">
-            <div className="birds-sr__signatory-item">
-              <span className="birds-sr__signatory-label">
-                Acknowledged by:
-              </span>
-              {signatory2.approve_image ? (
+            {preparedSignature && (
+              <div className="birds-sr__signatory-item">
+                <span className="birds-sr__signatory-label">Prepared by:</span>
                 <div className="birds-sr__signatory-img-box">
                   <img
-                    src={signatory2.approve_image}
-                    alt="acknowledged-by"
+                    src={preparedSignature}
+                    alt="prepared-by"
                     className="birds-sr__signatory-img"
                   />
                 </div>
-              ) : (
-                <div className="birds-sr__signatory-img-box birds-sr__signatory-img-box--empty" />
-              )}
-              {signatory2.name && (
-                <span className="birds-sr__signatory-name">
-                  {signatory2.name}
-                </span>
-              )}
-            </div>
+                {preparedName && (
+                  <span className="birds-sr__signatory-name">
+                    {preparedName}
+                  </span>
+                )}
+              </div>
+            )}
+            {signatory2 && (
+              <div className="birds-sr__signatory-item">
+                <span className="birds-sr__signatory-label">Noted by:</span>
+                {signatory2.approve_image ? (
+                  <div className="birds-sr__signatory-img-box">
+                    <img
+                      src={signatory2.approve_image}
+                      alt="noted-by"
+                      className="birds-sr__signatory-img"
+                    />
+                  </div>
+                ) : (
+                  <div className="birds-sr__signatory-img-box birds-sr__signatory-img-box--empty" />
+                )}
+                {signatory2.name && (
+                  <span className="birds-sr__signatory-name">
+                    {signatory2.name}
+                  </span>
+                )}
+              </div>
+            )}
+            {signatory3 && (
+              <div className="birds-sr__signatory-item">
+                <span className="birds-sr__signatory-label">Reviewed by:</span>
+                {signatory3.assess_image ? (
+                  <div className="birds-sr__signatory-img-box">
+                    <img
+                      src={signatory3.assess_image}
+                      alt="reviewed-by"
+                      className="birds-sr__signatory-img"
+                    />
+                  </div>
+                ) : (
+                  <div className="birds-sr__signatory-img-box birds-sr__signatory-img-box--empty" />
+                )}
+                {signatory3.name && (
+                  <span className="birds-sr__signatory-name">
+                    {signatory3.name}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
 
       <DialogActions className="birds-sr__footer">
-        <div className="birds-sr__footer-left">
-          <FormControl size="small" className="birds-sr__download-select">
-            <Select
-              value={downloadType}
-              onChange={(e) => setDownloadType(e.target.value)}
-              className="birds-sr__select"
-              MenuProps={{
-                PaperProps: { className: "birds-sr__select-menu" },
-              }}>
-              <MenuItem value="PDF">PDF</MenuItem>
-              <MenuItem value="Excel">Excel</MenuItem>
-            </Select>
-          </FormControl>
-          <IconButton
-            className="birds-sr__btn-download"
-            onClick={handleDownload}
-            size="small">
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-          <button className="birds-sr__btn-print" onClick={handlePrint}>
-            <PrintIcon fontSize="small" />
-            PRINT
-          </button>
-        </div>
         <button className="birds-sr__btn-close" onClick={onClose}>
           Close
         </button>

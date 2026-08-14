@@ -11,6 +11,11 @@ import UniversalTable from "../../reusable-components/universal-table/UniversalT
 import TablePagination from "../../reusable-components/table-pagination/TablePagination";
 import { useGetBirdsQuery } from "../../features/api/birds/birdsApi";
 import {
+  getMonthPeriodLabels,
+  getWeekStatus,
+  isWeekDone,
+} from "./birdsPeriodUtils";
+import {
   getChipBg,
   getChipTextColor,
   useChipColors,
@@ -18,6 +23,8 @@ import {
 import BirdsModal from "./BirdsModal";
 import BirdsExportDialog from "./BirdsExportDialog";
 import "./Birds.scss";
+
+const SECTION = "birds";
 
 const COLUMNS = [
   { key: "checklist_name", label: "Checklist Name", sortable: false },
@@ -40,26 +47,23 @@ const STATUS_CHIP_MAP = {
 const getCompletedPeriodsCount = (periodMap) => {
   let count = 0;
   Object.values(periodMap).forEach((entries) => {
-    if (!Array.isArray(entries) || entries.length === 0) return;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-    const status = latest?.status?.toLowerCase() ?? "";
-    if (status === "completed" || status === "done" || status === "approved")
-      count += 1;
+    if (isWeekDone(entries, SECTION)) count += 1;
   });
   return count;
 };
 
 const hasAnyInProgressPeriod = (periodMap) => {
   return Object.values(periodMap).some((entries) => {
-    if (!Array.isArray(entries) || entries.length === 0) return false;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-    const status = latest?.status?.toLowerCase() ?? "";
-    return status === "for acknowledgement" || status === "for approval";
+    const status = getWeekStatus(entries, SECTION)?.toLowerCase();
+    return (
+      status === "for acknowledgement" ||
+      status === "for approval" ||
+      status === "on going"
+    );
   });
 };
 
-const getDerivedBirdsTableStatus = (periodMap) => {
-  const totalPeriods = Object.keys(periodMap).length;
+const getDerivedBirdsTableStatus = (periodMap, totalPeriods) => {
   const completedPeriods = getCompletedPeriodsCount(periodMap);
   if (completedPeriods === 0 && !hasAnyInProgressPeriod(periodMap))
     return "Pending";
@@ -79,6 +83,12 @@ const isChecklistNotYetCreated = (checklistData, currentMonth) => {
 const flattenBirdsData = (rawData, currentMonth) => {
   if (!rawData) return [];
   const rows = [];
+  const periodLabels = getMonthPeriodLabels(
+    currentMonth.format("MM"),
+    currentMonth.format("YYYY"),
+  );
+  const totalPeriods = periodLabels.length;
+
   Object.entries(rawData).forEach(([checklistKey, checklistData]) => {
     const periodMap = checklistData?.periods ?? {};
     const completedPeriods = getCompletedPeriodsCount(periodMap);
@@ -90,7 +100,7 @@ const flattenBirdsData = (rawData, currentMonth) => {
 
     const notYetCreated = isChecklistNotYetCreated(checklistData, currentMonth);
 
-    let derivedStatus = getDerivedBirdsTableStatus(periodMap);
+    let derivedStatus = getDerivedBirdsTableStatus(periodMap, totalPeriods);
     let isLocked = false;
 
     if (notYetCreated) {
@@ -100,7 +110,7 @@ const flattenBirdsData = (rawData, currentMonth) => {
 
     rows.push({
       checklist_name: checklistData?.checklist_name ?? "—",
-      week: `${completedPeriods}/${Object.keys(periodMap).length}`,
+      week: `${completedPeriods}/${totalPeriods}`,
       status: derivedStatus,
       _raw: latestBatch,
       _unitKey: checklistKey,

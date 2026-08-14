@@ -234,6 +234,7 @@
   &__table-scroll {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar {
       height: 4px;
@@ -1132,6 +1133,201 @@
       &:focus {
         border-color: $secondary-main;
       }
+    }
+  }
+
+  @media (max-width: 900px) {
+    &__paper {
+      margin: 12px !important;
+      max-height: 94vh !important;
+    }
+
+    &__th--area,
+    &__td--area-name {
+      width: 130px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    &__paper {
+      margin: 8px !important;
+      max-height: 96vh !important;
+      border-radius: 10px !important;
+      width: calc(100% - 16px) !important;
+    }
+
+    &__header {
+      flex-wrap: wrap;
+      row-gap: 4px;
+      padding: 12px 14px 6px;
+    }
+
+    &__name-value {
+      font-size: 0.78rem;
+      white-space: normal;
+      width: 100%;
+      order: 3;
+    }
+
+    &__info-strip {
+      flex-wrap: wrap;
+    }
+
+    &__info-item {
+      padding: 6px 10px;
+      border-right: none;
+      border-bottom: 1px solid $border-color;
+
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    &__content {
+      padding: 12px 14px 18px !important;
+    }
+
+    &__section {
+      margin-bottom: 10px;
+    }
+
+    &__section-header {
+      font-size: 0.76rem;
+      padding: 7px 10px;
+    }
+
+    &__th--area,
+    &__td--area-name {
+      width: 110px;
+    }
+
+    &__th--col,
+    &__th--obs-sub {
+      width: 62px;
+    }
+
+    &__graph-label {
+      min-width: 120px;
+      font-size: 0.72rem;
+      white-space: normal;
+    }
+
+    &__others-row {
+      flex-direction: column;
+    }
+
+    &__others-field--date {
+      width: 100%;
+    }
+
+    &__footer {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px !important;
+    }
+
+    &__footer-left {
+      order: 2;
+      width: 100%;
+    }
+
+    &__footer-right {
+      order: 1;
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &__header-title {
+      font-size: 0.85rem;
+    }
+
+    &__footer-right {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+
+      .MuiButton-root {
+        width: 100%;
+      }
+    }
+
+    &__th--col,
+    &__th--obs-sub {
+      width: 54px;
+    }
+
+    &__graph-percent {
+      min-width: 32px;
+      font-size: 0.74rem;
+    }
+
+    &__graph-legend {
+      gap: 10px;
+    }
+
+    &__others-body {
+      padding: 12px;
+    }
+  }
+  &__signatories-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 14px 4px 4px;
+  }
+
+  &__signatory-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__signatory-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &__signatory-img-box {
+    width: 140px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: transparent;
+
+    &--empty {
+      background: transparent;
+    }
+  }
+
+  &__signatory-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  &__signatory-name {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+    text-align: center;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
     }
   }
 }

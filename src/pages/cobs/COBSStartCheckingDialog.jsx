@@ -281,6 +281,14 @@ const COBSStartCheckingDialog = ({
   const errorCount = Object.keys(errors).length;
   const { min: dateMin, max: dateMax } = getWeekDateRange(week, month, year);
 
+  const preparedName = batchEntry?.user ?? null;
+  const preparedSignature = batchEntry?.user_signatory ?? null;
+  const signatory1 = batchEntry?.signatory_1 ?? null;
+  const signatory2 = batchEntry?.signatory_2 ?? null;
+  const signatory3 = batchEntry?.signatory_3 ?? null;
+  const hasSignatories =
+    preparedSignature || signatory1 || signatory2 || signatory3;
+
   useEffect(() => {
     if (viewMode || updateMode) return;
     if (!open) {
@@ -1385,6 +1393,99 @@ const COBSStartCheckingDialog = ({
                   )}
                 </div>
               </div>
+
+              {viewMode && hasSignatories && (
+                <div className="cobs-sc__signatories-row">
+                  {preparedSignature && (
+                    <div className="cobs-sc__signatory-item">
+                      <span className="cobs-sc__signatory-label">
+                        Audited by:
+                      </span>
+                      <div className="cobs-sc__signatory-img-box">
+                        <img
+                          src={preparedSignature}
+                          alt="audited-by"
+                          className="cobs-sc__signatory-img"
+                        />
+                      </div>
+                      {preparedName && (
+                        <span className="cobs-sc__signatory-name">
+                          {preparedName}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {signatory1 && (
+                    <div className="cobs-sc__signatory-item">
+                      <span className="cobs-sc__signatory-label">
+                        Acknowledged by:
+                      </span>
+                      {signatory1.evaluate_image ? (
+                        <div className="cobs-sc__signatory-img-box">
+                          <img
+                            src={signatory1.evaluate_image}
+                            alt="acknowledged-by"
+                            className="cobs-sc__signatory-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className="cobs-sc__signatory-img-box cobs-sc__signatory-img-box--empty" />
+                      )}
+                      {signatory1.name && (
+                        <span className="cobs-sc__signatory-name">
+                          {signatory1.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {signatory2 && (
+                    <div className="cobs-sc__signatory-item">
+                      <span className="cobs-sc__signatory-label">
+                        Reviewed by:
+                      </span>
+                      {signatory2.approve_image ? (
+                        <div className="cobs-sc__signatory-img-box">
+                          <img
+                            src={signatory2.approve_image}
+                            alt="reviewed-by"
+                            className="cobs-sc__signatory-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className="cobs-sc__signatory-img-box cobs-sc__signatory-img-box--empty" />
+                      )}
+                      {signatory2.name && (
+                        <span className="cobs-sc__signatory-name">
+                          {signatory2.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {signatory3 && (
+                    <div className="cobs-sc__signatory-item">
+                      <span className="cobs-sc__signatory-label">
+                        Noted by:
+                      </span>
+                      {signatory3.assess_image ? (
+                        <div className="cobs-sc__signatory-img-box">
+                          <img
+                            src={signatory3.assess_image}
+                            alt="noted-by"
+                            className="cobs-sc__signatory-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className="cobs-sc__signatory-img-box cobs-sc__signatory-img-box--empty" />
+                      )}
+                      {signatory3.name && (
+                        <span className="cobs-sc__signatory-name">
+                          {signatory3.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </DialogContent>

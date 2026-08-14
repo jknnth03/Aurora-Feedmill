@@ -22,6 +22,31 @@ const TOTAL_OBS_COLUMNS = OTHER_OBSERVATIONS.reduce(
   0,
 );
 
+const formatDateTime = (raw) => {
+  if (!raw) return "—";
+  const date = new Date(raw);
+  if (isNaN(date)) return "—";
+  return date.toLocaleString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const formatDateOnly = (raw) => {
+  if (!raw) return "—";
+  const date = new Date(raw);
+  if (isNaN(date)) return "—";
+  return date.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const getGrade = (percent) => {
   if (percent <= 30) return { label: "Low", color: "#7bc67e" };
   if (percent <= 60) return { label: "Moderate", color: "#4db6ac" };
@@ -61,10 +86,37 @@ const getViewGridValue = (responses, areaName, pestName) => {
   return "";
 };
 
+const dataUrlToFile = (dataUrl, filename) => {
+  if (!dataUrl) return null;
+  const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
+  if (!match) return null;
+  const mimeType = match[1];
+  const base64Data = match[2];
+  const byteString = atob(base64Data);
+  const byteArray = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) {
+    byteArray[i] = byteString.charCodeAt(i);
+  }
+  const extension = mimeType === "image/jpeg" ? "jpg" : "png";
+  return new File([byteArray], `${filename}.${extension}`, {
+    type: mimeType,
+  });
+};
+
+const getLoggedInUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const PestsApprovalModal = ({
   open,
   onClose,
   batchEntry = null,
+  checklistCreatedAt,
   onApprove,
   currentUser = null,
 }) => {
@@ -76,6 +128,9 @@ const PestsApprovalModal = ({
   if (!batchEntry) return null;
 
   const responses = batchEntry.responses ?? [];
+
+  const displayDate =
+    batchEntry?.date ?? checklistCreatedAt ?? batchEntry?.start_at ?? null;
 
   const inspectionAreas = [
     ...new Set(
@@ -125,18 +180,29 @@ const PestsApprovalModal = ({
   const handleConfirmAcknowledge = () => {
     if (!batchEntry) return;
 
-    const approverId = currentUser?.id ?? batchEntry.user_id;
-    const approverName = currentUser?.name ?? batchEntry.user ?? "";
+    const loggedInUser = getLoggedInUser();
+    const approverId =
+      currentUser?.id ?? loggedInUser?.id ?? batchEntry.user_id;
+    const approverName =
+      currentUser?.name ??
+      (`${loggedInUser?.first_name ?? ""} ${loggedInUser?.last_name ?? ""}`.trim() ||
+        batchEntry.user ||
+        "");
+    const signatureFile = dataUrlToFile(
+      loggedInUser?.signature,
+      `signature-${approverId}`,
+    );
 
     approvePestsApproval({
       batch_no: batchEntry.batch_no,
-      section: "pests",
-      approve: [
+      assessor_id: approverId,
+      approvers: [
         {
           id: approverId,
           name: approverName,
         },
       ],
+      signatureFile,
     })
       .unwrap()
       .then(() => {
@@ -170,6 +236,37 @@ const PestsApprovalModal = ({
         <IconButton size="small" className="pestsam__close" onClick={onClose}>
           <CloseIcon fontSize="small" />
         </IconButton>
+      </div>
+
+      <div className="pestsam__info-strip">
+        <div className="pestsam__info-item">
+          <span className="pestsam__info-label">Date</span>
+          <span className="pestsam__info-value">
+            {formatDateOnly(displayDate)}
+          </span>
+        </div>
+        <div className="pestsam__info-item">
+          <span className="pestsam__info-label">Submitted by</span>
+          <span className="pestsam__info-value">{batchEntry.user ?? "—"}</span>
+        </div>
+        <div className="pestsam__info-item">
+          <span className="pestsam__info-label">Approver</span>
+          <span className="pestsam__info-value">
+            {batchEntry.approver ?? "—"}
+          </span>
+        </div>
+        <div className="pestsam__info-item">
+          <span className="pestsam__info-label">Start</span>
+          <span className="pestsam__info-value">
+            {formatDateTime(batchEntry.start_at)}
+          </span>
+        </div>
+        <div className="pestsam__info-item">
+          <span className="pestsam__info-label">End</span>
+          <span className="pestsam__info-value">
+            {formatDateTime(batchEntry.end_at)}
+          </span>
+        </div>
       </div>
 
       <DialogContent className="pestsam__content">

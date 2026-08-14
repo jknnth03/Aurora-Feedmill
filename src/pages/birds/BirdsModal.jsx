@@ -23,7 +23,15 @@ import {
 import BirdsStartCheckingDialog from "./BirdsStartCheckingDialog";
 import BirdsShowReportDialog from "./BirdsShowReportDialog";
 import BirdsAcknowledgementTimelineDialog from "./BirdsAcknowledgementTimelineDialog";
+import {
+  getMonthPeriodLabels,
+  getWeekStatus,
+  getLatestEntry,
+  isWeekDone,
+} from "./birdsPeriodUtils";
 import "./BirdsModal.scss";
+
+const SECTION = "birds";
 
 const MONTHS = [
   "January",
@@ -40,41 +48,17 @@ const MONTHS = [
   "December",
 ];
 
+// "For Approval" intentionally reuses the same chip id as "For
+// Acknowledgement" — visually they're treated the same in this table.
 const STATUS_CHIP_MAP = {
   done: "chip-done",
   "for acknowledgement": "chip-for-approval",
+  "for approval": "chip-for-approval",
   "on going": "chip-on-going",
   pending: "chip-pending",
   rejected: "chip-rejected",
   "on progress": "chip-draft",
   "saved as draft": "chip-draft",
-};
-
-const getWeekStatus = (entries) => {
-  if (!Array.isArray(entries) || entries.length === 0) return "Pending";
-  const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-  const raw = latest.status?.toLowerCase() ?? "pending";
-  if (raw === "approved" || raw === "done" || raw === "completed")
-    return "Done";
-  if (raw === "rejected") return "Rejected";
-  if (raw === "on going") return "On Going";
-  if (latest.is_completed === 1 || latest.is_completed === true) {
-    if (!latest.is_approved) return "For Acknowledgement";
-    return "Done";
-  }
-  if (latest.is_completed === 0 || latest.is_completed === false)
-    return "Saved as Draft";
-  return "Pending";
-};
-
-const isWeekDone = (entries) => {
-  const status = getWeekStatus(entries)?.toLowerCase();
-  return status === "done";
-};
-
-const getLatestEntry = (entries) => {
-  if (!Array.isArray(entries) || entries.length === 0) return null;
-  return entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
 };
 
 const isDraftEntry = (entry) => {
@@ -85,7 +69,7 @@ const isDraftEntry = (entry) => {
 const hasAcknowledgeableTimeline = (entries) => {
   const hasEntries = Array.isArray(entries) && entries.length > 0;
   if (!hasEntries) return false;
-  const statusLower = getWeekStatus(entries)?.toLowerCase();
+  const statusLower = getWeekStatus(entries, SECTION)?.toLowerCase();
   return statusLower !== "pending" && statusLower !== "saved as draft";
 };
 
@@ -155,10 +139,12 @@ const RowActionMenu = ({
 }) => {
   const [anchor, setAnchor] = useState(null);
   const latest = getLatestEntry(entries);
-  const status = getWeekStatus(entries);
+  const status = getWeekStatus(entries, SECTION);
   const statusLower = status?.toLowerCase();
   const isForAcknowledgement =
-    statusLower === "for acknowledgement" || statusLower === "done";
+    statusLower === "for acknowledgement" ||
+    statusLower === "for approval" ||
+    statusLower === "done";
   const isDraft = latest ? isDraftEntry(latest) : false;
   const hasEntries = Array.isArray(entries) && entries.length > 0;
   const canAct = hasEntries || isPreviousPeriodDone;
@@ -285,13 +271,15 @@ const BirdsModal = ({
   const checklistId = unitData?.id ?? null;
   const unitDataId = null;
 
+  const periodLabels = getMonthPeriodLabels(month, year);
+
   const allBatches = Object.values(periodMap).flat();
   const fallbackEvaluatorId =
     allBatches.find((b) => b?.evaluator_id != null)?.evaluator_id ?? null;
   const fallbackApproverId =
     allBatches.find((b) => b?.approver_id != null)?.approver_id ?? null;
 
-  const rows = Object.keys(periodMap).map((label) => ({
+  const rows = periodLabels.map((label) => ({
     period: label,
     entries: periodMap[label] ?? [],
   }));
@@ -325,8 +313,8 @@ const BirdsModal = ({
             </thead>
             <tbody>
               {isFetching
-                ? Array.from({ length: 4 }).map((_, idx) => (
-                    <tr key={idx} className="birds-cm__tr">
+                ? periodLabels.map((lbl) => (
+                    <tr key={lbl} className="birds-cm__tr">
                       {Array.from({ length: 6 }).map((_, i) => (
                         <td key={i} className="birds-cm__td">
                           <Skeleton variant="text" width="70%" height={20} />
@@ -338,7 +326,7 @@ const BirdsModal = ({
                     const previousEntries =
                       index === 0 ? null : rows[index - 1].entries;
                     const isPreviousPeriodDone =
-                      index === 0 || isWeekDone(previousEntries);
+                      index === 0 || isWeekDone(previousEntries, SECTION);
                     return (
                       <tr key={period} className="birds-cm__tr">
                         <td className="birds-cm__td">{unitName}</td>
@@ -354,7 +342,9 @@ const BirdsModal = ({
                           />
                         </td>
                         <td className="birds-cm__td">
-                          <StatusChip status={getWeekStatus(entries)} />
+                          <StatusChip
+                            status={getWeekStatus(entries, SECTION)}
+                          />
                         </td>
                         <td className="birds-cm__td birds-cm__td--actions">
                           <RowActionMenu

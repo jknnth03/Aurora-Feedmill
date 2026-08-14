@@ -35,13 +35,14 @@
 
   &__header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     padding: 16px 20px 6px;
     position: sticky;
     top: 0;
     z-index: 10;
     background: $bg-main;
+    row-gap: 4px;
   }
 
   &__header-title {
@@ -52,6 +53,8 @@
     font-weight: 600;
     color: $primary-main;
     font-family: "Poppins", sans-serif;
+    order: 1;
+    flex-shrink: 0;
 
     [data-theme="dark"] & {
       color: $secondary-main;
@@ -70,6 +73,9 @@
   &__close {
     color: $text-muted !important;
     transition: color 0.15s !important;
+    order: 2;
+    margin-left: auto;
+    flex-shrink: 0;
 
     &:hover {
       color: $primary-main !important;
@@ -81,9 +87,70 @@
     font-weight: 600;
     color: $text-primary;
     font-family: "Poppins", sans-serif;
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.35;
+    margin-top: 2px;
 
     [data-theme="dark"] & {
       color: rgba(255, 255, 255, 0.88);
+    }
+  }
+
+  &__info-strip {
+    display: flex;
+    overflow-x: auto;
+    background: rgba($primary-main, 0.03);
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
+
+  &__info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 16px;
+    border-right: 1px solid $border-color;
+    flex-shrink: 0;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    [data-theme="dark"] & {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  &__info-label {
+    font-size: 0.63rem;
+    font-weight: 700;
+    color: $text-muted;
+    font-family: "Poppins", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &__info-value {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-family: "Poppins", sans-serif;
+    white-space: nowrap;
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85);
     }
   }
 
@@ -120,6 +187,7 @@
   &__table-scroll {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar {
       height: 4px;
@@ -617,6 +685,120 @@
 
     [data-theme="dark"] & {
       background-color: $secondary-main !important;
+    }
+  }
+
+  @media (max-width: 900px) {
+    &__paper {
+      margin: 12px !important;
+      max-height: 94vh !important;
+    }
+
+    &__th--area,
+    &__td--area-name {
+      min-width: 130px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    &__paper {
+      margin: 8px !important;
+      max-height: 96vh !important;
+      border-radius: 10px !important;
+      width: calc(100% - 16px) !important;
+    }
+
+    &__header {
+      flex-wrap: wrap;
+      row-gap: 4px;
+      padding: 12px 14px 6px;
+    }
+
+    &__batch-label {
+      font-size: 0.78rem;
+    }
+
+    &__info-strip {
+      flex-wrap: wrap;
+    }
+
+    &__info-item {
+      padding: 6px 10px;
+      border-right: none;
+      border-bottom: 1px solid $border-color;
+
+      [data-theme="dark"] & {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    &__content {
+      padding: 12px 14px 18px !important;
+    }
+
+    &__section {
+      margin-bottom: 10px;
+    }
+
+    &__section-header {
+      font-size: 0.76rem;
+      padding: 7px 10px;
+    }
+
+    &__th--area,
+    &__td--area-name {
+      min-width: 110px;
+    }
+
+    &__th--col,
+    &__th--obs-sub {
+      min-width: 62px;
+    }
+
+    &__graph-label {
+      min-width: 120px;
+      font-size: 0.72rem;
+      white-space: normal;
+    }
+
+    &__footer {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &__header-title {
+      font-size: 0.85rem;
+    }
+
+    &__footer {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      gap: 6px;
+
+      .MuiButton-root {
+        width: 100%;
+      }
+    }
+
+    &__th--col,
+    &__th--obs-sub {
+      min-width: 54px;
+    }
+
+    &__graph-percent {
+      min-width: 32px;
+      font-size: 0.74rem;
+    }
+
+    &__graph-legend {
+      gap: 10px;
+    }
+
+    &__others-body {
+      padding: 12px;
     }
   }
 }
