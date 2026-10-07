@@ -38,22 +38,27 @@ const STATUS_CHIP_MAP = {
   "checklist not yet created": "chip-pending",
 };
 
-const getCompletedPeriodsCount = (periodMap) => {
-  let count = 0;
-  Object.values(periodMap).forEach((entries) => {
-    if (!Array.isArray(entries) || entries.length === 0) return;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-    const status = latest?.status?.toLowerCase() ?? "";
-    if (status === "completed" || status === "done" || status === "approved")
-      count += 1;
-  });
-  return count;
+const getLatestEntry = (entries) =>
+  entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+
+const isPeriodDone = (entries) => {
+  if (!Array.isArray(entries) || entries.length === 0) return false;
+  const latest = getLatestEntry(entries);
+  const status = latest?.status?.toLowerCase() ?? "";
+  if (status === "approved" || status === "done" || status === "completed")
+    return true;
+  if (status === "rejected" || status === "on going") return false;
+  return Boolean(latest?.is_completed) && Boolean(latest?.is_approved);
 };
+
+const getCompletedPeriodsCount = (periodMap) =>
+  Object.values(periodMap).filter(isPeriodDone).length;
 
 const hasAnyInProgressPeriod = (periodMap) => {
   return Object.values(periodMap).some((entries) => {
     if (!Array.isArray(entries) || entries.length === 0) return false;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+    if (isPeriodDone(entries)) return false;
+    const latest = getLatestEntry(entries);
     const status = latest?.status?.toLowerCase() ?? "";
     return (
       status === "for acknowledgement" ||
