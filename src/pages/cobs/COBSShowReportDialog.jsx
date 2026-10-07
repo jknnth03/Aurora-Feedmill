@@ -129,7 +129,9 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
   };
 
   const totalAllocation = data.score_breakdown
-    ? data.score_breakdown.reduce((sum, s) => sum + (s.allocation ?? 0), 0)
+    ? Math.round(
+        data.score_breakdown.reduce((sum, s) => sum + (s.allocation ?? 0), 0),
+      )
     : 100;
 
   const scorePercent =
@@ -357,9 +359,6 @@ const COBSShowReportDialog = ({ open, onClose, reportData, onRefetch }) => {
                   <div className="cobs-sr__score-divider" />
                   <div className="cobs-sr__score-total-row">
                     <span className="cobs-sr__score-total-label">Total —</span>
-                    <span className="cobs-sr__score-total-value">
-                      {data.score}
-                    </span>
                     <span className="cobs-sr__score-total-pct">
                       {scorePercent}%
                     </span>

@@ -16,7 +16,7 @@ import {
   useChipColors,
 } from "../../../components/accountmenu/Chipcolorpickerutils";
 import COBSMonitoringModal from "./COBSMonitoringModal";
-import COBSExportDialog from "../../cobs/COBSExportDialog";
+import { exportCobsToExcel } from "../../cobs/exportCobsToExcel";
 import "../../cobs/COBS.scss";
 
 const COLUMNS = [
@@ -145,9 +145,6 @@ const StatusChip = ({ value }) => {
   );
 };
 
-// Monitoring/view-only counterpart of COBS.jsx — same listing, but rows open
-// COBSMonitoringModal (view-only: Show Report / Show Checklist), never any
-// Start/Continue Checking or Merge flow.
 const COBSMonitoring = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -155,12 +152,12 @@ const COBSMonitoring = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
-  const [exportOpen, setExportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, isFetching, error, refetch } = useGetCobsQuery(
+  const { data, isFetching, error } = useGetCobsQuery(
     {
       month: currentMonth.format("MM"),
       year: currentMonth.format("YYYY"),
@@ -203,9 +200,23 @@ const COBSMonitoring = () => {
     setSelectedUnitKey(row._unitKey);
   };
 
-  const fetchExportData = async (startDate, endDate) => {
-    const result = await refetch({ startDate, endDate });
-    return result?.data ?? data;
+  const handleExport = async () => {
+    if (isExporting || !data) return;
+    setIsExporting(true);
+    try {
+      await exportCobsToExcel(
+        data,
+        currentMonth.startOf("month").format("YYYY-MM-DD"),
+        currentMonth.endOf("month").format("YYYY-MM-DD"),
+      );
+    } catch (err) {
+      console.error("[COBSMonitoring] export ERROR", err);
+      window.__snackbar__?.enqueueSnackbar("Export failed. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const columnsWithRender = COLUMNS.map((col) =>
@@ -242,9 +253,10 @@ const COBSMonitoring = () => {
               <div className="cobs__filters-right">
                 <button
                   className="cobs__export-btn"
-                  onClick={() => setExportOpen(true)}>
+                  onClick={handleExport}
+                  disabled={isExporting || !data}>
                   <FileDownloadIcon className="cobs__export-btn-icon" />
-                  Export
+                  {isExporting ? "Exporting..." : "Export"}
                 </button>
               </div>
             </div>
@@ -278,12 +290,6 @@ const COBSMonitoring = () => {
         year={Number(currentMonth.format("YYYY"))}
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
-      />
-
-      <COBSExportDialog
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        fetchExportData={fetchExportData}
       />
     </>
   );

@@ -198,7 +198,7 @@ $bg-paper: #ffffff;
   overflow: hidden;
 
   [data-theme="dark"] & {
-    background: rgba(255, 255, 255, 0.06);
+    background: #fff;
     border-color: rgba(255, 255, 255, 0.12);
   }
 }
@@ -236,18 +236,6 @@ $bg-paper: #ffffff;
     background: #fff0e8;
     color: $accent;
     border-color: $accent-mid;
-  }
-
-  [data-theme="dark"] & {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.45);
-
-    &:hover {
-      background: rgba(230, 100, 20, 0.2);
-      color: var(--palette-primary);
-      border-color: var(--palette-primary);
-    }
   }
 }
 

@@ -585,9 +585,13 @@ $red-deduct: #d84040;
   }
 
   [data-theme="dark"] & {
-    border-bottom-color: rgba(255, 255, 255, 0.5);
+    background: #fff;
+    border-radius: 6px 6px 0 0;
+    border-bottom-color: $text-secondary;
 
     &--empty {
+      background: transparent;
+      border-radius: 0;
       border-bottom-color: rgba(255, 255, 255, 0.15);
     }
   }
@@ -897,9 +901,9 @@ $red-deduct: #d84040;
   box-shadow: inset 0 2px 8px rgba(230, 100, 20, 0.06);
 
   [data-theme="dark"] & {
-    background: rgba(255, 255, 255, 0.05);
+    background: #fff;
     border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.12);
   }
 }
 

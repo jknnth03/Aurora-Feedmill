@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { initPalette } from "../utils/paletteUtils";
 import { initTextColors } from "../components/accountmenu/TextColorPickerDialog";
+import {
+  initChipColors,
+  dispatchChipChange,
+} from "../components/accountmenu/ChipColorPickerUtils";
 
 const ThemeContext = createContext();
 
@@ -9,7 +13,6 @@ export const ThemeProvider = ({ children }) => {
     () => localStorage.getItem("theme") === "dark",
   );
 
-  // Runs on every theme toggle — applies palette + text color vars for the new theme
   useEffect(() => {
     document.documentElement.setAttribute(
       "data-theme",
@@ -18,12 +21,14 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("theme", isDark ? "dark" : "light");
     initPalette();
     initTextColors();
+    initChipColors();
+    dispatchChipChange();
   }, [isDark]);
 
-  // Also run once on mount to restore any saved colors
   useEffect(() => {
     initPalette();
     initTextColors();
+    initChipColors();
   }, []);
 
   const toggleTheme = () => setIsDark((p) => !p);

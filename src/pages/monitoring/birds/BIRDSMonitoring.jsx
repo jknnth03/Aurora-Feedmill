@@ -2,6 +2,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import IconButton from "@mui/material/IconButton";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
@@ -15,7 +16,8 @@ import {
   useChipColors,
 } from "../../../components/accountmenu/Chipcolorpickerutils";
 import BIRDSMonitoringModal from "./BIRDSMonitoringModal";
-import "../../../pages/birds/Birds.scss"; // reuse Birds.scss class names (birds__*) — adjust path as needed
+import { exportBirdsToExcel } from "../../../pages/birds/exportBirdsToExcel";
+import "../../../pages/birds/Birds.scss";
 
 const COLUMNS = [
   { key: "checklist_name", label: "Checklist Name", sortable: false },
@@ -126,9 +128,6 @@ const StatusChip = ({ value }) => {
   );
 };
 
-// Monitoring/view-only counterpart of Birds.jsx — same listing, but rows open
-// BIRDSMonitoringModal (view-only: Show Checklist / Show Report), never any
-// Start/Continue Checking flow.
 const BIRDSMonitoring = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -136,6 +135,7 @@ const BIRDSMonitoring = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -178,6 +178,25 @@ const BIRDSMonitoring = () => {
     setSelectedUnitKey(row._unitKey);
   };
 
+  const handleExport = async () => {
+    if (isExporting || !data) return;
+    setIsExporting(true);
+    try {
+      await exportBirdsToExcel(
+        data,
+        currentMonth.startOf("month").format("YYYY-MM-DD"),
+        currentMonth.endOf("month").format("YYYY-MM-DD"),
+      );
+    } catch (err) {
+      console.error("[BIRDSMonitoring] export ERROR", err);
+      window.__snackbar__?.enqueueSnackbar("Export failed. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const columnsWithRender = COLUMNS.map((col) =>
     col.key === "status"
       ? { ...col, render: (val) => <StatusChip value={val} /> }
@@ -209,7 +228,15 @@ const BIRDSMonitoring = () => {
                   <ChevronRightIcon />
                 </IconButton>
               </div>
-              <div className="birds__filters-right" />
+              <div className="birds__filters-right">
+                <button
+                  className="birds__export-btn"
+                  onClick={handleExport}
+                  disabled={isExporting || !data}>
+                  <FileDownloadIcon className="birds__export-btn-icon" />
+                  {isExporting ? "Exporting..." : "Export"}
+                </button>
+              </div>
             </div>
           </div>
         }

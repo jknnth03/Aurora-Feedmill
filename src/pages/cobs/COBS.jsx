@@ -17,7 +17,7 @@ import {
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import COBSModal from "./COBSModal";
-import COBSExportDialog from "./COBSExportDialog";
+import { exportCobsToExcel } from "./exportCobsToExcel";
 import "./COBS.scss";
 
 const COLUMNS = [
@@ -39,9 +39,6 @@ const STATUS_CHIP_MAP = {
   "checklist not yet created": "chip-pending",
 };
 
-// A week counts toward the completed total when it's Done or Merged
-// (shared logic with COBSModal.jsx via cobsWeekUtils, so the table count
-// and the per-row status chips can never disagree).
 const getCompletedWeeksCount = (weekMap) => {
   let count = 0;
   Object.values(weekMap).forEach((entries) => {
@@ -152,7 +149,7 @@ const COBS = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
-  const [exportOpen, setExportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -200,9 +197,23 @@ const COBS = () => {
     setSelectedUnitKey(row._unitKey);
   };
 
-  const fetchExportData = async (startDate, endDate) => {
-    const result = await refetch({ startDate, endDate });
-    return result?.data ?? data;
+  const handleExport = async () => {
+    if (isExporting || !data) return;
+    setIsExporting(true);
+    try {
+      await exportCobsToExcel(
+        data,
+        currentMonth.startOf("month").format("YYYY-MM-DD"),
+        currentMonth.endOf("month").format("YYYY-MM-DD"),
+      );
+    } catch (err) {
+      console.error("[COBS] export ERROR", err);
+      window.__snackbar__?.enqueueSnackbar("Export failed. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const columnsWithRender = COLUMNS.map((col) =>
@@ -239,9 +250,10 @@ const COBS = () => {
               <div className="cobs__filters-right">
                 <button
                   className="cobs__export-btn"
-                  onClick={() => setExportOpen(true)}>
+                  onClick={handleExport}
+                  disabled={isExporting || !data}>
                   <FileDownloadIcon className="cobs__export-btn-icon" />
-                  Export
+                  {isExporting ? "Exporting..." : "Export"}
                 </button>
               </div>
             </div>
@@ -276,12 +288,6 @@ const COBS = () => {
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
         onRefetch={refetch}
-      />
-
-      <COBSExportDialog
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        fetchExportData={fetchExportData}
       />
     </>
   );

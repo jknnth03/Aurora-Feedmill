@@ -122,7 +122,7 @@ const Wastages = () => {
   return (
     <>
       <PageContainer
-        title="Wastages"
+        title="Checklist Type"
         titleIcon={<DeleteSweepIcon />}
         isEmpty={!isFetching && (tableData.length === 0 || is404)}
         titleAction={

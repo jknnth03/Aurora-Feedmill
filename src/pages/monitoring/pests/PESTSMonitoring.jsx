@@ -2,6 +2,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import IconButton from "@mui/material/IconButton";
 import { useRememberQueryParams } from "../../../hooks/useRememberQueryParams";
 import useDebounce from "../../../hooks/useDebounce";
@@ -15,6 +16,7 @@ import {
   useChipColors,
 } from "../../../components/accountmenu/Chipcolorpickerutils";
 import PESTSMonitoringModal from "./PESTSMonitoringModal";
+import { exportPestToExcel } from "../../pest/exportPestToExcel";
 import "../../pest/Pest.scss";
 
 const COLUMNS = [
@@ -132,9 +134,6 @@ const StatusChip = ({ value }) => {
   );
 };
 
-// Monitoring/view-only counterpart of Pest.jsx — same listing, but rows open
-// PESTSMonitoringModal (view-only: Show Report / Show Checklist), never any
-// Start/Continue Checking flow.
 const PESTSMonitoring = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -142,6 +141,7 @@ const PESTSMonitoring = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -184,6 +184,31 @@ const PESTSMonitoring = () => {
     setSelectedUnitKey(row._unitKey);
   };
 
+  const handleExport = async () => {
+    if (isExporting || !data) return;
+    setIsExporting(true);
+    try {
+      const exported = await exportPestToExcel(
+        data,
+        currentMonth.startOf("month").format("YYYY-MM-DD"),
+        currentMonth.endOf("month").format("YYYY-MM-DD"),
+      );
+      if (!exported) {
+        window.__snackbar__?.enqueueSnackbar(
+          "No inspection records to export for this month.",
+          { variant: "warning" },
+        );
+      }
+    } catch (err) {
+      console.error("[PESTSMonitoring] export ERROR", err);
+      window.__snackbar__?.enqueueSnackbar("Export failed. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const columnsWithRender = COLUMNS.map((col) =>
     col.key === "status"
       ? { ...col, render: (val) => <StatusChip value={val} /> }
@@ -215,7 +240,15 @@ const PESTSMonitoring = () => {
                   <ChevronRightIcon />
                 </IconButton>
               </div>
-              <div className="pest__filters-right" />
+              <div className="pest__filters-right">
+                <button
+                  className="pest__export-btn"
+                  onClick={handleExport}
+                  disabled={isExporting || !data}>
+                  <FileDownloadIcon className="pest__export-btn-icon" />
+                  {isExporting ? "Exporting..." : "Export"}
+                </button>
+              </div>
             </div>
           </div>
         }

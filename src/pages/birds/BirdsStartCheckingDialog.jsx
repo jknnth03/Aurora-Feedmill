@@ -17,6 +17,7 @@ import {
 import { validateForm } from "./BirdsStartCheckingDialogValidation";
 import "./BirdsStartCheckingDialog.scss";
 import { useGetWastagesQuery } from "../../features/api/masterlist/wastagesApi";
+import { useGetInfestationLevelsQuery } from "../../features/api/masterlist/infestationLevelApi";
 import ConfirmDialog from "../../reusable-components/comfirm-dialog/ConfirmDialog";
 
 const formatDateTime = (raw) => {
@@ -238,15 +239,15 @@ const BirdsStartCheckingDialog = ({
   const { data: wastagesData } = useGetWastagesQuery(undefined, {
     skip: !open,
   });
+  const { data: inspectionLevelData, isFetching: isFetchingLevels } =
+    useGetInfestationLevelsQuery(undefined, { skip: !open });
   const [createBird, { isLoading }] = useCreateBirdMutation();
 
   const questionnaireData = data?.data;
   const inspectionAreas =
     questionnaireData?.items?.find((s) => s.name === "Inspection Areas")
       ?.items ?? [];
-  const infestationLevelItems =
-    questionnaireData?.items?.find((s) => s.name === "Infestation Level")
-      ?.items ?? [];
+  const infestationLevelItems = inspectionLevelData?.data ?? [];
   const wastageOptions = wastagesData?.data ?? [];
 
   const errorCount = Object.keys(errors).length;
@@ -612,6 +613,8 @@ const BirdsStartCheckingDialog = ({
     </div>
   );
 
+  const isLoadingContent = isFetching || isFetchingLevels;
+
   return (
     <>
       <Dialog
@@ -640,7 +643,7 @@ const BirdsStartCheckingDialog = ({
           </IconButton>
         </div>
 
-        {continueMode && batchEntry && !isFetching && (
+        {continueMode && batchEntry && !isLoadingContent && (
           <div className="birds-sc__info-strip birds-sc__info-strip--draft">
             <div className="birds-sc__info-item">
               <span className="birds-sc__info-label">Draft by</span>
@@ -658,7 +661,7 @@ const BirdsStartCheckingDialog = ({
         )}
 
         <DialogContent className="birds-sc__content">
-          {isFetching ? (
+          {isLoadingContent ? (
             renderSkeleton()
           ) : (
             <>
@@ -693,7 +696,7 @@ const BirdsStartCheckingDialog = ({
                         <th className="birds-sc__th birds-sc__th--area-placeholder" />
                         {infestationLevelItems.map((lvl) => (
                           <th
-                            key={lvl.name}
+                            key={lvl.id ?? lvl.name}
                             className="birds-sc__th birds-sc__th--col">
                             <div className="birds-sc__col-head">
                               <span>{lvl.name}</span>
@@ -750,7 +753,7 @@ const BirdsStartCheckingDialog = ({
                               const isFirstCol = i === 0;
                               return (
                                 <td
-                                  key={lvl.name}
+                                  key={lvl.id ?? lvl.name}
                                   ref={
                                     isFirstCol
                                       ? getFirstErrorRef(infestError)

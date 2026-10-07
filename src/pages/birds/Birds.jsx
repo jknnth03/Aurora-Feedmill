@@ -21,7 +21,7 @@ import {
   useChipColors,
 } from "../../components/accountmenu/Chipcolorpickerutils";
 import BirdsModal from "./BirdsModal";
-import BirdsExportDialog from "./BirdsExportDialog";
+import { exportBirdsToExcel } from "./exportBirdsToExcel";
 import "./Birds.scss";
 
 const SECTION = "birds";
@@ -145,7 +145,7 @@ const BirdsPage = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedUnitKey, setSelectedUnitKey] = useState(null);
-  const [exportOpen, setExportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [queryParams] = useRememberQueryParams();
   const search = queryParams.search ?? "";
   const debouncedSearch = useDebounce(search, 500);
@@ -188,9 +188,23 @@ const BirdsPage = () => {
     setSelectedUnitKey(row._unitKey);
   };
 
-  const fetchExportData = async (startDate, endDate) => {
-    const result = await refetch({ startDate, endDate });
-    return result?.data ?? data;
+  const handleExport = async () => {
+    if (isExporting || !data) return;
+    setIsExporting(true);
+    try {
+      await exportBirdsToExcel(
+        data,
+        currentMonth.startOf("month").format("YYYY-MM-DD"),
+        currentMonth.endOf("month").format("YYYY-MM-DD"),
+      );
+    } catch (err) {
+      console.error("[Birds] export ERROR", err);
+      window.__snackbar__?.enqueueSnackbar("Export failed. Please try again.", {
+        variant: "error",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const columnsWithRender = COLUMNS.map((col) =>
@@ -227,9 +241,10 @@ const BirdsPage = () => {
               <div className="birds__filters-right">
                 <button
                   className="birds__export-btn"
-                  onClick={() => setExportOpen(true)}>
+                  onClick={handleExport}
+                  disabled={isExporting || !data}>
                   <FileDownloadIcon className="birds__export-btn-icon" />
-                  Export
+                  {isExporting ? "Exporting..." : "Export"}
                 </button>
               </div>
             </div>
@@ -264,12 +279,6 @@ const BirdsPage = () => {
         onClose={() => setSelectedUnitKey(null)}
         isFetching={isFetching}
         onRefetch={refetch}
-      />
-
-      <BirdsExportDialog
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        fetchExportData={fetchExportData}
       />
     </>
   );
