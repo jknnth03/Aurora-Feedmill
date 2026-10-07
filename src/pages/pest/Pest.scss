@@ -33,6 +33,7 @@
 
   &__filters-right {
     justify-content: flex-end;
+    flex: 1;
   }
 
   &__month-nav {
@@ -94,5 +95,36 @@
     font-family: "Poppins", sans-serif;
     white-space: nowrap;
     line-height: 1.5;
+  }
+
+  &__export-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    background: $primary-main;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    transition: filter 0.15s;
+
+    &:hover {
+      filter: brightness(0.92);
+    }
+
+    [data-theme="dark"] & {
+      background: $secondary-main;
+    }
+  }
+
+  &__export-btn-icon {
+    font-size: 1rem !important;
+    color: #fff;
   }
 }

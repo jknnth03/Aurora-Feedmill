@@ -585,18 +585,23 @@ $red-deduct: #d84040;
   }
 
   [data-theme="dark"] & {
-    background: #fff;
-    border-radius: 6px 6px 0 0;
-    border-bottom-color: $text-secondary;
+    border-bottom-color: rgba(255, 255, 255, 0.5);
 
     &--empty {
-      background: transparent;
-      border-radius: 0;
       border-bottom-color: rgba(255, 255, 255, 0.15);
     }
   }
 }
 
+.cobs-sr__signatory-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+
+  [data-theme="dark"] & {
+    filter: invert(1) brightness(1.2);
+  }
+}
 .cobs-sr__signatory-img {
   max-width: 100%;
   max-height: 100%;

@@ -7,7 +7,7 @@ import Skeleton from "@mui/material/Skeleton";
 import CloseIcon from "@mui/icons-material/Close";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import { useGetPestQuestionnaireQuery } from "../../../features/api/pests/pestApi";
-import "../../pest/PestStartCheckingDialog.scss"; // reuse PestStartCheckingDialog.scss class names (pest-sc__*) — adjust path as needed
+import "../../pest/PestStartCheckingDialog.scss";
 
 const PEST_CHECKLIST_ID = 6;
 
@@ -51,9 +51,6 @@ const skeletonSx = {
   },
 };
 
-// Monitoring/view-only counterpart of PestStartCheckingDialog — always
-// read-only (no start/continue/draft/submit, no validation). Renders the
-// filled-in pest inspection grid + grading summary for a given batch entry.
 const PESTSMonitoringStartCheckingDialog = ({
   open,
   onClose,
@@ -77,6 +74,11 @@ const PESTSMonitoringStartCheckingDialog = ({
   const otherObsItems =
     questionnaireData?.items?.find((s) => s.name === "Other Observation")
       ?.items ?? [];
+
+  const preparedName = batchEntry?.user ?? null;
+  const preparedSignature = batchEntry?.user_signatory ?? null;
+  const signatory2 = batchEntry?.signatory_2 ?? null;
+  const hasSignatories = preparedSignature || signatory2;
 
   const getMaxPossibleScorePerPest = () => inspectionAreas.length * 10;
 
@@ -492,6 +494,53 @@ const PESTSMonitoringStartCheckingDialog = ({
                 </div>
               </div>
             </div>
+
+            {hasSignatories && (
+              <div className="pest-sc__signatories-row">
+                {preparedSignature && (
+                  <div className="pest-sc__signatory-item">
+                    <span className="pest-sc__signatory-label">
+                      Inspected by:
+                    </span>
+                    <div className="pest-sc__signatory-img-box">
+                      <img
+                        src={preparedSignature}
+                        alt="inspected-by"
+                        className="pest-sc__signatory-img"
+                      />
+                    </div>
+                    {preparedName && (
+                      <span className="pest-sc__signatory-name">
+                        {preparedName}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {signatory2 && (
+                  <div className="pest-sc__signatory-item">
+                    <span className="pest-sc__signatory-label">
+                      Noted & Checked by:
+                    </span>
+                    {signatory2.approve_image ? (
+                      <div className="pest-sc__signatory-img-box">
+                        <img
+                          src={signatory2.approve_image}
+                          alt="noted-and-checked-by"
+                          className="pest-sc__signatory-img"
+                        />
+                      </div>
+                    ) : (
+                      <div className="pest-sc__signatory-img-box pest-sc__signatory-img-box--empty" />
+                    )}
+                    {signatory2.name && (
+                      <span className="pest-sc__signatory-name">
+                        {signatory2.name}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </DialogContent>

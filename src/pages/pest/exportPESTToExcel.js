@@ -1,4 +1,5 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import dayjs from "dayjs";
 
 const FIXED_HEADERS = [
@@ -22,6 +23,12 @@ const getColumnWidth = (rows, key) => {
     return Math.max(max, length);
   }, key.length);
   return Math.min(40, longest + 2);
+};
+
+const toExcelDate = (value) => {
+  const parsed = value ? dayjs(value) : null;
+  if (!parsed?.isValid()) return "";
+  return new Date(Date.UTC(parsed.year(), parsed.month(), parsed.date()));
 };
 
 export const exportPestToExcel = async (data, startDate, endDate) => {
@@ -51,14 +58,13 @@ export const exportPestToExcel = async (data, startDate, endDate) => {
   if (records.length === 0) return 0;
 
   const rows = records.map(({ checklist, periodName, batch, response }) => {
-    const startAt = batch.start_at ? dayjs(batch.start_at) : null;
     const row = {
       Checklist: checklist.checklist_name ?? "",
       Period: periodName,
       "Batch No": batch.batch_no ?? "",
       Status: batch.status ?? "",
       "Audited By": batch.user ?? "",
-      Date: startAt?.isValid() ? startAt.toDate() : "",
+      Date: toExcelDate(batch.start_at),
       "Inspection Area": response.inspection_area ?? "",
     };
     pestNames.forEach((name) => {
@@ -72,18 +78,27 @@ export const exportPestToExcel = async (data, startDate, endDate) => {
   });
 
   const headers = [...FIXED_HEADERS, ...pestNames, ...observationKeys];
-  const worksheet = XLSX.utils.json_to_sheet(rows, {
-    header: headers,
-    cellDates: true,
-    dateNF: "yyyy-mm-dd",
-  });
-  worksheet["!cols"] = headers.map((header) => ({
-    wch: getColumnWidth(rows, header),
-  }));
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Pest Monitoring");
-  XLSX.writeFile(workbook, `Pest_Monitoring_${startDate}_to_${endDate}.xlsx`);
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Pest Monitoring");
+  sheet.columns = headers.map((header) => ({
+    header,
+    key: header,
+    width: getColumnWidth(rows, header),
+  }));
+  rows.forEach((row) => sheet.addRow(row));
+
+  sheet.getColumn("Date").numFmt = "yyyy-mm-dd";
+  sheet.getRow(1).font = { bold: true };
+  sheet.views = [{ state: "frozen", ySplit: 1 }];
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(
+    new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+    `Pest_Monitoring_${startDate}_to_${endDate}.xlsx`,
+  );
 
   return rows.length;
 };

@@ -38,14 +38,24 @@ const STATUS_CHIP_MAP = {
   "checklist not yet created": "chip-pending",
 };
 
+const getLatestEntry = (entries) =>
+  entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+
+const isPeriodDone = (batch) => {
+  const status = batch?.status?.toLowerCase() ?? "";
+  return (
+    Number(batch?.is_completed) === 1 ||
+    status === "completed" ||
+    status === "done" ||
+    status === "approved"
+  );
+};
+
 const getCompletedPeriodsCount = (periodMap) => {
   let count = 0;
   Object.values(periodMap).forEach((entries) => {
     if (!Array.isArray(entries) || entries.length === 0) return;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
-    const status = latest?.status?.toLowerCase() ?? "";
-    if (status === "completed" || status === "done" || status === "approved")
-      count += 1;
+    if (isPeriodDone(getLatestEntry(entries))) count += 1;
   });
   return count;
 };
@@ -53,7 +63,7 @@ const getCompletedPeriodsCount = (periodMap) => {
 const hasAnyInProgressPeriod = (periodMap) => {
   return Object.values(periodMap).some((entries) => {
     if (!Array.isArray(entries) || entries.length === 0) return false;
-    const latest = entries.reduce((a, b) => (b.batch_no > a.batch_no ? b : a));
+    const latest = getLatestEntry(entries);
     const status = latest?.status?.toLowerCase() ?? "";
     return (
       status === "for acknowledgement" ||

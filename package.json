@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:pretest": "vite build --mode pretest && node scripts/zip-build.mjs pretest",
+    "build:prod": "vite build --mode production && node scripts/zip-build.mjs prod",
     "lint": "eslint .",
     "preview": "vite preview"
   },

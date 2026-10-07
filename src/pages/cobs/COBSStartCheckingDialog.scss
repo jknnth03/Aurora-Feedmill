@@ -290,8 +290,6 @@
     }
   }
 
-  // ── Bulk "Set all to" row ────────────────────────────────────────────────
-
   &__bulk-label {
     display: flex;
     align-items: center;
@@ -323,8 +321,6 @@
     }
   }
 
-  // Mirrors __radio-box exactly (padding/gap) so buttons line up with the
-  // radio circles in the rows underneath.
   &__quickset-box {
     display: flex;
     align-items: center;
@@ -448,8 +444,6 @@
     transform: scale(1.15);
     filter: brightness(1.08);
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
 
   &__radio-box {
     display: flex;
@@ -598,7 +592,6 @@
       }
     }
 
-    // Dimmed border when score = 100 (optional)
     &--optional {
       border-color: rgba($border-color, 0.6);
       background: rgba($primary-main, 0.01);
@@ -622,8 +615,6 @@
       }
     }
   }
-
-  // ── Remarks hint badge (Required / Optional) ──────────────────────────────
 
   &__remarks-hint {
     display: inline-flex;
@@ -653,8 +644,6 @@
       border: 1px solid rgba(#4caf50, 0.2);
     }
   }
-
-  // ─────────────────────────────────────────────────────────────────────────────
 
   &__attach-list {
     display: flex;
@@ -1181,8 +1170,6 @@
     }
   }
 
-  // ── Date Picker ───────────────────────────────────────────────────────────────
-
   &__date-picker-wrap {
     display: flex;
     align-items: center;
@@ -1286,8 +1273,6 @@
     margin-top: 2px;
   }
 
-  // ── Combined Time Row ─────────────────────────────────────────────────────────
-
   &__time-row {
     display: flex;
     align-items: center;
@@ -1353,8 +1338,6 @@
     }
   }
 
-  // ── Inline Validation ─────────────────────────────────────────────────────────
-
   &__inline-error {
     display: inline-flex;
     align-items: center;
@@ -1406,8 +1389,6 @@
     }
   }
 
-  // ── Footer Left ───────────────────────────────────────────────────────────────
-
   &__footer-left {
     display: flex;
     align-items: center;
@@ -1423,6 +1404,7 @@
     font-weight: 600;
     color: #e53935;
   }
+
   &__signatories-row {
     display: flex;
     flex-wrap: wrap;
@@ -1468,6 +1450,10 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+
+    [data-theme="dark"] & {
+      filter: invert(1) brightness(1.2);
+    }
   }
 
   &__signatory-name {

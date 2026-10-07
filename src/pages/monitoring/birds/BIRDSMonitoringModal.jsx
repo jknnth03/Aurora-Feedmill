@@ -21,7 +21,7 @@ import {
 import BIRDSMonitoringStartCheckingDialog from "./BIRDSMonitoringStartCheckingDialog";
 import BirdsShowReportDialog from "../../birds/BirdsShowReportDialog";
 import BirdsAcknowledgementTimelineDialog from "../../birds/BirdsAcknowledgementTimelineDialog";
-import "../../birds/BirdsModal.scss"; // reuse BirdsModal.scss class names (birds-cm__*) — adjust path as needed
+import "../../birds/Birds.scss";
 
 const MONTHS = [
   "January",

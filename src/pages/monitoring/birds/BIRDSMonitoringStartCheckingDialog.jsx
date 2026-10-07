@@ -7,7 +7,7 @@ import Skeleton from "@mui/material/Skeleton";
 import CloseIcon from "@mui/icons-material/Close";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import { useGetBirdsQuestionnaireTemplateQuery } from "../../../features/api/birds/birdsApi";
-import "../../birds/BirdsStartCheckingDialog.scss"; // reuse BirdsStartCheckingDialog.scss class names (birds-sc__*) — adjust path as needed
+import "../../birds/BirdsStartCheckingDialog.scss";
 
 const getLevelColorClass = (levelName) => {
   if (!levelName) return "";
@@ -27,9 +27,6 @@ const skeletonSx = {
   },
 };
 
-// Monitoring/view-only counterpart of BirdsStartCheckingDialog — always
-// read-only (no start/continue/draft/submit, no wastage dropdown, no
-// validation). Renders the filled-in bird inspection grid for a batch entry.
 const BIRDSMonitoringStartCheckingDialog = ({
   open,
   onClose,
@@ -52,6 +49,12 @@ const BIRDSMonitoringStartCheckingDialog = ({
   const infestationLevelItems =
     questionnaireData?.items?.find((s) => s.name === "Infestation Level")
       ?.items ?? [];
+
+  const preparedName = batchEntry?.user ?? null;
+  const preparedSignature = batchEntry?.user_signatory ?? null;
+  const signatory2 = batchEntry?.signatory_2 ?? null;
+  const signatory3 = batchEntry?.signatory_3 ?? null;
+  const hasSignatories = preparedSignature || signatory2 || signatory3;
 
   const getViewInfestation = (areaName) => {
     if (!batchEntry?.responses) return null;
@@ -307,6 +310,74 @@ const BIRDSMonitoringStartCheckingDialog = ({
                 </div>
               </div>
             </div>
+
+            {hasSignatories && (
+              <div className="birds-sc__signatories-row">
+                {preparedSignature && (
+                  <div className="birds-sc__signatory-item">
+                    <span className="birds-sc__signatory-label">
+                      Prepared by:
+                    </span>
+                    <div className="birds-sc__signatory-img-box">
+                      <img
+                        src={preparedSignature}
+                        alt="prepared-by"
+                        className="birds-sc__signatory-img"
+                      />
+                    </div>
+                    {preparedName && (
+                      <span className="birds-sc__signatory-name">
+                        {preparedName}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {signatory2 && (
+                  <div className="birds-sc__signatory-item">
+                    <span className="birds-sc__signatory-label">Noted by:</span>
+                    {signatory2.approve_image ? (
+                      <div className="birds-sc__signatory-img-box">
+                        <img
+                          src={signatory2.approve_image}
+                          alt="noted-by"
+                          className="birds-sc__signatory-img"
+                        />
+                      </div>
+                    ) : (
+                      <div className="birds-sc__signatory-img-box birds-sc__signatory-img-box--empty" />
+                    )}
+                    {signatory2.name && (
+                      <span className="birds-sc__signatory-name">
+                        {signatory2.name}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {signatory3 && (
+                  <div className="birds-sc__signatory-item">
+                    <span className="birds-sc__signatory-label">
+                      Reviewed by:
+                    </span>
+                    {signatory3.assess_image ? (
+                      <div className="birds-sc__signatory-img-box">
+                        <img
+                          src={signatory3.assess_image}
+                          alt="reviewed-by"
+                          className="birds-sc__signatory-img"
+                        />
+                      </div>
+                    ) : (
+                      <div className="birds-sc__signatory-img-box birds-sc__signatory-img-box--empty" />
+                    )}
+                    {signatory3.name && (
+                      <span className="birds-sc__signatory-name">
+                        {signatory3.name}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </DialogContent>
