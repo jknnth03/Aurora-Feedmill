@@ -13,6 +13,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import {
@@ -259,6 +260,7 @@ const COBSStartCheckingDialog = ({
   });
 
   const cameraInputRefs = useRef({});
+  const galleryInputRefs = useRef({});
   const intervalRef = useRef(null);
   const firstErrorRef = useRef(null);
 
@@ -414,6 +416,13 @@ const COBSStartCheckingDialog = ({
       cameraInputRefs.current[key].value = "";
     }
     cameraInputRefs.current[key]?.click();
+  };
+
+  const triggerGallery = (key) => {
+    if (galleryInputRefs.current[key]) {
+      galleryInputRefs.current[key].value = "";
+    }
+    galleryInputRefs.current[key]?.click();
   };
 
   const handleRemoveImage = (key, idx) =>
@@ -628,6 +637,31 @@ const COBSStartCheckingDialog = ({
     }
     return null;
   };
+
+  const renderPhotoButtons = (editKey, iconSize) => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+      }}>
+      <button
+        type="button"
+        className="cobs-sc__attach-btn"
+        onClick={() => triggerCamera(editKey)}>
+        <CameraAltIcon sx={{ fontSize: iconSize }} />
+        <span>Take photo</span>
+      </button>
+      <button
+        type="button"
+        className="cobs-sc__attach-btn"
+        onClick={() => triggerGallery(editKey)}>
+        <PhotoLibraryIcon sx={{ fontSize: iconSize }} />
+        <span>Gallery</span>
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -1013,6 +1047,22 @@ const COBSStartCheckingDialog = ({
                                           )
                                         }
                                       />
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        style={{ display: "none" }}
+                                        ref={(el) =>
+                                          (galleryInputRefs.current[editKey] =
+                                            el)
+                                        }
+                                        onChange={(e) =>
+                                          handleCameraCapture(
+                                            editKey,
+                                            e.target.files,
+                                          )
+                                        }
+                                      />
 
                                       {existingFileList.length > 0 ||
                                       existingUpdateImages.length > 0 ||
@@ -1149,34 +1199,10 @@ const COBSStartCheckingDialog = ({
                                               </IconButton>
                                             </div>
                                           ))}
-                                          <button
-                                            type="button"
-                                            className="cobs-sc__attach-btn cobs-sc__attach-btn--more"
-                                            onClick={() =>
-                                              triggerCamera(editKey)
-                                            }>
-                                            <CameraAltIcon
-                                              sx={{ fontSize: 13 }}
-                                            />
-                                            Add photo
-                                          </button>
+                                          {renderPhotoButtons(editKey, 13)}
                                         </div>
                                       ) : (
-                                        <Tooltip
-                                          title="Take photo"
-                                          placement="top">
-                                          <button
-                                            type="button"
-                                            className="cobs-sc__attach-btn"
-                                            onClick={() =>
-                                              triggerCamera(editKey)
-                                            }>
-                                            <CameraAltIcon
-                                              sx={{ fontSize: 14 }}
-                                            />
-                                            <span>Add photo</span>
-                                          </button>
-                                        </Tooltip>
+                                        renderPhotoButtons(editKey, 14)
                                       )}
                                     </>
                                   )}

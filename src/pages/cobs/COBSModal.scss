@@ -115,7 +115,7 @@
     }
 
     &:nth-child(even) {
-      background: #fff;
+      background: $bg-main;
 
       [data-theme="dark"] & {
         background: rgba(255, 255, 255, 0.01);
@@ -220,6 +220,14 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
     font-family: "Poppins", sans-serif !important;
     min-width: 160px !important;
+    background: $bg-main !important;
+    border: 1.5px solid $border-color;
+
+    [data-theme="dark"] & {
+      background: $bg-main !important;
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
   }
 
   &__menu-item {
@@ -229,6 +237,19 @@
     align-items: center !important;
     gap: 8px !important;
     padding: 8px 16px !important;
+    color: $text-primary !important;
+
+    &:hover {
+      background: rgba($primary-main, 0.06) !important;
+    }
+
+    [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.85) !important;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06) !important;
+      }
+    }
   }
 
   &__menu-icon {

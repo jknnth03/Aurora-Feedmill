@@ -195,6 +195,7 @@ const COBS = () => {
   const handleRowClick = (row) => {
     if (row._isLocked) return;
     setSelectedUnitKey(row._unitKey);
+    refetch();
   };
 
   const handleExport = async () => {

@@ -203,7 +203,7 @@ const RowActionMenu = ({
     statusLower === "for acknowledgement" ||
     statusLower === "for signature" ||
     statusLower === "done";
-  const canUpdateAttachment = statusLower === "done";
+  const canUpdateAttachment = statusLower === "for signature";
   const isDraft = latest ? isDraftEntry(latest) : false;
 
   const hasEntries = Array.isArray(entries) && entries.length > 0;
@@ -236,7 +236,7 @@ const RowActionMenu = ({
         onClose={close}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{ className: "cobs-cm__menu-paper" }}>
+        slotProps={{ paper: { className: "cobs-cm__menu-paper" } }}>
         {isForAcknowledgement
           ? [
               <MenuItem
@@ -417,8 +417,8 @@ const COBSModal = ({
         maxWidth="md"
         fullWidth
         className="cobs-cm"
-        PaperProps={{
-          className: "cobs-cm__paper",
+        slotProps={{
+          paper: { className: "cobs-cm__paper" },
         }}>
         <DialogTitle className="cobs-cm__title">
           Checklist for the Month of {monthLabel} {year}

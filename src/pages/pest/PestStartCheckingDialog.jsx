@@ -909,7 +909,7 @@ const PestStartCheckingDialog = ({
                     <div className="pest-sc__others-textarea-wrap">
                       <textarea
                         className="pest-sc__others-textarea"
-                        placeholder="Type here*"
+                        placeholder="Type here"
                         value={viewMode ? (batchEntry?.remarks ?? "") : remarks}
                         onChange={
                           viewMode

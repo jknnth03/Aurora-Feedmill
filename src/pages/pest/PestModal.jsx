@@ -189,7 +189,7 @@ const RowActionMenu = ({
         onClose={close}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{ className: "pest-cm__menu-paper" }}>
+        slotProps={{ paper: { className: "pest-cm__menu-paper" } }}>
         {isForAcknowledgement
           ? [
               <MenuItem
@@ -310,7 +310,9 @@ const PestModal = ({
         maxWidth="sm"
         fullWidth
         className="pest-cm"
-        PaperProps={{ className: "pest-cm__paper", sx: { maxWidth: 700 } }}>
+        slotProps={{
+          paper: { className: "pest-cm__paper", sx: { maxWidth: 700 } },
+        }}>
         <DialogTitle className="pest-cm__title">
           Checklist for the Month of {monthLabel} {year}
         </DialogTitle>
